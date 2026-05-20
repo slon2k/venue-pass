@@ -410,3 +410,37 @@ Example:
 - reliable Outbox-backed integration events
 - immediate consistency within modules
 - eventual consistency across modules
+
+---
+
+## 12. Risks and Trade-offs
+
+### Risks
+
+- Hand-rolled Outbox implementation can drift in reliability without strict idempotency and retry testing
+- Enforcing boundaries in a single codebase requires continuous architecture test coverage to prevent accidental coupling
+- Eventual consistency can introduce short-lived read model gaps and edge cases in user flows
+- Demo-first scope can underrepresent production concerns (observability depth, operational hardening, migration strategy)
+
+### Trade-offs accepted
+
+- Modular monolith over microservices: simpler delivery and debugging, but less independent deployability
+- One physical database with schema-per-module: operational simplicity, but stronger discipline needed to avoid cross-schema leakage
+- Direct injection dispatch over mediator pipeline: simpler and explicit control flow, but fewer centralized cross-cutting extension points
+- Thin integration events plus notify-and-fetch: keeps ownership clear, but may add synchronous follow-up reads in consumers
+
+---
+
+## 13. Candidate ADRs
+
+The detailed decision log is maintained in `docs/tech-decisions.md`.
+
+Current and near-term candidate ADRs:
+
+- TD-01: Command/Query dispatch via direct injection and co-located handler pattern
+- One DbContext per module with schema-per-module isolation in a single SQL Server instance
+- Outbox-per-module with background dispatch and idempotent subscribers for at-least-once delivery
+- Synchronous cross-module calls allowed only for read/validation via module contracts
+- Notify-and-fetch synchronization as default cross-module consistency strategy
+- Feature-first module organization with aggregate/business-concept-first domain layout
+- xUnit plus architecture tests as mandatory boundary enforcement mechanism
