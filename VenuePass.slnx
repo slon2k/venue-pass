@@ -7,4 +7,7 @@
     <Project Path="src/VenuePass.Modules.Identity/VenuePass.Modules.Identity.csproj" />
     <Project Path="src/VenuePass.Modules.Ticketing/VenuePass.Modules.Ticketing.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/VenuePass.BuildingBlocks.Tests/VenuePass.BuildingBlocks.Tests.csproj" />
+  </Folder>
 </Solution>
