@@ -83,3 +83,7 @@ Example synchronization pattern:
 - **Architecture tests** for boundary enforcement
 
 ---
+
+## Process Docs
+
+- [Docs planning and execution flow](docs/github-projects-process.md)
