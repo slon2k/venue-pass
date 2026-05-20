@@ -276,6 +276,26 @@ Domain   -X→ Infrastructure
 Domain   -X→ Features
 ```
 
+### Presentation vs application models
+
+At the HTTP boundary, endpoints use explicit request/response DTOs.
+Inside the module, handlers use application-layer command/query models.
+
+Endpoints map:
+
+- request DTO -> command/query
+- handler result -> response DTO
+
+This keeps the public API contract separate from the internal application model.
+
+Example:
+
+- `CreateVenueRequest` = HTTP request model
+- `CreateVenue.Command` = application model
+- `CreateVenueResponse` = HTTP response model
+
+`CreateVenueEndpoint.cs` may contain `CreateVenueRequest` and `CreateVenueResponse`
+
 ---
 
 ## 6. Module Boundary Rules

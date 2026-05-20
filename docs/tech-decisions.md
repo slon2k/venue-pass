@@ -33,13 +33,19 @@ public static class CreateVenue
 
 // Features/CreateVenue/CreateVenueEndpoint.cs
 app.MapPost("/events/venues", async (
-    CreateVenue.Command command,
+    CreateVenueRequest request,
     CreateVenue.Handler handler,
     CancellationToken ct) =>
 {
+    var command = new CreateVenue.Command(
+        request.Name,
+        request.City,
+        request.Capacity);
+
     var result = await handler.Handle(command, ct);
+
     return result.IsSuccess
-        ? Results.Created($"/events/venues/{result.Value.VenueId}", result.Value)
+        ? Results.Created($"/events/venues/{result.Value.VenueId}", new CreateVenueResponse(result.Value.VenueId))
         : result.ToProblemResult();
 });
 ```
