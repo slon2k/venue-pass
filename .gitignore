@@ -1,0 +1,26 @@
+# Build artifacts
+bin/
+obj/
+out/
+
+# User-specific files
+*.user
+*.rsuser
+*.suo
+
+# IDE folders
+.vs/
+.vscode/
+
+# Test and coverage artifacts
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

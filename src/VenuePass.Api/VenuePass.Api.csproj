@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VenuePass.BuildingBlocks\VenuePass.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\VenuePass.Modules.Events\VenuePass.Modules.Events.csproj" />
+    <ProjectReference Include="..\VenuePass.Modules.Ticketing\VenuePass.Modules.Ticketing.csproj" />
+    <ProjectReference Include="..\VenuePass.Modules.Attendance\VenuePass.Modules.Attendance.csproj" />
+    <ProjectReference Include="..\VenuePass.Modules.Identity\VenuePass.Modules.Identity.csproj" />
+  </ItemGroup>
+
+</Project>
