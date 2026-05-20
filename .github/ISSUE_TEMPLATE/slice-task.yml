@@ -1,0 +1,68 @@
+name: Slice Task
+about: Small vertical implementation slice
+title: "slice: "
+labels: ["type:slice"]
+body:
+  - type: input
+    id: parent
+    attributes:
+      label: Parent Feature Issue
+      description: Reference parent feature issue number.
+      placeholder: "#123"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Module
+      options:
+        - Events
+        - Ticketing
+        - Attendance
+        - Identity
+        - Cross-Cutting
+    validations:
+      required: true
+
+  - type: dropdown
+    id: slice-type
+    attributes:
+      label: Slice Type
+      options:
+        - Domain
+        - Persistence
+        - Endpoint
+        - Integration
+        - Test
+        - Docs
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What exact behavior is implemented in this slice?
+      placeholder: Keep this slice small and mergeable.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      value: |
+        - [ ] Behavior implemented
+        - [ ] Relevant tests updated/passing
+        - [ ] No boundary rule violations
+    validations:
+      required: true
+
+  - type: textarea
+    id: docs
+    attributes:
+      label: Docs Impact
+      value: |
+        - [ ] No doc changes needed
+        - [ ] Docs updated in same PR

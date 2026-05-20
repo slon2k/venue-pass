@@ -1,0 +1,79 @@
+name: Feature
+about: Track a feature aligned to milestone outcomes
+title: "feat: "
+labels: ["type:feature"]
+body:
+  - type: input
+    id: outcome
+    attributes:
+      label: Outcome
+      description: What will be true when this feature is done?
+      placeholder: One-sentence outcome
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Use checkboxes for testable criteria.
+      value: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Module
+      options:
+        - Events
+        - Ticketing
+        - Attendance
+        - Identity
+        - Cross-Cutting
+    validations:
+      required: true
+
+  - type: dropdown
+    id: milestone
+    attributes:
+      label: Milestone
+      options:
+        - M1
+        - M2
+        - M3
+        - M4
+        - M5
+        - M6
+    validations:
+      required: true
+
+  - type: textarea
+    id: boundary-impact
+    attributes:
+      label: Boundary Impact
+      description: Describe cross-module contracts/events impacted, if any.
+      placeholder: No boundary impact / describe impact
+
+  - type: textarea
+    id: test-plan
+    attributes:
+      label: Test Plan
+      description: Which tests validate completion?
+      value: |
+        - Architecture tests:
+        - Unit tests:
+        - Integration tests (if applicable):
+
+  - type: textarea
+    id: docs
+    attributes:
+      label: Docs to Update
+      description: List docs impacted by this feature.
+      value: |
+        - [ ] docs/milestone-plan.md
+        - [ ] docs/roadmap.md (if scope changes)
+        - [ ] docs/architecture-overview.md (if architecture changes)
+        - [ ] docs/tech-decisions.md (if ADR-worthy)
