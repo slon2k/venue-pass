@@ -2,7 +2,7 @@
 
 ## Now
 
-- **Milestone**: M1 Foundation and First Events Slices
+- **Milestone**: 01 - Foundation
   - Outcome: The modular monolith foundation is in place with enforced boundaries, baseline CI, and first vertical slices in Events implemented and tested.
   - Features:
     - Solution scaffolding finalized
@@ -13,26 +13,26 @@
 
 ## Next
 
-- **Milestone**: M2 Cross-Module Messaging and Ticketing Bootstrap
+- **Milestone**: 02 - Messaging and Ticketing Bootstrap
   - Outcome: Reliable Outbox-backed integration flow is proven between Events and Ticketing for initial publish/inventory scenarios.
 
 ## Later
 
-- M3 Ticketing Sales Flows (offers, reservations, orders)
-- M4 Attendance Check-In Flows
-- M5 Identity Module First Cut (custom login, roles, JWT issuance)
-- M6 Integration CI Expansion and Migration Smoke Checks
+- 03 - Ticketing Sales Flows (offers, reservations, orders)
+- 04 - Attendance Check-In Flows
+- 05 - Identity Module First Cut (custom login, roles, JWT issuance)
+- 06 - Integration CI Expansion and Migration Smoke Checks
 
 ## Milestone Outcomes
 
 | Milestone | Outcome | Status |
 |-----------|---------|--------|
-| M1 Foundation and First Events Slices | Foundation complete with first Events slices and CI baseline | In progress |
-| M2 Cross-Module Messaging and Ticketing Bootstrap | Outbox-backed cross-module flow validated | Not started |
-| M3 Ticketing Sales Flows | Ticketing core commercial lifecycle implemented | Not started |
-| M4 Attendance Check-In Flows | Admission/check-in lifecycle implemented | Not started |
-| M5 Identity Module First Cut | Internal identity and token issuance baseline implemented | Not started |
-| M6 Integration CI Expansion and Migration Smoke Checks | CI verifies integration and migration paths | Not started |
+| 01 - Foundation | Foundation complete with first Events slices and CI baseline | In progress |
+| 02 - Messaging and Ticketing Bootstrap | Outbox-backed cross-module flow validated | Not started |
+| 03 - Ticketing Sales Flows | Ticketing core commercial lifecycle implemented | Not started |
+| 04 - Attendance Check-In Flows | Admission/check-in lifecycle implemented | Not started |
+| 05 - Identity Module First Cut | Internal identity and token issuance baseline implemented | Not started |
+| 06 - Integration CI Expansion and Migration Smoke Checks | CI verifies integration and migration paths | Not started |
 
 ## Risks and Dependencies
 

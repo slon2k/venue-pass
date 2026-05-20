@@ -1,4 +1,4 @@
-# VenuePass — Milestone Plan (M1 Foundation and First Events Slices)
+# VenuePass — Milestone Plan (01 - Foundation)
 
 ## Milestone Outcome
 

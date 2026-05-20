@@ -1,8 +1,8 @@
-# M1 First Feature: Solution Scaffolding and Module Boundaries
+# 01 - Foundation First Feature: Solution Scaffolding and Module Boundaries
 
 ## Feature Issue Template
 
-**Title:** feat: Solution scaffolding and module boundaries (M1)
+**Title:** feat: Solution scaffolding and module boundaries (01 - Foundation)
 
 **Description:**
 
@@ -23,7 +23,7 @@ The solution project structure is complete with four module projects and shared 
 Events (primary)
 
 ### Milestone
-M1
+01 - Foundation
 
 ### Boundary Impact
 Establishes module isolation rules enforced by architecture tests; critical for entire project.
@@ -45,7 +45,7 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 ### Labels
 - type:feature
 - module:cross-cutting
-- milestone:M1
+- milestone:01-foundation
 
 ---
 
@@ -55,7 +55,7 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 
 **Title:** slice: Create .slnx and project layout
 
-**Parent Feature Issue:** feat: Solution scaffolding and module boundaries (M1)
+**Parent Feature Issue:** feat: Solution scaffolding and module boundaries (01 - Foundation)
 
 **Module:** Cross-Cutting
 
@@ -83,7 +83,7 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 
 **Title:** slice: Implement BuildingBlocks primitives and contracts
 
-**Parent Feature Issue:** feat: Solution scaffolding and module boundaries (M1)
+**Parent Feature Issue:** feat: Solution scaffolding and module boundaries (01 - Foundation)
 
 **Module:** Cross-Cutting
 
@@ -110,7 +110,7 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 
 **Title:** slice: Events module folder layout and module configuration
 
-**Parent Feature Issue:** feat: Solution scaffolding and module boundaries (M1)
+**Parent Feature Issue:** feat: Solution scaffolding and module boundaries (01 - Foundation)
 
 **Module:** Events
 
@@ -137,7 +137,7 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 
 **Title:** slice: Implement architecture test suite for module boundaries
 
-**Parent Feature Issue:** feat: Solution scaffolding and module boundaries (M1)
+**Parent Feature Issue:** feat: Solution scaffolding and module boundaries (01 - Foundation)
 
 **Module:** Cross-Cutting
 
@@ -167,7 +167,7 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 
 **Title:** slice: Set up baseline CI workflow (restore, build, arch tests, unit tests)
 
-**Parent Feature Issue:** feat: Solution scaffolding and module boundaries (M1)
+**Parent Feature Issue:** feat: Solution scaffolding and module boundaries (01 - Foundation)
 
 **Module:** Cross-Cutting
 
@@ -193,7 +193,7 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 
 **Title:** slice: Events domain and persistence scaffolding for first slice
 
-**Parent Feature Issue:** feat: Solution scaffolding and module boundaries (M1)
+**Parent Feature Issue:** feat: Solution scaffolding and module boundaries (01 - Foundation)
 
 **Module:** Events
 

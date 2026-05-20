@@ -15,19 +15,23 @@ Use these docs as canonical planning artifacts:
 - docs/architecture-outline.md: short architecture reference for planning and AI context
 - docs/roadmap.md: milestone sequencing (Now, Next, Later)
 - docs/milestone-plan.md: active milestone scope and definition of done
+- docs/milestones/milestone-01.md: issue seed for current milestone feature and slices
 - docs/tech-decisions.md: ADR-style technical decisions
 
 ## GitHub Project Structure
 
 Create one repository-level GitHub Project with the following fields:
 
-- Status: Backlog, Ready, In Progress, Review, Done
-- Milestone: M1, M2, M3, M4, M5, M6
+- Status: Todo, In progress, Done
+- Milestone: 01 - Foundation, 02 - Messaging and Ticketing Bootstrap, 03 - Ticketing Sales Flows, 04 - Attendance Check-In Flows, 05 - Identity Module First Cut, 06 - Integration CI Expansion and Migration Smoke Checks
 - Module: Events, Ticketing, Attendance, Identity, Cross-Cutting
 - Slice Type: Domain, Persistence, Endpoint, Integration, Test, Docs
-- Risk: Low, Medium, High
-- ADR Needed: Yes, No
-- Docs Updated: Yes, No
+
+Use labels instead of extra fields for secondary tracking:
+
+- needs-adr
+- docs-update
+- architecture-impact
 
 ## Work Item Hierarchy
 
@@ -85,13 +89,12 @@ Each PR should include:
 Recommended built-in automation:
 
 - Auto-add new issues and PRs to project
-- Move item to Review when PR opens
+- Move item to In progress when work starts
 - Move item to Done when PR merges
-- Set Docs Updated to No by default
 
 Recommended manual checks:
 
-- If architecture-impact label is present, set ADR Needed to Yes
+- If architecture-impact label is present, decide whether `docs/tech-decisions.md` needs an ADR entry
 - If milestone scope changes, update docs/milestone-plan.md and docs/roadmap.md first
 
 ## Milestone Governance Cadence
@@ -130,14 +133,14 @@ Use labels to simplify project filters:
 - type:feature
 - type:slice
 - type:docs
-- risk:high
 - architecture-impact
 - needs-adr
+- docs-update
 
 ## Minimal Setup Checklist
 
 - Create GitHub Project and custom fields
 - Add project automation rules
 - Create issue and PR templates
-- Seed project with M1 milestone issue and in-scope feature issues
+- Seed project with 01 - Foundation milestone issue and in-scope feature issues
 - Verify links between board items and planning docs
