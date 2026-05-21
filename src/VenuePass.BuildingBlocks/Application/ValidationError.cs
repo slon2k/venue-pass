@@ -1,5 +1,6 @@
 namespace VenuePass.BuildingBlocks.Application;
 
+
 public sealed record ValidationError : Error
 {
     public ValidationError(
