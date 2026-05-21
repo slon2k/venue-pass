@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using VenuePass.BuildingBlocks.Domain;
 using VenuePass.BuildingBlocks.Extensions;
 
@@ -21,6 +23,10 @@ public sealed class Venue : AggregateRoot<Guid>
 
     public static Venue Create(VenueName name, VenueAddress address, VenueCapacity capacity)
     {
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(address);
+        ArgumentNullException.ThrowIfNull(capacity);
+
         return new Venue(Guid.CreateVersion7(), name, address, capacity);
     }
 }
@@ -41,8 +47,23 @@ public sealed record VenueName
     public override string ToString() => Value;
 }
 
-public sealed record VenueAddress(StreetAddress StreetAddress, City City, Country Country)
+public sealed record VenueAddress
 {
+    public StreetAddress StreetAddress { get; }
+    public City City { get; }
+    public Country Country { get; }
+
+    public VenueAddress(StreetAddress streetAddress, City city, Country country)
+    {
+        ArgumentNullException.ThrowIfNull(streetAddress);
+        ArgumentNullException.ThrowIfNull(city);
+        ArgumentNullException.ThrowIfNull(country);
+
+        StreetAddress = streetAddress;
+        City = city;
+        Country = country;
+    }
+
     public string FullAddress => $"{StreetAddress}, {City}, {Country}";
 
     public override string ToString() => FullAddress;
@@ -105,4 +126,6 @@ public sealed record VenueCapacity
         value.ThrowIfNotInRange(nameof(value), 1, int.MaxValue);
         Value = value;
     }
+
+    public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);
 }
