@@ -1,0 +1,29 @@
+name: Architecture Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  architecture-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore VenuePass.slnx
+
+      - name: Build
+        run: dotnet build VenuePass.slnx --configuration Release --no-restore /warnaserror
+
+      - name: Run architecture tests
+        run: dotnet test tests/VenuePass.ArchitectureTests/VenuePass.ArchitectureTests.csproj --configuration Release --no-build
