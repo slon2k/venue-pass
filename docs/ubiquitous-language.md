@@ -14,7 +14,7 @@ Its purpose is to keep naming consistent across:
 ## Quick Glossary (Top 10)
 
 | Term | Short meaning |
-|---|---|
+| --- | --- |
 | `Event` | A scheduled occurrence at a venue based on one `Manifest`. |
 | `ManifestTemplate` | Reusable venue layout definition. |
 | `Manifest` | Event-specific structural snapshot derived from a template. |
@@ -39,10 +39,12 @@ Its purpose is to keep naming consistent across:
 ## General rules
 
 ### Avoid these names
+
 - `Booking` as a generic catch-all
 - `GA seat` as a core domain term
 
 ### Abbreviation rule
+
 - In code, prefer `GeneralAdmission` over `GA` in type names
 - `GA` is acceptable in:
   - UI text
@@ -51,6 +53,7 @@ Its purpose is to keep naming consistent across:
   - enum labels if already obvious
 
 Examples:
+
 - good: `GeneralAdmissionArea`
 - good: `TicketType.GeneralAdmission`
 - acceptable in UI: `"GA Ticket"`
@@ -61,7 +64,7 @@ Examples:
 ## Cross-Module Terms
 
 | Term | Owner | Meaning |
-|---|---|---|
+| --- | --- | --- |
 | Event | Events | A scheduled occurrence at a venue, based on a specific manifest |
 | Published Event | Events | An event that is structurally finalized and eligible for ticketing |
 | Ticket | Ticketing | A single admission entitlement issued after purchase |
@@ -74,19 +77,23 @@ Examples:
 ## Events Module Vocabulary
 
 ### Venue
+
 **Meaning:** A physical place where events happen.
 
 **Contains / relates to:**
+
 - one or more `ManifestTemplate`s
 - identifying and descriptive venue data
 
 **Do not use as:**
+
 - a ticketing concept
 - a substitute for `Manifest`
 
 ---
 
 ### ManifestTemplate
+
 **Meaning:** A reusable structural layout definition for a venue.
 
 **May contain:**
@@ -569,7 +576,7 @@ Avoid:
 ## Terms We Intentionally Do Not Use
 
 | Avoid | Use instead | Why |
-|---|---|---|
+| --- | --- | --- |
 | `EventManifest` | `Manifest` | Module context already makes meaning clear |
 | `InventorySnapshot` | `Inventory` | Shorter, still clear |
 | `GA seat` | `GeneralAdmissionArea`, `GeneralAdmissionPool`, `GeneralAdmissionTicket` | GA is not necessarily a seat |
