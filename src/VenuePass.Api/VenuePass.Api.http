@@ -1,6 +1,16 @@
 @VenuePass.Api_HostAddress = http://localhost:5119
 
-GET {{VenuePass.Api_HostAddress}}/weatherforecast/
+### Create a new venue
+POST {{VenuePass.Api_HostAddress}}/events/venues/
 Accept: application/json
+Content-Type: application/json
+
+{
+    "name": "Test Venue",
+    "address": "123 Main St",
+    "city": "Anytown",
+    "country": "USA",
+    "capacity": 2500
+}
 
 ###

@@ -32,3 +32,6 @@ csharp_preserve_single_line_blocks = true
 
 [tests/**/*.cs]
 dotnet_diagnostic.CA1707.severity = none
+
+[*.cs]
+dotnet_diagnostic.CA1848.severity = none
