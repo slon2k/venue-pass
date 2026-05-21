@@ -44,6 +44,8 @@ public sealed record VenueName
         Value = value;
     }
 
+    public static implicit operator string(VenueName name) => name.Value;
+
     public override string ToString() => Value;
 }
 
@@ -82,6 +84,8 @@ public sealed record Country
         Value = value;
     }
 
+    public static implicit operator string(Country country) => country.Value;
+
     public override string ToString() => Value;
 }
 
@@ -97,6 +101,8 @@ public sealed record City
         value.ThrowIfTooLong(nameof(value), MaxLength);
         Value = value;
     }
+
+    public static implicit operator string(City city) => city.Value;
 
     public override string ToString() => Value;
 }
@@ -114,6 +120,8 @@ public sealed record StreetAddress
         Value = value;
     }
 
+    public static implicit operator string(StreetAddress streetAddress) => streetAddress.Value;
+
     public override string ToString() => Value;
 }
 
@@ -126,6 +134,8 @@ public sealed record VenueCapacity
         value.ThrowIfNotInRange(nameof(value), 1, int.MaxValue);
         Value = value;
     }
+
+    public static implicit operator int(VenueCapacity capacity) => capacity.Value;
 
     public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);
 }

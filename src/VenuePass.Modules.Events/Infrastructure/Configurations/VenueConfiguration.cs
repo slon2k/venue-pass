@@ -32,17 +32,17 @@ internal sealed class VenueConfiguration : IEntityTypeConfiguration<Venue>
             .HasColumnName("capacity")
             .IsRequired();
 
-        builder.OwnsOne(x => x.Address, owned =>
+        builder.OwnsOne(x => x.Address, address =>
         {
-            owned.Property(x => x.StreetAddress)
+            address.Property(x => x.StreetAddress)
                 .HasConversion(
-                    address => address.Value,
+                    streetAddress => streetAddress.Value,
                     value => new StreetAddress(value))
                 .HasMaxLength(StreetAddress.MaxLength)
-                .HasColumnName("address")
+                .HasColumnName("street_address")
                 .IsRequired();
 
-            owned.Property(x => x.City)
+            address.Property(x => x.City)
                 .HasConversion(
                     city => city.Value,
                     value => new City(value))
@@ -50,7 +50,7 @@ internal sealed class VenueConfiguration : IEntityTypeConfiguration<Venue>
                 .HasColumnName("city")
                 .IsRequired();
 
-            owned.Property(x => x.Country)
+            address.Property(x => x.Country)
                 .HasConversion(
                     country => country.Value,
                     value => new Country(value))
@@ -58,5 +58,7 @@ internal sealed class VenueConfiguration : IEntityTypeConfiguration<Venue>
                 .HasColumnName("country")
                 .IsRequired();
         });
+
+        builder.Navigation(x => x.Address).IsRequired();
     }
 }
