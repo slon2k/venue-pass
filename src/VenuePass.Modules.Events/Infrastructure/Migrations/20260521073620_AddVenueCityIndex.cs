@@ -20,7 +20,7 @@ namespace VenuePass.Modules.Events.Infrastructure.Migrations
                 name: "UX_venues_name_city",
                 schema: "events",
                 table: "venues",
-                columns: new[] { "name", "city" },
+                columns: ["name", "city"],
                 unique: true);
         }
 
