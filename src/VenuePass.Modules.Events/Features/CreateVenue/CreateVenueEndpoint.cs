@@ -52,11 +52,11 @@ public static class CreateVenueEndpoint
         Result<CreateVenueResult> result = await handler.Handle(command, ct);
 
         return result.Match(
-            ToSuccessResult,
+            ToCreatedResult,
             error => error.ToProblemDetails());
     }
 
-    private static IResult ToSuccessResult(CreateVenueResult result)
+    private static IResult ToCreatedResult(this CreateVenueResult result)
     {
         CreateVenueResponse response = new (
             result.VenueId,
