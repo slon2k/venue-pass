@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NetArchTest.Rules" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\VenuePass.Modules.Events\VenuePass.Modules.Events.csproj" />
+    <ProjectReference Include="..\..\src\VenuePass.Modules.Ticketing\VenuePass.Modules.Ticketing.csproj" />
+    <ProjectReference Include="..\..\src\VenuePass.Modules.Attendance\VenuePass.Modules.Attendance.csproj" />
+    <ProjectReference Include="..\..\src\VenuePass.Modules.Identity\VenuePass.Modules.Identity.csproj" />
+  </ItemGroup>
+</Project>
