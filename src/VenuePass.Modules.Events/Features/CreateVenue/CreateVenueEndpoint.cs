@@ -11,7 +11,7 @@ public static class CreateVenueEndpoint
 {
     public sealed record CreateVenueRequest(
         string Name,
-        string StreetAddress,
+        string Address,
         string City,
         string Country,
         int Capacity);
@@ -19,7 +19,7 @@ public static class CreateVenueEndpoint
     public sealed record CreateVenueResponse(
         Guid VenueId,
         string Name,
-        string StreetAddress,
+        string Address,
         string City,
         string Country,
         int Capacity);
@@ -44,7 +44,7 @@ public static class CreateVenueEndpoint
     {
         CreateVenueCommand command = new(
             request.Name,
-            request.StreetAddress,
+            request.Address,
             request.City,
             request.Country,
             request.Capacity);
