@@ -7,9 +7,11 @@
 **Description:**
 
 ### Outcome
+
 The solution project structure is complete with four module projects and shared building blocks, module boundaries are enforced via architecture tests, and the first Events vertical slice structure is ready.
 
 ### Acceptance Criteria
+
 - [ ] .slnx solution file created with all projects added
 - [ ] Four module projects created: Events, Ticketing, Attendance, Identity
 - [ ] Shared BuildingBlocks project created
@@ -20,15 +22,19 @@ The solution project structure is complete with four module projects and shared 
 - [ ] Docs aligned with implemented structure
 
 ### Module
+
 Events (primary)
 
 ### Milestone
+
 01 - Foundation
 
 ### Boundary Impact
+
 Establishes module isolation rules enforced by architecture tests; critical for entire project.
 
 ### Test Plan
+
 - Architecture tests:
   - No module accesses another module's tables
   - No shared business entities across modules
@@ -37,12 +43,14 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 - Integration tests: First Events slice can read/write to Events schema
 
 ### Docs to Update
+
 - [x] docs/milestone-plan.md (in progress tracking)
 - [x] docs/roadmap.md (if scope changes)
 - [x] docs/architecture-overview.md (reflects implementation)
 - [x] project-plan.md (track progress)
 
 ### Labels
+
 - type:feature
 - module:cross-cutting
 - milestone:01-foundation
@@ -62,6 +70,7 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 **Slice Type:** Domain
 
 **Scope:**
+
 - Create VenuePass.slnx file
 - Create VenuePass.Api project (ASP.NET Core)
 - Create VenuePass.BuildingBlocks project (class library)
@@ -70,11 +79,13 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 - Add projects to solution and verify build
 
 **Acceptance Criteria:**
+
 - [ ] `dotnet build` succeeds for all projects
 - [ ] Projects can be navigated in IDE
 - [ ] Solution compiles cleanly with no warnings
 
 **Docs Impact:**
+
 - [ ] No doc changes needed for this slice
 
 ---
@@ -90,6 +101,7 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 **Slice Type:** Domain
 
 **Scope:**
+
 - Create Result<T> type in BuildingBlocks.Application
 - Create domain event base class in BuildingBlocks.Messaging
 - Create integration event base interface in BuildingBlocks.Messaging
@@ -97,11 +109,13 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 - Add basic documentation on usage
 
 **Acceptance Criteria:**
+
 - [ ] All base types are abstract/sealed appropriately
 - [ ] Unit tests verify basic Result<T> behavior
 - [ ] No module internals leaked in BuildingBlocks
 
 **Docs Impact:**
+
 - [ ] Update docs/tech-decisions.md if new patterns emerge
 
 ---
@@ -117,6 +131,7 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 **Slice Type:** Domain
 
 **Scope:**
+
 - Create Features, Domain, Infrastructure, Contracts folders in Events module
 - Create ModuleConfiguration.cs class
 - Stub EventsDbContext in Infrastructure
@@ -124,11 +139,13 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 - Register module in DI from Api startup
 
 **Acceptance Criteria:**
+
 - [ ] Folder structure matches architecture (see docs/architecture-overview.md section 4)
 - [ ] ModuleConfiguration.cs can be discovered and instantiated
 - [ ] No compilation errors in Api when Events is registered
 
 **Docs Impact:**
+
 - [ ] No doc changes needed
 
 ---
@@ -144,6 +161,7 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 **Slice Type:** Test
 
 **Scope:**
+
 - Create VenuePass.ArchitectureTests project (xUnit)
 - Write test rules enforcing:
   - No module accesses another module's tables/DbContext
@@ -153,12 +171,14 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 - Tests should be runnable in CI and fail-fast on violations
 
 **Acceptance Criteria:**
+
 - [ ] All architecture tests pass
 - [ ] Each rule has at least one positive test (should pass) and one negative test (should fail if rule violated)
 - [ ] Tests are clear and maintainable
 - [ ] CI runs architecture tests as part of baseline pipeline
 
 **Docs Impact:**
+
 - [ ] Update docs/tech-decisions.md with architecture test strategy if not already present
 
 ---
@@ -174,17 +194,20 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 **Slice Type:** Docs
 
 **Scope:**
+
 - Create or update .github/workflows/fast-ci.yml
 - Define trigger: on PR and push to main
 - Steps: restore, build (warnings as errors), architecture tests, unit tests
 - Verify all steps pass locally before push
 
 **Acceptance Criteria:**
+
 - [ ] Workflow file is valid YAML
 - [ ] Workflow runs on PR to main
 - [ ] All steps pass in CI
 
 **Docs Impact:**
+
 - [ ] Update docs/delivery-plan.md if CI structure differs from original
 
 ---
@@ -200,6 +223,7 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 **Slice Type:** Domain + Persistence
 
 **Scope:**
+
 - Create Venue aggregate in Events.Domain.Venues
 - Create EventsDbContext in Events.Infrastructure with Venue DbSet
 - Create Venue EF configuration (column mappings)
@@ -207,17 +231,20 @@ Establishes module isolation rules enforced by architecture tests; critical for 
 - Verify migration runs cleanly on local SQL Server
 
 **Acceptance Criteria:**
+
 - [ ] Venue entity compiles and has basic properties (Id, Name, City, Capacity)
 - [ ] EventsDbContext maps correctly to "events" schema
 - [ ] Migration creates events.venues table
 - [ ] Architecture tests still pass
 
 **Docs Impact:**
+
 - [ ] No doc changes needed for this slice
 
 ---
 
 ## Slice Execution Order
+
 1. Slice 1 (Project structure)
 2. Slice 2 (BuildingBlocks)
 3. Slice 3 (Events module layout)
