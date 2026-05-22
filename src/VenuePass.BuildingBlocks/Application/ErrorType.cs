@@ -2,7 +2,6 @@ namespace VenuePass.BuildingBlocks.Application;
 
 public enum ErrorType
 {
-    None = 0,
     Validation = 1,
     Conflict = 2,
     Forbidden = 3,

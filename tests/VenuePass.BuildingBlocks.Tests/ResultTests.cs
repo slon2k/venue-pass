@@ -6,29 +6,39 @@ namespace VenuePass.BuildingBlocks.Tests;
 public sealed class ResultTests
 {
     [Fact]
-    public void Ok_WhenCalled_ReturnsSuccessWithNoneError()
+    public void Success_WhenCalled_ReturnsSuccess()
     {
-        var result = Result.Ok();
+        var result = Result.Success();
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(Error.None, result.Error);
+        Assert.False(result.IsFailure);
     }
 
     [Fact]
-    public void Fail_WithValidationError_ReturnsFailure()
+    public void Error_WhenSuccess_ThrowsInvalidOperationException()
+    {
+        var result = Result.Success();
+
+        void Act() => _ = result.Error;
+
+        Assert.Throws<InvalidOperationException>(Act);
+    }
+
+    [Fact]
+    public void Failure_WithValidationError_ReturnsFailure()
     {
         var error = Error.Validation("sample.error", "Failure message");
         
-        var result = Result.Fail(error);
+        var result = Result.Failure(error);
 
         Assert.True(result.IsFailure);
     }
 
     [Fact]
-    public void Fail_WithConflictError_SetsErrorProperties()
+    public void Failure_WithConflictError_SetsErrorProperties()
     {
         var error = Error.Conflict("sample.error", "Failure message");
-        var result = Result.Fail(error);
+        var result = Result.Failure(error);
 
         Assert.Equal(ErrorType.Conflict, result.Error.Type);
         Assert.Equal("sample.error", result.Error.Code);
@@ -36,27 +46,42 @@ public sealed class ResultTests
     }
 
     [Fact]
-    public void Ok_Generic_WhenCalled_ReturnsValue()
+    public void Success_Generic_WhenCalled_ReturnsValue()
     {
-        var result = Result.Ok(42);
+        var result = Result.Success(42);
 
         Assert.Equal(42, result.Value);
     }
 
     [Fact]
-    public void Value_WhenFail_ThrowsInvalidOperationException()
+    public void Value_WhenFailure_ThrowsInvalidOperationException()
     {
         var error = Error.Validation("sample.error", "Failure message");
-        var result = Result.Fail<int>(error);
+        var result = Result.Failure<int>(error);
 
-        Assert.Throws<InvalidOperationException>(() => _ = result.Value);
+        void Act() => _ = result.Value;
+
+        Assert.Throws<InvalidOperationException>(Act);
     }
 
     [Fact]
-    public void Fail_WithNoneTypeOrSuccessWithNonNone_ThrowsArgumentException()
+    public void Failure_WithNullError_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentException>(() => Result.Fail(Error.None));
-        Assert.Throws<ArgumentException>(() => Result.Fail<int>(Error.None));
+        void Act1() => _ = Result.Failure((Error)null!);
+        void Act2() => _ = Result.Failure<string>((Error)null!);
+
+        Assert.Throws<ArgumentNullException>(Act1);
+        Assert.Throws<ArgumentNullException>(Act2);
+    }
+
+    [Fact]
+    public void Success_Generic_WithNullValue_ThrowsArgumentNullException()
+    {
+        void Act1() => _ = Result.Success<string>(null!);
+        void Act2() => _ = new Result<string>((string)null!);
+
+        Assert.Throws<ArgumentNullException>(Act1);
+        Assert.Throws<ArgumentNullException>(Act2);
     }
 
     [Fact]

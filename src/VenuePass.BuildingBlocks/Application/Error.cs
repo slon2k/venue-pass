@@ -2,18 +2,20 @@ namespace VenuePass.BuildingBlocks.Application;
 
 public record Error
 {
-    public ErrorType Type { get; init; }
-    public string Code { get;  init; }
-    public string Message { get; init; }
+    public ErrorType Type { get; }
+    public string Code { get; }
+    public string Message { get; }
 
     protected Error(ErrorType type, string code, string message)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(code);
+        ArgumentException.ThrowIfNullOrWhiteSpace(message);
+
         Type = type;
         Code = code;
         Message = message; 
     }
-
-    public static Error None => new(ErrorType.None, string.Empty, string.Empty);
+    
     public static Error Unexpected(string code, string message) => new(ErrorType.Unexpected, code, message);
     public static Error Validation(string code, string message) => new(ErrorType.Validation, code, message);
     public static Error Conflict(string code, string message) => new(ErrorType.Conflict, code, message);

@@ -1,13 +1,13 @@
-namespace VenuePass.BuildingBlocks.Extensions;
+namespace VenuePass.BuildingBlocks.Presentation;
 
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
 using VenuePass.BuildingBlocks.Application;
 
-public static class ErrorExtensions
+public static class ErrorHttpMappingExtensions
 {
-    public static IResult ToProblemDetails(this Error error)
+    public static IResult ToProblemResult(this Error error)
     {
         Dictionary<string, object?> extensions = new()
         {
@@ -72,12 +72,6 @@ public static class ErrorExtensions
             ErrorType.Unexpected => Results.Problem(
                 title: "Unexpected error",
                 detail: error.Message,
-                statusCode: StatusCodes.Status500InternalServerError,
-                extensions: extensions),
-
-            ErrorType.None => Results.Problem(
-                title: "Unexpected error",
-                detail: "No error details were provided.",
                 statusCode: StatusCodes.Status500InternalServerError,
                 extensions: extensions),
 
