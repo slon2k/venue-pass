@@ -15,7 +15,7 @@ Use these docs as canonical planning artifacts:
 - docs/architecture-outline.md: short architecture reference for planning and AI context
 - docs/roadmap.md: milestone sequencing (Now, Next, Later)
 - docs/milestone-plan.md: active milestone scope and definition of done
-- docs/milestones/milestone-01.md: issue seed for current milestone feature and slices
+- docs/milestones/milestone-00.md: issue seed for current milestone capability issues and slices
 - docs/tech-decisions.md: ADR-style technical decisions
 
 ## GitHub Project Structure
@@ -23,7 +23,7 @@ Use these docs as canonical planning artifacts:
 Create one repository-level GitHub Project with the following fields:
 
 - Status: Todo, In progress, Done
-- Milestone: 01 - Foundation, 02 - Messaging and Ticketing Bootstrap, 03 - Ticketing Sales Flows, 04 - Attendance Check-In Flows, 05 - Identity Module First Cut, 06 - Integration CI Expansion and Migration Smoke Checks
+- Milestone: 00 - Foundation: Project Scaffolding, 01 - Events: Venues & Manifest Templates, 02 - Events: Event Creation & Publication, 03 - Ticketing: Event Sync, Inventory & Offers, 04 - Ticketing: Reservation, Orders & Ticket Issuance, 05 - Attendance: Check-In, 06 - Identity: Users, Roles & Authentication, 07 - Integration & Operational Hardening
 - Module: Events, Ticketing, Attendance, Identity, Cross-Cutting
 - Slice Type: Domain, Persistence, Endpoint, Integration, Test, Docs
 
@@ -33,19 +33,64 @@ Use labels instead of extra fields for secondary tracking:
 - docs-update
 - architecture-impact
 
+## Planning Levels
+
+Use the following planning levels consistently:
+
+1. Milestone = delivery phase
+2. Parent issue = capability issue
+3. Sub-issue = vertical slice
+
+Definitions:
+
+- A milestone groups related work into a delivery phase with a clear outcome.
+- A parent issue describes a meaningful capability the system should gain.
+- A sub-issue describes one concrete vertical slice that moves that capability forward.
+
+Examples:
+
+Good parent issues:
+
+- Venue management
+- Manifest template management
+
+Good sub-issues:
+
+- Create venue
+- Get venue
+- Create manifest template
+- Get manifest template
+
+Less ideal sub-issues:
+
+- Add DbContext
+- Add EF config
+- Add endpoint
+
+Those technical tasks are usually implementation checklist items inside a vertical slice, not standalone planning items.
+
 ## Work Item Hierarchy
 
 Model work in this hierarchy:
 
-1. Milestone Issue (epic-level)
-2. Feature Issue (deliverable-level)
-3. Slice Tasks (implementation-level)
+1. Milestone issue (delivery-phase level)
+2. Parent capability issue
+3. Sub-issues as vertical slices
 
 Rules:
 
 - Each milestone in docs/roadmap.md has one milestone issue.
-- Each item in docs/milestone-plan.md In Scope maps to one or more feature issues.
-- Each feature is decomposed into small vertical slices.
+- Each item in docs/milestone-plan.md In Scope maps to one or more parent capability issues.
+- Each capability is decomposed into small, user-meaningful vertical slices.
+- Avoid decomposing planning into layer-only issues unless the work is genuinely cross-cutting and independently valuable.
+
+Use standalone technical issues only when the work unlocks multiple capabilities or applies across modules.
+
+Examples of acceptable standalone technical issues:
+
+- Establish architecture test harness
+- Add baseline CI workflow
+- Introduce shared outbox dispatcher
 
 ## Slice Definition
 
@@ -61,6 +106,8 @@ Typical slice path:
 
 A slice is done only when acceptance criteria pass and architecture constraints remain intact.
 
+A good slice may include domain, persistence, endpoint, tests, and docs changes together when that is the thinnest path to delivering observable behavior.
+
 ## Issue and PR Standards
 
 ## Issue template expectations
@@ -73,6 +120,14 @@ Each issue should include:
 - Boundary impact note
 - Test plan
 - Docs to update
+
+Parent capability issues should also include:
+
+- Capability statement
+- In-scope sub-slices
+- Explicit out-of-scope notes where useful
+
+Sub-issues should describe the behavior being added, not the implementation layers used to add it.
 
 ## Pull request expectations
 
@@ -142,5 +197,5 @@ Use labels to simplify project filters:
 - Create GitHub Project and custom fields
 - Add project automation rules
 - Create issue and PR templates
-- Seed project with 01 - Foundation milestone issue and in-scope feature issues
+- Seed project with 00 - Foundation milestone issue and in-scope capability issues
 - Verify links between board items and planning docs

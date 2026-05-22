@@ -1,4 +1,4 @@
-# 01 - Foundation: Milestone Status (2026-05-22)
+# 00 - Foundation: Project Scaffolding Status (2026-05-22)
 
 ## Outcome Snapshot
 
@@ -11,6 +11,14 @@ The foundation milestone is functionally in place:
 
 Milestone closure depends on merging final doc/issue alignment changes.
 
+## Delivery Model
+
+- Milestone = delivery phase
+- Parent issues = capability issues
+- Sub-issues = vertical slices
+
+For this milestone, most completed work was cross-cutting foundation work rather than capability-oriented application behavior. Future milestone docs should prefer capability groupings with sub-issues beneath them.
+
 ## Acceptance Criteria Status
 
 - [x] `.slnx` solution file created with all projects added
@@ -21,15 +29,24 @@ Milestone closure depends on merging final doc/issue alignment changes.
 - [x] First Events slice has domain, persistence, and endpoint scaffolding
 - [x] Core docs aligned with currently implemented structure
 
-## Slice Status
+## Capability and Slice Status
 
-1. Slice 1: solution and project layout - complete
-2. Slice 2: BuildingBlocks primitives and contracts - complete
-3. Slice 3: Events module structure and module wiring - complete
-4. Slice 4: architecture boundary test suite - complete
-5. Slice 5: baseline CI workflow - complete
-6. Slice 6: first Events vertical slice scaffolding - complete
-7. Slice 7: docs and milestone alignment - complete
+### Cross-cutting foundation baseline
+
+Completed vertical slices:
+
+- Solution and project layout
+- BuildingBlocks primitives and contracts
+- Architecture boundary test suite
+- Baseline CI workflow
+- Docs and milestone alignment
+
+### Events bootstrap capability
+
+Completed vertical slices:
+
+- Events module structure and wiring
+- First Events vertical slice scaffolding (`CreateVenue`)
 
 ## Validation Snapshot
 
@@ -41,3 +58,4 @@ Milestone closure depends on merging final doc/issue alignment changes.
 
 - CI workflow file: `.github/workflows/ci.yml`
 - Baseline test execution is solution-level (`dotnet test VenuePass.slnx`) so new test projects are picked up automatically.
+- This milestone is an exception-heavy foundation phase; later milestones should be modeled primarily as capabilities with vertical-slice sub-issues.

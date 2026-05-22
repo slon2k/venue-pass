@@ -3,13 +3,14 @@
 ## Delivery Model
 
 - Solo developer, sequential slices
+- Milestones are delivery phases; work inside a milestone is organized into capability issues and vertical-slice sub-issues
 - Each slice is a vertical increment: domain → persistence → endpoints → tests
 - A slice is **done** when its acceptance criteria pass and architecture tests still pass
 - Supporting docs (API contracts, outbox behavior, auth rules) are written just-in-time per slice
 
 ## CI Maturity Plan
 
-### S0-S2: Baseline CI (required)
+### M00-M02: Baseline CI (required)
 
 - Workflow: `ci`
 - Trigger: every pull request and push to `main`
@@ -19,7 +20,7 @@
   - tests (solution-level: includes architecture and unit test projects)
 - Goal: fast feedback and boundary protection from day one
 
-### S3-S5: Expanded CI (required)
+### M03-M05: Expanded CI (required)
 
 - Keep `ci` required on all PRs
 - Add workflow: `integration-ci`
@@ -32,7 +33,7 @@
   - outbox dispatch/integration tests
 - Goal: verify persistence + integration behavior in CI, not only locally
 
-### S6-S7: Release CI/CD (optional initially)
+### M06-M07: Release CI/CD (optional initially)
 
 - Keep `ci` and `integration-ci`
 - Optionally add:
@@ -43,42 +44,42 @@
 
 ### Branch protection policy
 
-- S0-S2: require `ci`
-- S3-S5: require `ci`; phase in required `integration-ci` when integration suite is stable
-- S6-S7: require both `ci` and `integration-ci`; keep release workflow approval-gated
+- M00-M02: require `ci`
+- M03-M05: require `ci`; phase in required `integration-ci` when integration suite is stable
+- M06-M07: require both `ci` and `integration-ci`; keep release workflow approval-gated
 
 ---
 
 ## Slice Order
 
 ```text
-S0: Project Scaffolding
+M00: Foundation: Project Scaffolding
  │
  ▼
-S1: Events — Venue & Manifest Setup
+M01: Events: Venues & Manifest Templates
  │
  ▼
-S2: Events — Event Lifecycle
+M02: Events: Event Creation & Publication
  │
  ▼
-S3: Ticketing — Offers & Inventory
+M03: Ticketing: Event Sync, Inventory & Offers
  │
  ▼
-S4: Ticketing — Reservation & Purchase
+M04: Ticketing: Reservation, Orders & Ticket Issuance
  │
  ▼
-S5: Attendance — Check-In
+M05: Attendance: Check-In
  │
  ▼
-S6: Identity — Custom Auth
+M06: Identity: Users, Roles & Authentication
  │
  ▼
-S7: Integration Hardening
+M07: Integration & Operational Hardening
 ```
 
 ---
 
-## S0: Project Scaffolding
+## M00: Foundation: Project Scaffolding
 
 **Goal:** Runnable empty solution with module boundaries enforced.
 
@@ -116,7 +117,7 @@ S7: Integration Hardening
 
 ---
 
-## S1: Events — Venue & Manifest Setup
+## M01: Events: Venues & Manifest Templates
 
 **Goal:** Create venues and define manifest templates with sections, seats, and GA areas.
 
@@ -143,7 +144,7 @@ S7: Integration Hardening
 - Unit tests for domain invariants
 - Integration tests for persistence
 
-**Prerequisites:** S0 complete
+**Prerequisites:** M00 complete
 
 **Acceptance criteria:**
 
@@ -159,7 +160,7 @@ S7: Integration Hardening
 
 ---
 
-## S2: Events — Event Lifecycle
+## M02: Events: Event Creation & Publication
 
 **Goal:** Create events, assign manifests, publish events, and emit integration events.
 
@@ -179,7 +180,7 @@ S7: Integration Hardening
 - Unit tests for event lifecycle rules
 - Integration tests for Outbox write + dispatch
 
-**Prerequisites:** S1 complete
+**Prerequisites:** M01 complete
 
 **Acceptance criteria:**
 
@@ -198,7 +199,7 @@ S7: Integration Hardening
 
 ---
 
-## S3: Ticketing — Offers & Inventory
+## M03: Ticketing: Event Sync, Inventory & Offers
 
 **Goal:** Create ticketing inventory for published events and configure sellable offers.
 
@@ -229,7 +230,7 @@ S7: Integration Hardening
 - Unit tests for offer/pricing invariants
 - Integration tests for inventory snapshot creation
 
-**Prerequisites:** S2 complete (EventPublished flowing, Outbox dispatcher operational)
+**Prerequisites:** M02 complete (EventPublished flowing, Outbox dispatcher operational)
 
 **Acceptance criteria:**
 
@@ -251,7 +252,7 @@ S7: Integration Hardening
 
 ---
 
-## S4: Ticketing — Reservation & Purchase
+## M04: Ticketing: Reservation, Orders & Ticket Issuance
 
 **Goal:** Reserve seats/GA, complete purchase, issue tickets, and support cancellation.
 
@@ -300,7 +301,7 @@ S7: Integration Hardening
 
 ---
 
-## S5: Attendance — Check-In
+## M05: Attendance: Check-In
 
 **Goal:** Scan tickets, validate eligibility, record check-in, and reject duplicates.
 
@@ -353,7 +354,7 @@ S7: Integration Hardening
 
 ---
 
-## S6: Identity — Custom Auth
+## M06: Identity: Users, Roles & Authentication
 
 **Goal:** Replace `dotnet user-jwts` with a real Identity module that issues tokens.
 
@@ -394,7 +395,7 @@ S7: Integration Hardening
 
 ---
 
-## S7: Integration Hardening
+## M07: Integration & Operational Hardening
 
 **Goal:** Ensure the full system is robust, testable, and demo-ready.
 

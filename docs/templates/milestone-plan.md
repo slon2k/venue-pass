@@ -4,12 +4,30 @@
 
 <!-- One sentence: what is true when this milestone is complete? -->
 
+## Delivery Model
+
+<!-- Milestone = delivery phase. Work inside the milestone should be grouped by parent capability issues and implemented through vertical-slice sub-issues. -->
+
 ## In Scope
 
-<!-- Features included in this milestone -->
+<!-- Capability issues included in this milestone -->
 
-- [ ] Feature 1
-- [ ] Feature 2
+- [ ] Capability 1
+- [ ] Capability 2
+
+## Capability Breakdown
+
+<!-- For each parent capability issue, list the expected vertical-slice sub-issues. Avoid listing layer-only tasks like DbContext, EF config, or endpoint as standalone slices unless they are truly cross-cutting. -->
+
+### Capability 1
+
+- [ ] Slice A
+- [ ] Slice B
+
+### Capability 2
+
+- [ ] Slice C
+- [ ] Slice D
 
 ## Out of Scope
 
@@ -19,7 +37,7 @@
 
 <!-- All conditions that must be met to close this milestone -->
 
-- [ ] All features implemented and merged
+- [ ] All in-scope capability issues implemented and merged
 - [ ] Tests passing
 - [ ] Docs updated
 

@@ -245,14 +245,14 @@ app.MapPost("/events/venues", async (
 
 **Stages:**
 
-- S0-S2 baseline `ci`: restore, build, solution-level tests (including architecture and unit tests)
-- S3-S5 add `integration-ci`: SQL Server service container integration tests, migration smoke checks, outbox integration tests
-- S6-S7 optional release automation: Docker image build, artifact publish, demo deployment workflow with manual approval
+- M00-M02 baseline `ci`: restore, build, solution-level tests (including architecture and unit tests)
+- M03-M05 add `integration-ci`: SQL Server service container integration tests, migration smoke checks, outbox integration tests
+- M06-M07 optional release automation: Docker image build, artifact publish, demo deployment workflow with manual approval
 
 **Policy:**
 
-- `ci` is required on all pull requests from S0 onward
-- `integration-ci` becomes required as soon as the integration suite is stable (target: by S6)
+- `ci` is required on all pull requests from M00 onward
+- `integration-ci` becomes required as soon as the integration suite is stable (target: by M06)
 - Release workflow stays manual-approval gated
 
 **Rationale:**
@@ -265,7 +265,7 @@ app.MapPost("/events/venues", async (
 
 - Early stages do not validate full container image builds
 - Deployment automation is postponed until later slices
-- CI runtime will increase from S3 onward due to integration test matrix
+- CI runtime will increase from M03 onward due to integration test matrix
 
 ---
 

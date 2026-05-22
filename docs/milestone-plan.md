@@ -1,4 +1,4 @@
-# VenuePass — Milestone Plan (01 - Foundation)
+# VenuePass — Milestone Plan (00 - Foundation: Project Scaffolding)
 
 ## Milestone Outcome
 
