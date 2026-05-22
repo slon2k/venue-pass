@@ -2,23 +2,20 @@
 
 ## Now
 
-- **Milestone**: 00 - Foundation: Project Scaffolding
-  - Outcome: The modular monolith foundation is in place with enforced boundaries, baseline CI, and the first Events vertical slice (CreateVenue) implemented end-to-end.
+- **Milestone**: 01 - Events: Venues & Manifest Templates
+  - Outcome: Venues and manifest templates are modeled, persisted, and exposed through the Events module.
   - Features:
-    - Solution scaffolding finalized
-    - Module boundaries defined and enforced with architecture tests
-    - Baseline CI workflow (`ci.yml`) running restore, build, and solution-level tests
-    - Events module first vertical slice (domain, persistence, migrations, endpoint, tests)
-    - Core architecture and planning docs aligned with implemented behavior
+    - Venue management capability
+    - Manifest template management capability
+    - Supporting persistence and outbox readiness
 
 ## Next
 
-- **Milestone**: 01 - Events: Venues & Manifest Templates
-  - Outcome: Venues and manifest templates are modeled, persisted, and exposed through the Events module.
+- **Milestone**: 02 - Events: Event Creation & Publication
+  - Outcome: Event lifecycle and publication flow are operational.
 
 ## Later
 
-- 02 - Events: Event Creation & Publication
 - 03 - Ticketing: Event Sync, Inventory & Offers
 - 04 - Ticketing: Reservation, Orders & Ticket Issuance
 - 05 - Attendance: Check-In
@@ -29,8 +26,8 @@
 
 | Milestone | Outcome | Status |
 |-----------|---------|--------|
-| 00 - Foundation: Project Scaffolding | Foundation baseline complete with first Events slice and CI | In progress |
-| 01 - Events: Venues & Manifest Templates | Venues and manifest templates are modeled and retrievable | Not started |
+| 00 - Foundation: Project Scaffolding | Foundation baseline complete with first Events slice and CI | Closed |
+| 01 - Events: Venues & Manifest Templates | Venues and manifest templates are modeled and retrievable | In progress |
 | 02 - Events: Event Creation & Publication | Event lifecycle and publication flow are operational | Not started |
 | 03 - Ticketing: Event Sync, Inventory & Offers | Ticketing synchronizes published events and exposes sellable inventory | Not started |
 | 04 - Ticketing: Reservation, Orders & Ticket Issuance | Reservation and purchase lifecycle produces tickets | Not started |

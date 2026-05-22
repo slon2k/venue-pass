@@ -1,43 +1,69 @@
-# VenuePass — Milestone Plan (00 - Foundation: Project Scaffolding)
+# VenuePass — Milestone Plan (01 - Events: Venues & Manifest Templates)
 
 ## Milestone Outcome
 
-VenuePass has a stable modular-monolith foundation with enforced boundaries, baseline CI, and initial Events vertical slices delivered end-to-end.
+The Events module supports venue management and manifest template management end-to-end, with persistence in the `events` schema and retrieval APIs for both capabilities.
 
 ## In Scope
 
-- [x] Finalize solution scaffolding and module project layout
-- [x] Enforce module boundaries via architecture tests
-- [x] Establish baseline CI pipeline (restore, build, and tests)
-- [x] Deliver first Events vertical slice with domain, persistence, endpoint mapping, and tests
-- [x] Align core docs with implemented architecture and delivery workflow
+- [ ] Venue management
+- [ ] Manifest template management
+- [ ] Events persistence and outbox readiness
 
 ## Out of Scope
 
-- Full cross-module integration event choreography across all modules
-- Ticketing sales lifecycle completion (offers/reservations/orders)
-- Attendance admission lifecycle completion
-- Full Identity module implementation beyond early JWT dev setup
-- Production-grade deployment or cloud runtime optimization
+- Event creation and publication
+- Manifest snapshot creation from templates
+- Ticketing synchronization from published events
+- Attendance workflows
+- Identity module implementation beyond existing development setup
+- Venue update/delete flows
+- Manifest template update/delete flows
+
+## Capability Breakdown
+
+### Venue management
+
+- [ ] Create venue
+- [ ] Get venue
+- [ ] Harden venue validation and duplicate rules
+
+### Manifest template management
+
+- [ ] Create manifest template
+- [ ] Get manifest template
+
+### Events persistence and outbox readiness
+
+- [ ] Persist venue and manifest template aggregate structure in the `events` schema
+- [ ] Add migrations required for venues and manifest templates
+- [ ] Add outbox table in the `events` schema without publication flow yet
+
+## Initial Manifest Template Scope
+
+Seated structure plus general admission areas.
 
 ## Definition of Done
 
-- [x] All in-scope features implemented
-- [x] Architecture tests pass and protect intended boundaries
-- [x] Unit tests for implemented slices pass
-- [x] Build passes cleanly in CI baseline pipeline
-- [x] Architecture, roadmap, and milestone docs are updated to match implementation
+- [ ] All in-scope capability issues implemented and merged
+- [ ] Venue creation and retrieval work through the API
+- [ ] Manifest template creation and retrieval work through the API
+- [ ] Venue and manifest template data persist in the `events` schema
+- [ ] Venue duplicate rule is enforced consistently
+- [ ] Architecture tests still pass
+- [ ] Docs updated if contracts or behavior change
 
 ## Validation Checklist
 
-- [x] `dotnet restore VenuePass.slnx` passes
-- [x] `dotnet build VenuePass.slnx --configuration Release --no-restore /warnaserror` passes
-- [x] `dotnet test VenuePass.slnx --configuration Release --no-build` passes
-- [x] First Events API slice is implemented (CreateVenue domain + persistence + endpoint + migrations)
+- [ ] `dotnet build VenuePass.slnx --configuration Release /warnaserror`
+- [ ] `dotnet test VenuePass.slnx --configuration Release`
+- [ ] Venue API flow tested end-to-end
+- [ ] Manifest template API flow tested end-to-end
+- [ ] Database schema contains required `events` objects for venues, templates, and outbox readiness
 
 ## Risks and Dependencies
 
-- Architecture test rules may need iterative tuning as module internals become concrete.
-- Outbox-related decisions can affect slice design even if full integration is deferred.
-- CI flakiness risk exists while initial test/database setup stabilizes.
-- Solo execution means sequencing discipline is required to avoid scope creep.
+- Manifest template modeling can expand quickly if seating structure rules are not kept tight.
+- Template persistence may drive several EF Core mapping decisions at once.
+- Outbox readiness should not accidentally pull publication behavior from M02 into this milestone.
+- Retrieval shape decisions made here will influence later event-creation flows.

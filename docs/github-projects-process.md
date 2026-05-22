@@ -15,7 +15,7 @@ Use these docs as canonical planning artifacts:
 - docs/architecture-outline.md: short architecture reference for planning and AI context
 - docs/roadmap.md: milestone sequencing (Now, Next, Later)
 - docs/milestone-plan.md: active milestone scope and definition of done
-- docs/milestones/milestone-00.md: issue seed for current milestone capability issues and slices
+- docs/milestones/milestone-01.md: issue seed for current milestone capability issues and slices
 - docs/tech-decisions.md: ADR-style technical decisions
 
 ## GitHub Project Structure
@@ -197,5 +197,5 @@ Use labels to simplify project filters:
 - Create GitHub Project and custom fields
 - Add project automation rules
 - Create issue and PR templates
-- Seed project with 00 - Foundation milestone issue and in-scope capability issues
+- Seed project with 01 - Events: Venues & Manifest Templates milestone issue and in-scope capability issues
 - Verify links between board items and planning docs

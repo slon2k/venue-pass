@@ -1,15 +1,15 @@
-# 00 - Foundation: Project Scaffolding Status (2026-05-22)
+# 00 - Foundation: Project Scaffolding Status (Closed 2026-05-22)
 
 ## Outcome Snapshot
 
-The foundation milestone is functionally in place:
+The foundation milestone is complete:
 
 - solution and module scaffolding are implemented
 - module boundaries are enforced by architecture tests
 - first Events vertical slice (CreateVenue) includes domain, persistence, migrations, and API endpoint
 - baseline CI workflow is configured and locally validated
 
-Milestone closure depends on merging final doc/issue alignment changes.
+Milestone is closed.
 
 ## Delivery Model
 
@@ -58,4 +58,4 @@ Completed vertical slices:
 
 - CI workflow file: `.github/workflows/ci.yml`
 - Baseline test execution is solution-level (`dotnet test VenuePass.slnx`) so new test projects are picked up automatically.
-- This milestone is an exception-heavy foundation phase; later milestones should be modeled primarily as capabilities with vertical-slice sub-issues.
+- This milestone was an exception-heavy foundation phase; later milestones should be modeled primarily as capabilities with vertical-slice sub-issues.
