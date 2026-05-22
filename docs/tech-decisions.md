@@ -241,17 +241,17 @@ app.MapPost("/events/venues", async (
 
 **Context:** CI must provide early safety without slowing down initial development.
 
-**Choice:** Progressive CI/CD rollout with two CI workflows (`fast-ci`, `integration-ci`) aligned with delivery slices.
+**Choice:** Progressive CI/CD rollout with two CI workflows (`ci`, `integration-ci`) aligned with delivery slices.
 
 **Stages:**
 
-- S0-S2 baseline `fast-ci`: restore, build, architecture tests, unit tests
+- S0-S2 baseline `ci`: restore, build, solution-level tests (including architecture and unit tests)
 - S3-S5 add `integration-ci`: SQL Server service container integration tests, migration smoke checks, outbox integration tests
 - S6-S7 optional release automation: Docker image build, artifact publish, demo deployment workflow with manual approval
 
 **Policy:**
 
-- `fast-ci` is required on all pull requests from S0 onward
+- `ci` is required on all pull requests from S0 onward
 - `integration-ci` becomes required as soon as the integration suite is stable (target: by S6)
 - Release workflow stays manual-approval gated
 

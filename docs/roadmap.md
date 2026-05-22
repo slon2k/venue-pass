@@ -3,12 +3,12 @@
 ## Now
 
 - **Milestone**: 01 - Foundation
-  - Outcome: The modular monolith foundation is in place with enforced boundaries, baseline CI, and first vertical slices in Events implemented and tested.
+  - Outcome: The modular monolith foundation is in place with enforced boundaries, baseline CI, and the first Events vertical slice (CreateVenue) implemented end-to-end.
   - Features:
     - Solution scaffolding finalized
     - Module boundaries defined and enforced with architecture tests
-    - Baseline CI pipeline running restore, build, architecture tests, and unit tests
-    - Events module first vertical slices (domain, persistence, endpoints, tests)
+    - Baseline CI workflow (`ci.yml`) running restore, build, and solution-level tests
+    - Events module first vertical slice (domain, persistence, migrations, endpoint, tests)
     - Core architecture and planning docs aligned with implemented behavior
 
 ## Next
@@ -27,7 +27,7 @@
 
 | Milestone | Outcome | Status |
 |-----------|---------|--------|
-| 01 - Foundation | Foundation complete with first Events slices and CI baseline | In progress |
+| 01 - Foundation | Foundation baseline complete with first Events slice and CI | In progress |
 | 02 - Messaging and Ticketing Bootstrap | Outbox-backed cross-module flow validated | Not started |
 | 03 - Ticketing Sales Flows | Ticketing core commercial lifecycle implemented | Not started |
 | 04 - Attendance Check-In Flows | Admission/check-in lifecycle implemented | Not started |

@@ -48,7 +48,7 @@ It exists to practice:
 
 | Concern | Choice |
 |---------|--------|
-| Runtime |  Latest LTS version of .NET at project start |
+| Runtime | .NET 10 (`net10.0`) |
 | API | Minimal APIs with per-feature endpoint mapping |
 | Dispatch | Direct injection — co-located Command + Handler per feature |
 | Persistence | EF Core, one DbContext per module, one DB with schema-per-module |
@@ -69,8 +69,6 @@ VenuePass.slnx
 ├─ src/
 │  ├─ VenuePass.Api/
 │  │  ├─ Program.cs
-│  │  ├─ DependencyInjection/
-│  │  └─ Extensions/
 │  │
 │  ├─ VenuePass.BuildingBlocks/
 │  │  ├─ Domain/          (small base abstractions only)
@@ -78,40 +76,34 @@ VenuePass.slnx
 │  │  ├─ Infrastructure/  (current-user, outbox abstractions, helpers)
 │  │  └─ Messaging/       (integration event base/contracts)
 │  │
-│  └─ Modules/
-│     ├─ VenuePass.Modules.Events/
-│     │  ├─ Features/        (one folder per use case)
-│     │  ├─ Domain/          (organized by aggregate / business concept)
-│     │  ├─ Infrastructure/  (DbContext, configurations, outbox)
-│     │  ├─ Contracts/       (interfaces exposed to other modules)
-│     │  └─ ModuleConfiguration.cs
-│     │
-│     ├─ VenuePass.Modules.Ticketing/
-│     │  ├─ Features/
-│     │  ├─ Domain/
-│     │  ├─ Infrastructure/
-│     │  ├─ Contracts/
-│     │  └─ ModuleConfiguration.cs
-│     │
-│     ├─ VenuePass.Modules.Attendance/
-│     │  ├─ Features/
-│     │  ├─ Domain/
-│     │  ├─ Infrastructure/
-│     │  ├─ Contracts/
-│     │  └─ ModuleConfiguration.cs
-│     │
-│     └─ VenuePass.Modules.Identity/
-│        ├─ Features/
-│        ├─ Infrastructure/
-│        ├─ Contracts/
-│        └─ ModuleConfiguration.cs
+│  ├─ VenuePass.Modules.Events/
+│  │  ├─ Features/CreateVenue/
+│  │  ├─ Domain/Venues/
+│  │  ├─ Infrastructure/ (DbContext, configurations, migrations)
+│  │  ├─ Contracts/
+│  │  ├─ ModuleConfiguration.cs
+│  │  └─ ModuleEndpointMappings.cs
+│  │
+│  ├─ VenuePass.Modules.Ticketing/
+│  │  ├─ Features/
+│  │  ├─ Domain/
+│  │  ├─ Infrastructure/
+│  │  └─ Contracts/
+│  │
+│  ├─ VenuePass.Modules.Attendance/
+│  │  ├─ Features/
+│  │  ├─ Domain/
+│  │  ├─ Infrastructure/
+│  │  └─ Contracts/
+│  │
+│  └─ VenuePass.Modules.Identity/
+│     ├─ Features/
+│     ├─ Infrastructure/
+│     └─ Contracts/
 │
 ├─ tests/
 │  ├─ VenuePass.ArchitectureTests/
-│  ├─ VenuePass.Modules.Events.Tests/
-│  ├─ VenuePass.Modules.Ticketing.Tests/
-│  ├─ VenuePass.Modules.Attendance.Tests/
-│  └─ VenuePass.Modules.Identity.Tests/
+│  └─ VenuePass.BuildingBlocks.Tests/
 │
 ├─ docs/
 │

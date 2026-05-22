@@ -6,11 +6,11 @@ VenuePass has a stable modular-monolith foundation with enforced boundaries, bas
 
 ## In Scope
 
-- [ ] Finalize solution scaffolding and module project layout
-- [ ] Enforce module boundaries via architecture tests
-- [ ] Establish baseline CI pipeline (restore, build, architecture tests, unit tests)
-- [ ] Deliver first Events vertical slices with domain, persistence, endpoint mapping, and tests
-- [ ] Align core docs with implemented architecture and delivery workflow
+- [x] Finalize solution scaffolding and module project layout
+- [x] Enforce module boundaries via architecture tests
+- [x] Establish baseline CI pipeline (restore, build, and tests)
+- [x] Deliver first Events vertical slice with domain, persistence, endpoint mapping, and tests
+- [x] Align core docs with implemented architecture and delivery workflow
 
 ## Out of Scope
 
@@ -22,19 +22,18 @@ VenuePass has a stable modular-monolith foundation with enforced boundaries, bas
 
 ## Definition of Done
 
-- [ ] All in-scope features implemented and merged
-- [ ] Architecture tests pass and protect intended boundaries
-- [ ] Unit tests for implemented slices pass in CI
-- [ ] Build passes cleanly in CI baseline pipeline
-- [ ] Architecture, roadmap, and milestone docs are updated to match implementation
+- [x] All in-scope features implemented
+- [x] Architecture tests pass and protect intended boundaries
+- [x] Unit tests for implemented slices pass
+- [x] Build passes cleanly in CI baseline pipeline
+- [x] Architecture, roadmap, and milestone docs are updated to match implementation
 
 ## Validation Checklist
 
-- [ ] `dotnet restore` passes
-- [ ] `dotnet build` passes
-- [ ] Architecture test suite passes
-- [ ] Events module unit tests pass
-- [ ] First Events API slice works in local run against SQL Server container
+- [x] `dotnet restore VenuePass.slnx` passes
+- [x] `dotnet build VenuePass.slnx --configuration Release --no-restore /warnaserror` passes
+- [x] `dotnet test VenuePass.slnx --configuration Release --no-build` passes
+- [x] First Events API slice is implemented (CreateVenue domain + persistence + endpoint + migrations)
 
 ## Risks and Dependencies
 

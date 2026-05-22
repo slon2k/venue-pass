@@ -11,18 +11,17 @@
 
 ### S0-S2: Baseline CI (required)
 
-- Workflow: `fast-ci`
+- Workflow: `ci`
 - Trigger: every pull request and push to `main`
 - Steps:
   - restore
   - build (warnings as errors for CI)
-  - architecture tests
-  - unit tests
+  - tests (solution-level: includes architecture and unit test projects)
 - Goal: fast feedback and boundary protection from day one
 
 ### S3-S5: Expanded CI (required)
 
-- Keep `fast-ci` required on all PRs
+- Keep `ci` required on all PRs
 - Add workflow: `integration-ci`
 - Trigger:
   - pull requests with integration-impact label (optional during transition)
@@ -35,7 +34,7 @@
 
 ### S6-S7: Release CI/CD (optional initially)
 
-- Keep `fast-ci` and `integration-ci`
+- Keep `ci` and `integration-ci`
 - Optionally add:
   - Docker image build
   - artifact publish
@@ -44,9 +43,9 @@
 
 ### Branch protection policy
 
-- S0-S2: require `fast-ci`
-- S3-S5: require `fast-ci`; phase in required `integration-ci` when integration suite is stable
-- S6-S7: require both `fast-ci` and `integration-ci`; keep release workflow approval-gated
+- S0-S2: require `ci`
+- S3-S5: require `ci`; phase in required `integration-ci` when integration suite is stable
+- S6-S7: require both `ci` and `integration-ci`; keep release workflow approval-gated
 
 ---
 
