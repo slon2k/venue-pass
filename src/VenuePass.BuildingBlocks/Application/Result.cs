@@ -2,40 +2,46 @@ namespace VenuePass.BuildingBlocks.Application;
 
 public sealed class Result
 {
-    private Result(bool isSuccess, Error error)
+    private readonly Error? _error;
+
+    private readonly bool _isSuccess;
+
+    private Result(Error error)
     {
-        if (isSuccess && error.Type != ErrorType.None)
-        {
-            throw new ArgumentException("Successful result must use Error.None.", nameof(error));
-        }
-
-        if (!isSuccess && error.Type == ErrorType.None)
-        {
-            throw new ArgumentException("Failed result must provide an error.", nameof(error));
-        }
-
-        IsSuccess = isSuccess;
-        Error = error;
+        ArgumentNullException.ThrowIfNull(error);
+        _isSuccess = false;
+        _error = error;
     }
 
-    public bool IsSuccess { get; }
+    private Result()
+    {
+        _isSuccess = true;
+        _error = null;
+    }
+
+    public bool IsSuccess => _isSuccess;
 
     public bool IsFailure => !IsSuccess;
 
-    public Error Error { get; }
+    public Error Error => IsFailure
+        ? _error ?? throw new InvalidOperationException("Failed result must contain an error.")
+        : throw new InvalidOperationException("Cannot access error of a successful result.");
 
-    public static Result Ok() => new(true, Error.None);
+    public static Result Success() => new();
 
-    public static Result Fail(Error error) => new(false, error);
+    public static Result Failure(Error error) => new(error);
 
-    public static Result<T> Ok<T>(T value) => new(value, true, Error.None);
+    public static Result<T> Success<T>(T value) => value;
 
-    public static Result<T> Fail<T>(Error error) => new(default, false, error);
+    public static Result<T> Failure<T>(Error error) => error;
 
-    public static implicit operator Result(Error error) => Fail(error);
+    public static implicit operator Result(Error error) => Failure(error);
 
     public void Match(Action onSuccess, Action<Error> onFailure)
     {
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+
         if (IsSuccess)
         {
             onSuccess();
@@ -46,52 +52,62 @@ public sealed class Result
         }
     }
 
-    public TResult Match<TResult>(Func<TResult> onSuccess, Func<Error, TResult> onFailure) => 
-        IsSuccess ? onSuccess() : onFailure(Error);
+    public TResult Match<TResult>(Func<TResult> onSuccess, Func<Error, TResult> onFailure)
+    {
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+
+        return IsSuccess ? onSuccess() : onFailure(Error);
+    }
 }
 
 public sealed class Result<T>
 {
     private readonly T? _value;
 
-    internal Result(T? value, bool isSuccess, Error error)
+    private readonly Error? _error;
+
+    private readonly bool _isSuccess;
+
+    private Result(T value)
     {
-        if (isSuccess && value is null)
-        {
-            throw new ArgumentException("Successful result must provide a value.", nameof(value));
-        }
-
-        if (isSuccess && error.Type != ErrorType.None)
-        {
-            throw new ArgumentException("Successful result must use Error.None.", nameof(error));
-        }
-
-        if (!isSuccess && error.Type == ErrorType.None)
-        {
-            throw new ArgumentException("Failed result must provide an error.", nameof(error));
-        }
+        ArgumentNullException.ThrowIfNull(value);
 
         _value = value;
-        IsSuccess = isSuccess;
-        Error = error;
+        _isSuccess = true;
+        _error = null;
     }
 
-    public bool IsSuccess { get; }
+    private Result(Error error)
+    {
+        ArgumentNullException.ThrowIfNull(error);
+
+        _error = error;
+        _isSuccess = false;
+        _value = default;
+    }
+
+    public bool IsSuccess => _isSuccess;
 
     public bool IsFailure => !IsSuccess;
 
-    public Error Error { get; }
+    public Error Error => IsFailure
+        ? _error ?? throw new InvalidOperationException("Failed result must contain an error.")
+        : throw new InvalidOperationException("Cannot access error of a successful result.");
 
     public T Value => IsSuccess
-        ? _value!
+        ? _value ?? throw new InvalidOperationException("Successful result must contain a value.")
         : throw new InvalidOperationException("Cannot access value of a failed result.");
     
-    public static implicit operator Result<T>(Error error) => new(default, false, error);
+    public static implicit operator Result<T>(Error error) => new(error);
 
-    public static implicit operator Result<T>(T value) => new(value, true, Error.None);
+    public static implicit operator Result<T>(T value) => new(value);
 
     public void Match(Action<T> onSuccess, Action<Error> onFailure)
     {
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+
         if (IsSuccess)
         {
             onSuccess(Value);
@@ -102,6 +118,11 @@ public sealed class Result<T>
         }
     }
 
-    public TResult Match<TResult>(Func<T, TResult> onSuccess, Func<Error, TResult> onFailure) => 
-        IsSuccess ? onSuccess(Value) : onFailure(Error);
+    public TResult Match<TResult>(Func<T, TResult> onSuccess, Func<Error, TResult> onFailure)
+    {
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+
+        return IsSuccess ? onSuccess(Value) : onFailure(Error);
+    }
 }

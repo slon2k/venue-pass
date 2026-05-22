@@ -1,3 +1,6 @@
+using FluentValidation;
+using FluentValidation.Results;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using VenuePass.BuildingBlocks.Application;
@@ -6,24 +9,31 @@ using VenuePass.Modules.Events.Infrastructure;
 
 namespace VenuePass.Modules.Events.Features.CreateVenue;
 
-public sealed class CreateVenueHandler(EventsDbContext db, ILogger<CreateVenueHandler> logger)
+public sealed class CreateVenueHandler(
+    EventsDbContext db,
+    IValidator<CreateVenueCommand> validator,
+    ILogger<CreateVenueHandler> logger)
 {
-    public async Task<Result<CreateVenueResult>> Handle(CreateVenueCommand command, CancellationToken ct)
+    public async Task<Result<CreateVenueResult>> Handle(
+        CreateVenueCommand command,
+        CancellationToken ct)
     {
+        ValidationResult validationResult = await validator.ValidateAsync(command, ct);
+
+        if (!validationResult.IsValid)
+        {
+            return CreateVenueErrors.InvalidData(
+                [.. validationResult.Errors.Select(e =>
+                    new ValidationErrorDetail(e.PropertyName, e.ErrorMessage))]);
+        }
+
         try
         {
             Venue venue = ToEntity(command);
 
             if (await db.Venues.AnyAsync(v => v.Name == venue.Name && v.Address.City == venue.Address.City, ct))
             {
-                logger.LogWarning(
-                    "Venue with name {VenueName} already exists in city {City}.",
-                    venue.Name,
-                    venue.Address.City);
-
-                return Error.Conflict(
-                    "Venue.Create.Duplicate",
-                    $"A venue with the name '{venue.Name}' already exists in city '{venue.Address.City}'.");
+                return CreateVenueErrors.VenueAlreadyExists(venue.Name, venue.Address.City);
             }
 
             db.Venues.Add(venue);
@@ -33,8 +43,8 @@ public sealed class CreateVenueHandler(EventsDbContext db, ILogger<CreateVenueHa
         }
         catch (ArgumentException ex)
         {
-            logger.LogWarning(ex, "Invalid venue data.");
-            return Error.Validation("Venue.Create.Validation", ex.Message);
+            logger.LogInformation(ex, "Domain validation rejected venue creation.");
+            return CreateVenueErrors.InvalidData(ex.Message);
         }
     }
 

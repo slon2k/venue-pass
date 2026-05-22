@@ -14,3 +14,5 @@ if (app.Environment.IsDevelopment())
 
 app.MapEventsModule();
 app.Run();
+
+public partial class Program;

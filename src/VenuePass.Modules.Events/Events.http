@@ -1,0 +1,101 @@
+@Events_HostAddress = http://localhost:5119
+@venueId = 019e509a-17ba-759e-9650-afa6daf5dc89
+
+### Create a valid venue
+POST {{Events_HostAddress}}/events/venues
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Main Concert Hall",
+  "address": "123 Symphony Ave",
+  "city": "Seattle",
+  "country": "USA",
+  "capacity": 2500
+}
+
+### Create venue with whitespace trimming
+POST {{Events_HostAddress}}/events/venues
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "   Grand Theater   ",
+  "address": "  456 Broadway St  ",
+  "city": "  New York  ",
+  "country": "  USA  ",
+  "capacity": 1500
+}
+
+### Create venue - invalid (empty name)
+POST {{Events_HostAddress}}/events/venues
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "",
+  "address": "789 Oak Lane",
+  "city": "Portland",
+  "country": "USA",
+  "capacity": 800
+}
+
+### Create venue - invalid (zero capacity)
+POST {{Events_HostAddress}}/events/venues
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Small Room",
+  "address": "321 Pine St",
+  "city": "Boston",
+  "country": "USA",
+  "capacity": 0
+}
+
+### Create venue - invalid (negative capacity)
+POST {{Events_HostAddress}}/events/venues
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Invalid Venue",
+  "address": "654 Maple Dr",
+  "city": "Chicago",
+  "country": "USA",
+  "capacity": -100
+}
+
+### Get venue by ID (replace with valid ID from create response)
+GET {{Events_HostAddress}}/events/venues/{{venueId}}
+Accept: application/json
+
+### Get non-existent venue
+GET {{Events_HostAddress}}/events/venues/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Create duplicate venue in same city (should fail with 409)
+POST {{Events_HostAddress}}/events/venues
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Duplicate Venue",
+  "address": "999 Main St",
+  "city": "Denver",
+  "country": "USA",
+  "capacity": 500
+}
+
+### Create duplicate venue in same city (second attempt)
+POST {{Events_HostAddress}}/events/venues
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Duplicate Venue",
+  "address": "888 Other Ave",
+  "city": "Denver",
+  "country": "USA",
+  "capacity": 600
+}
