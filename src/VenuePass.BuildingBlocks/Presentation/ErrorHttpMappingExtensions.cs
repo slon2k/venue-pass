@@ -9,6 +9,8 @@ public static class ErrorHttpMappingExtensions
 {
     public static IResult ToProblemResult(this Error error)
     {
+        ArgumentNullException.ThrowIfNull(error);
+
         Dictionary<string, object?> extensions = new()
         {
             ["code"] = error.Code
@@ -16,70 +18,31 @@ public static class ErrorHttpMappingExtensions
 
         if (error is ValidationError validationError)
         {
-            extensions["details"] = validationError.Details.Select(x => new { field = x.Field, message = x.Message });
+            extensions["details"] = validationError.Details
+                .Select(x => new { field = x.Field, message = x.Message })
+                .ToArray();
         }
 
-        return error.Type switch
+        (string? title, int statusCode) = error.Type switch
         {
-            ErrorType.Validation => Results.Problem(
-                title: "Validation error",
-                detail: error.Message,
-                statusCode: StatusCodes.Status400BadRequest,
-                extensions: extensions),
-
-            ErrorType.Forbidden => Results.Problem(
-                title: "Forbidden",
-                detail: error.Message,
-                statusCode: StatusCodes.Status403Forbidden,
-                extensions: extensions),
-
-            ErrorType.Unauthorized => Results.Problem(
-                title: "Unauthorized",
-                detail: error.Message,
-                statusCode: StatusCodes.Status401Unauthorized,
-                extensions: extensions),
-
-            ErrorType.NotFound => Results.Problem(
-                title: "Not found",
-                detail: error.Message,
-                statusCode: StatusCodes.Status404NotFound,
-                extensions: extensions),
-
-            ErrorType.Conflict => Results.Problem(
-                title: "Conflict",
-                detail: error.Message,
-                statusCode: StatusCodes.Status409Conflict,
-                extensions: extensions),
-
-            ErrorType.Concurrency => Results.Problem(
-                title: "Concurrency conflict",
-                detail: error.Message,
-                statusCode: StatusCodes.Status409Conflict,
-                extensions: extensions),
-
-            ErrorType.RateLimit => Results.Problem(
-                title: "Rate limit exceeded",
-                detail: error.Message,
-                statusCode: StatusCodes.Status429TooManyRequests,
-                extensions: extensions),
-
-            ErrorType.Unavailable => Results.Problem(
-                title: "Service unavailable",
-                detail: error.Message,
-                statusCode: StatusCodes.Status503ServiceUnavailable,
-                extensions: extensions),
-
-            ErrorType.Unexpected => Results.Problem(
-                title: "Unexpected error",
-                detail: error.Message,
-                statusCode: StatusCodes.Status500InternalServerError,
-                extensions: extensions),
-
-            _ => Results.Problem(
-                title: "Unexpected error",
-                detail: error.Message,
-                statusCode: StatusCodes.Status500InternalServerError,
-                extensions: extensions)
+            ErrorType.Validation => ("Validation error", StatusCodes.Status400BadRequest),
+            ErrorType.Forbidden => ("Forbidden", StatusCodes.Status403Forbidden),
+            ErrorType.Unauthorized => ("Unauthorized", StatusCodes.Status401Unauthorized),
+            ErrorType.NotFound => ("Not found", StatusCodes.Status404NotFound),
+            ErrorType.Conflict => ("Conflict", StatusCodes.Status409Conflict),
+            ErrorType.Concurrency => ("Concurrency conflict", StatusCodes.Status409Conflict),
+            ErrorType.RateLimit => ("Rate limit exceeded", StatusCodes.Status429TooManyRequests),
+            ErrorType.Unavailable => ("Service unavailable", StatusCodes.Status503ServiceUnavailable),
+            ErrorType.Unexpected => ("Unexpected error", StatusCodes.Status500InternalServerError),
+            _ => ("Unexpected error", StatusCodes.Status500InternalServerError)
         };
+
+        return Results.Problem(
+            title: title,
+            detail: error.Message,
+            statusCode: statusCode,
+            extensions: extensions);
     }
+
+    public static IResult ToProblem(Error error) => error.ToProblemResult();
 }

@@ -6,11 +6,11 @@ Accept: application/json
 Content-Type: application/json
 
 {
-    "name": "Test Venue",
+    "name": " ",
     "address": "123 Main St",
-    "city": "Anytown",
+    "city": "New York",
     "country": "USA",
-    "capacity": 2500
+    "capacity": 0
 }
 
 ###

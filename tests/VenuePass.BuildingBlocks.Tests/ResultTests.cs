@@ -77,11 +77,9 @@ public sealed class ResultTests
     [Fact]
     public void Success_Generic_WithNullValue_ThrowsArgumentNullException()
     {
-        void Act1() => _ = Result.Success<string>(null!);
-        void Act2() => _ = new Result<string>((string)null!);
+        void Act() => _ = Result.Success<string>(null!);
 
-        Assert.Throws<ArgumentNullException>(Act1);
-        Assert.Throws<ArgumentNullException>(Act2);
+        Assert.Throws<ArgumentNullException>(Act);
     }
 
     [Fact]

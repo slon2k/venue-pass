@@ -23,20 +23,25 @@ public sealed class Result
 
     public bool IsFailure => !IsSuccess;
 
-    public Error Error => _error ?? throw new InvalidOperationException("Failed result must contain an error.");
+    public Error Error => IsFailure
+        ? _error ?? throw new InvalidOperationException("Failed result must contain an error.")
+        : throw new InvalidOperationException("Cannot access error of a successful result.");
 
     public static Result Success() => new();
 
     public static Result Failure(Error error) => new(error);
 
-    public static Result<T> Success<T>(T value) => new(value);
+    public static Result<T> Success<T>(T value) => value;
 
-    public static Result<T> Failure<T>(Error error) => new(error);
+    public static Result<T> Failure<T>(Error error) => error;
 
     public static implicit operator Result(Error error) => Failure(error);
 
     public void Match(Action onSuccess, Action<Error> onFailure)
     {
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+
         if (IsSuccess)
         {
             onSuccess();
@@ -47,8 +52,13 @@ public sealed class Result
         }
     }
 
-    public TResult Match<TResult>(Func<TResult> onSuccess, Func<Error, TResult> onFailure) => 
-        IsSuccess ? onSuccess() : onFailure(Error);
+    public TResult Match<TResult>(Func<TResult> onSuccess, Func<Error, TResult> onFailure)
+    {
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+
+        return IsSuccess ? onSuccess() : onFailure(Error);
+    }
 }
 
 public sealed class Result<T>
@@ -59,7 +69,7 @@ public sealed class Result<T>
 
     private readonly bool _isSuccess;
 
-    public Result(T value)
+    private Result(T value)
     {
         ArgumentNullException.ThrowIfNull(value);
 
@@ -68,7 +78,7 @@ public sealed class Result<T>
         _error = null;
     }
 
-    public Result(Error error)
+    private Result(Error error)
     {
         ArgumentNullException.ThrowIfNull(error);
 
@@ -81,10 +91,12 @@ public sealed class Result<T>
 
     public bool IsFailure => !IsSuccess;
 
-    public Error Error => _error ?? throw new InvalidOperationException("Failed result must contain an error.");
+    public Error Error => IsFailure
+        ? _error ?? throw new InvalidOperationException("Failed result must contain an error.")
+        : throw new InvalidOperationException("Cannot access error of a successful result.");
 
     public T Value => IsSuccess
-        ? _value!
+        ? _value ?? throw new InvalidOperationException("Successful result must contain a value.")
         : throw new InvalidOperationException("Cannot access value of a failed result.");
     
     public static implicit operator Result<T>(Error error) => new(error);
@@ -93,6 +105,9 @@ public sealed class Result<T>
 
     public void Match(Action<T> onSuccess, Action<Error> onFailure)
     {
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+
         if (IsSuccess)
         {
             onSuccess(Value);
@@ -103,6 +118,11 @@ public sealed class Result<T>
         }
     }
 
-    public TResult Match<TResult>(Func<T, TResult> onSuccess, Func<Error, TResult> onFailure) => 
-        IsSuccess ? onSuccess(Value) : onFailure(Error);
+    public TResult Match<TResult>(Func<T, TResult> onSuccess, Func<Error, TResult> onFailure)
+    {
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+
+        return IsSuccess ? onSuccess(Value) : onFailure(Error);
+    }
 }
