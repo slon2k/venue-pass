@@ -37,12 +37,13 @@ public readonly record struct VenueId(Guid Value)
 {
     public static VenueId Create() => new(Guid.CreateVersion7());
     public static implicit operator Guid(VenueId id) => id.Value;
-};
+    public override string ToString() => Value.ToString();
+}
 
 public sealed record VenueName
 {
     public const int MaxLength = 100;
-    public string Value { get; }
+    public string Value { get; private set; }
 
     public VenueName(string value)
     {
@@ -59,7 +60,7 @@ public sealed record VenueName
 
 public sealed record VenueCapacity
 {
-    public int Value { get; }
+    public int Value { get; private set; }
 
     public VenueCapacity(int value)
     {
@@ -74,9 +75,9 @@ public sealed record VenueCapacity
 
 public sealed record VenueAddress
 {
-    public StreetAddress StreetAddress { get; }
-    public City City { get; }
-    public Country Country { get; }
+    public StreetAddress StreetAddress { get; private set; }
+    public City City { get; private set; }
+    public Country Country { get; private set; }
 
     public VenueAddress(StreetAddress streetAddress, City city, Country country)
     {
@@ -97,7 +98,7 @@ public sealed record VenueAddress
 public sealed record Country
 {
     public const int MaxLength = 100;
-    public string Value { get; }
+    public string Value { get; private set; }
 
     public Country(string value)
     {
@@ -115,7 +116,7 @@ public sealed record Country
 public sealed record City
 {
     public const int MaxLength = 100;
-    public string Value { get; }
+    public string Value { get; private set; }
 
     public City(string value)
     {
@@ -133,7 +134,7 @@ public sealed record City
 public sealed record StreetAddress
 {
     public const int MaxLength = 200;
-    public string Value { get; }
+    public string Value { get; private set; }
 
     public StreetAddress(string value)
     {

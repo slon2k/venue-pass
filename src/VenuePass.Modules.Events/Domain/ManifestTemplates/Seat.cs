@@ -5,35 +5,31 @@ namespace VenuePass.Modules.Events.Domain.ManifestTemplates;
 
 public sealed class Seat : Entity<SeatId>
 {
-    private Seat(
-        SeatId id,
-        SeatLabel label)
-        : base(id)
+    private Seat()
+    {
+    }
+
+    private Seat(SeatId id, SeatLabel label): base(id)
     {
         Label = label;
     }
 
-    public SeatLabel Label { get; private set; }
+    public SeatLabel Label { get; private set; } = null!;
 
-    internal static Seat Create(
-        SeatId id,
-        string label)
-    {
-        return new Seat(id, new SeatLabel(label));
-    }
+    internal static Seat Create(SeatLabel label) => new(SeatId.Create(), label);
 }
 
-public sealed record SeatId(Guid Value)
+public readonly record struct SeatId(Guid Value)
 {
-    public static SeatId New() => new(Guid.NewGuid());
+    public static SeatId Create() => new(Guid.CreateVersion7());
     public static implicit operator Guid(SeatId id) => id.Value;
-    public static implicit operator SeatId(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
 };
 
 public sealed record SeatLabel
 {
     public const int MaxLength = 10;
-    public string Value { get; }
+    public string Value { get; private set; }
 
     public SeatLabel(string value)
     {

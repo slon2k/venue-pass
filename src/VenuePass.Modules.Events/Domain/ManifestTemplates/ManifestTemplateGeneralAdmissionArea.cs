@@ -7,6 +7,10 @@ namespace VenuePass.Modules.Events.Domain.ManifestTemplates;
 
 public sealed class GeneralAdmissionArea : Entity<GeneralAdmissionAreaId>
 {
+    private GeneralAdmissionArea()
+    {
+    }
+
     private GeneralAdmissionArea(
         GeneralAdmissionAreaId id,
         GeneralAdmissionAreaName name,
@@ -17,32 +21,28 @@ public sealed class GeneralAdmissionArea : Entity<GeneralAdmissionAreaId>
         Capacity = capacity;
     }
 
-    public GeneralAdmissionAreaName Name { get; private set; }
-    public GeneralAdmissionCapacity Capacity { get; private set; }
+    public GeneralAdmissionAreaName Name { get; private set; } = null!;
+    public GeneralAdmissionCapacity Capacity { get; private set; } = null!;
 
     internal static GeneralAdmissionArea Create(
-        GeneralAdmissionAreaId id,
-        string name,
-        int capacity)
-    {
-        return new GeneralAdmissionArea(
-            id,
-            new GeneralAdmissionAreaName(name),
-            new GeneralAdmissionCapacity(capacity));
-    }
+        GeneralAdmissionAreaName name,
+        GeneralAdmissionCapacity capacity) => new(
+            GeneralAdmissionAreaId.Create(),
+            name,
+            capacity);
 }
 
-public sealed record GeneralAdmissionAreaId(Guid Value)
+public readonly record struct GeneralAdmissionAreaId(Guid Value)
 {
-    public static GeneralAdmissionAreaId New() => new(Guid.NewGuid());
+    public static GeneralAdmissionAreaId Create() => new(Guid.CreateVersion7());
     public static implicit operator Guid(GeneralAdmissionAreaId id) => id.Value;
-    public static implicit operator GeneralAdmissionAreaId(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
 };
 
 public sealed record GeneralAdmissionAreaName
 {
     public const int MaxLength = 100;
-    public string Value { get; }
+    public string Value { get; private set; }
 
     public GeneralAdmissionAreaName(string value)
     {
@@ -59,13 +59,13 @@ public sealed record GeneralAdmissionAreaName
 
 public sealed record GeneralAdmissionCapacity
 {
-    public int Value { get; }
+    public int Value { get; private set; }
 
     public GeneralAdmissionCapacity(int value)
     {
-        if (value < 0)
+        if (value <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(value), "Capacity cannot be negative.");
+            throw new ArgumentOutOfRangeException(nameof(value), "Capacity must be greater than zero.");
         }
 
         Value = value;

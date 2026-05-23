@@ -7,31 +7,35 @@ public sealed class SeatRow : Entity<SeatRowId>
 {
     private readonly List<Seat> _seats = [];
 
-    private SeatRow(
-        SeatRowId id,
-        RowLabel label)
-        : base(id)
+    private SeatRow()
+    {
+    }
+
+    private SeatRow(SeatRowId id, RowLabel label) : base(id)
     {
         Label = label;
     }
 
-    public RowLabel Label { get; private set; }
+    public RowLabel Label { get; private set; } = null!;
 
-    public IReadOnlyCollection<Seat> Seats => _seats.AsReadOnly();
+    public IReadOnlyList<Seat> Seats => _seats.AsReadOnly();
 
-    internal static SeatRow Create(
-        SeatRowId id,
-        RowDraft draft)
+    internal static SeatRow Create(RowLabel label, IEnumerable<SeatDraft> seatDrafts)
     {
-        ArgumentNullException.ThrowIfNull(draft);
+        ArgumentNullException.ThrowIfNull(label);
+        ArgumentNullException.ThrowIfNull(seatDrafts);
 
-        var row = new SeatRow(
-            id,
-            new RowLabel(draft.Label));
+        var row = new SeatRow(SeatRowId.Create(), label);
 
-        foreach (var seatDraft in draft.Seats)
+        foreach (var seatDraft in seatDrafts)
         {
             row.AddSeat(seatDraft);
+        }
+
+        if (row.Seats.Count == 0)
+        {
+            throw new ArgumentException(
+                $"Row '{row.Label}' must contain at least one seat.");
         }
 
         return row;
@@ -41,30 +45,32 @@ public sealed class SeatRow : Entity<SeatRowId>
     {
         ArgumentNullException.ThrowIfNull(draft);
 
-        if (_seats.Any(x => x.Label == draft.Label))
+        var label = new SeatLabel(draft.Label);
+
+        if (_seats.Any(x => HasSameLabel(x.Label.Value, label.Value)))
         {
             throw new ArgumentException(
-                $"Seat with label '{draft.Label}' already exists in row '{Label}'.");
+                $"Seat with label '{label}' already exists in row '{Label}'.");
         }
 
-        _seats.Add(
-            Seat.Create(
-                SeatId.New(),
-                draft.Label));
+        _seats.Add(Seat.Create(label));
     }
+
+    private static bool HasSameLabel(string left, string right) =>
+        string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
 }
 
-public sealed record SeatRowId(Guid Value)
+public readonly record struct SeatRowId(Guid Value)
 {
-    public static SeatRowId New() => new(Guid.NewGuid());
+    public static SeatRowId Create() => new(Guid.CreateVersion7());
     public static implicit operator Guid(SeatRowId id) => id.Value;
-    public static implicit operator SeatRowId(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
 };
 
 public sealed record RowLabel
 {
     public const int MaxLength = 10;
-    public string Value { get; }
+    public string Value { get; private set; }
 
     public RowLabel(string value)
     {

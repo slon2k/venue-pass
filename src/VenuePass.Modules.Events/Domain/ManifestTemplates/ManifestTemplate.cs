@@ -9,6 +9,10 @@ public sealed class ManifestTemplate : AggregateRoot<ManifestTemplateId>
     private readonly List<ManifestTemplateSection> _sections = [];
     private readonly List<GeneralAdmissionArea> _generalAdmissionAreas = [];
 
+    private ManifestTemplate()
+    {
+    }
+
     private ManifestTemplate(
         ManifestTemplateId id,
         ManifestTemplateName name,
@@ -21,25 +25,29 @@ public sealed class ManifestTemplate : AggregateRoot<ManifestTemplateId>
         VenueId = venueId;
     }
 
-    public ManifestTemplateName Name { get; private set; }
+    public ManifestTemplateName Name { get; private set; } = null!;
     public ManifestTemplateDescription? Description { get; private set; }
     public VenueId VenueId { get; private set; }
 
-    public IReadOnlyCollection<ManifestTemplateSection> Sections => _sections.AsReadOnly();
-    public IReadOnlyCollection<GeneralAdmissionArea> GeneralAdmissionAreas => _generalAdmissionAreas.AsReadOnly();
+    public IReadOnlyList<ManifestTemplateSection> Sections => _sections.AsReadOnly();
+    public IReadOnlyList<GeneralAdmissionArea> GeneralAdmissionAreas => _generalAdmissionAreas.AsReadOnly();
 
     public static ManifestTemplate Create(
-        ManifestTemplateId id,
         ManifestTemplateName name,
         ManifestTemplateDescription? description,
         VenueId venueId,
-        IReadOnlyCollection<SectionDraft> sectionDrafts,
-        IReadOnlyCollection<GeneralAdmissionAreaDraft> generalAdmissionAreaDrafts)
+        IReadOnlyList<SectionDraft> sectionDrafts,
+        IReadOnlyList<GeneralAdmissionAreaDraft> generalAdmissionAreaDrafts)
     {
         ArgumentNullException.ThrowIfNull(sectionDrafts);
         ArgumentNullException.ThrowIfNull(generalAdmissionAreaDrafts);
+        ArgumentNullException.ThrowIfNull(name);
 
-        var template = new ManifestTemplate(id, name, description, venueId);
+        var template = new ManifestTemplate(
+            ManifestTemplateId.Create(),
+            name,
+            description,
+            venueId);
 
         foreach (var sectionDraft in sectionDrafts)
         {
@@ -63,45 +71,49 @@ public sealed class ManifestTemplate : AggregateRoot<ManifestTemplateId>
     {
         ArgumentNullException.ThrowIfNull(draft);
 
-        if (_sections.Any(x => x.Name == draft.Name))
-        {
-            throw new ArgumentException($"Section with name '{draft.Name}' already exists.");
-        }
+        var name = new SectionName(draft.Name);
+  
+        EnsureLayoutElementNameIsUnique(name.Value);
 
-        _sections.Add(
-            ManifestTemplateSection.Create(
-                ManifestTemplateSectionId.New(),
-                draft));
+        _sections.Add(ManifestTemplateSection.Create(name, draft.Rows));
     }
 
     private void AddGeneralAdmissionArea(GeneralAdmissionAreaDraft draft)
     {
         ArgumentNullException.ThrowIfNull(draft);
 
-        if (_generalAdmissionAreas.Any(x => x.Name == draft.Name))
-        {
-            throw new ArgumentException($"General admission area with name '{draft.Name}' already exists.");
-        }
+        var name = new GeneralAdmissionAreaName(draft.Name);
+        var capacity = new GeneralAdmissionCapacity(draft.Capacity);
 
-        _generalAdmissionAreas.Add(
-            GeneralAdmissionArea.Create(
-                GeneralAdmissionAreaId.New(),
-                draft.Name,
-                draft.Capacity));
+        EnsureLayoutElementNameIsUnique(name.Value);
+
+        _generalAdmissionAreas.Add(GeneralAdmissionArea.Create(name, capacity));
     }
+
+    private void EnsureLayoutElementNameIsUnique(string candidate)
+    {
+        if (_sections.Any(x => HasSameName(x.Name.Value, candidate)) ||
+            _generalAdmissionAreas.Any(x => HasSameName(x.Name.Value, candidate)))
+        {
+            throw new ArgumentException($"A layout element with name '{candidate}' already exists.");
+        }
+    }
+
+    private static bool HasSameName(string left, string right) =>
+        string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
 }
 
 public readonly record struct ManifestTemplateId(Guid Value)
 {
-    public static ManifestTemplateId New() => new(Guid.NewGuid());
+    public static ManifestTemplateId Create() => new(Guid.CreateVersion7());
     public static implicit operator Guid(ManifestTemplateId id) => id.Value;
-    public static implicit operator ManifestTemplateId(Guid value) => new(value);
+    public override string ToString() => Value.ToString();
 }
 
 public sealed record ManifestTemplateName
 {
     public const int MaxLength = 100;
-    public string Value { get; }
+    public string Value { get; private set; }
 
     public ManifestTemplateName(string value)
     {
@@ -119,11 +131,12 @@ public sealed record ManifestTemplateName
 public sealed record ManifestTemplateDescription
 {
     public const int MaxLength = 1000;
-    public string Value { get; }
+    public string Value { get; private set; }
 
     public ManifestTemplateDescription(string value)
     {
-        value = value?.Trim() ?? string.Empty;
+        ArgumentException.ThrowIfNullOrWhiteSpace(value);
+        value = value.Trim();
         value.ThrowIfTooLong(nameof(value), MaxLength);
         Value = value;
     }
