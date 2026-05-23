@@ -11,4 +11,13 @@ public abstract class DomainException : Exception
 
         Code = code;
     }
+
+    protected DomainException(DomainError error) : base(error.Message)
+    {
+        Code = error.Code;
+    }
+}
+
+public sealed class DomainRuleViolationException(DomainError error) : DomainException(error)
+{
 }

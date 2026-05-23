@@ -87,3 +87,4 @@ Example synchronization pattern:
 ## Process Docs
 
 - [Docs planning and execution flow](docs/github-projects-process.md)
+- [Development guide (EF migrations and DB update)](docs/development.md)

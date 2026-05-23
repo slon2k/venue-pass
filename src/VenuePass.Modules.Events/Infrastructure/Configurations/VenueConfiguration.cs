@@ -13,7 +13,11 @@ internal sealed class VenueConfiguration : IEntityTypeConfiguration<Venue>
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id)
-            .ValueGeneratedNever();
+            .HasConversion(
+                id => id.Value,
+                value => new VenueId(value))
+            .ValueGeneratedNever()
+            .HasColumnName("id");
 
         builder.Ignore(x => x.DomainEvents);
 

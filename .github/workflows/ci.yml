@@ -25,5 +25,8 @@ jobs:
       - name: Build
         run: dotnet build VenuePass.slnx --configuration Release --no-restore /warnaserror
 
-      - name: Run tests
-        run: dotnet test VenuePass.slnx --configuration Release --no-build
+      - name: Run tests (unit + architecture)
+        run: |
+          dotnet test tests/VenuePass.BuildingBlocks.Tests/VenuePass.BuildingBlocks.Tests.csproj --configuration Release --no-build
+          dotnet test tests/VenuePass.Modules.Events.Tests/VenuePass.Modules.Events.Tests.csproj --configuration Release --no-build
+          dotnet test tests/VenuePass.ArchitectureTests/VenuePass.ArchitectureTests.csproj --configuration Release --no-build
