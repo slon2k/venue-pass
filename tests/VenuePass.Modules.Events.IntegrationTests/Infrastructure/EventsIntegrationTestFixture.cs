@@ -15,15 +15,23 @@ public sealed class EventsIntegrationTestFixture : IAsyncLifetime
         .WithPassword("yourStrong(!)Password")
         .Build();
 
+    private readonly string? _externalConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Database");
+
     public EventsApiFactory Factory { get; private set; } = null!;
 
     public HttpClient Client => Factory.CreateClient();
 
     public async Task InitializeAsync()
     {
-        await _sqlContainer.StartAsync();
-
-        Factory = new EventsApiFactory(_sqlContainer.GetConnectionString());
+        if (string.IsNullOrWhiteSpace(_externalConnectionString))
+        {
+            await _sqlContainer.StartAsync();
+            Factory = new EventsApiFactory(_sqlContainer.GetConnectionString());
+        }
+        else
+        {
+            Factory = new EventsApiFactory(_externalConnectionString);
+        }
 
         await MigrateDatabaseWithRetryAsync();
     }
@@ -35,7 +43,10 @@ public sealed class EventsIntegrationTestFixture : IAsyncLifetime
             await Factory.DisposeAsync();
         }
 
-        await _sqlContainer.DisposeAsync();
+        if (string.IsNullOrWhiteSpace(_externalConnectionString))
+        {
+            await _sqlContainer.DisposeAsync();
+        }
     }
 
     private async Task MigrateDatabaseWithRetryAsync()
