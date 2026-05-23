@@ -61,7 +61,7 @@ public sealed class ManifestTemplate : AggregateRoot<ManifestTemplateId>
 
         if (template._sections.Count == 0 && template._generalAdmissionAreas.Count == 0)
         {
-            throw new ArgumentException("Manifest template must contain at least one layout element.");
+            throw new DomainRuleViolationException(ManifestTemplateErrors.MustContainLayoutElements());
         }
 
         return template;
@@ -95,7 +95,7 @@ public sealed class ManifestTemplate : AggregateRoot<ManifestTemplateId>
         if (_sections.Any(x => HasSameName(x.Name.Value, candidate)) ||
             _generalAdmissionAreas.Any(x => HasSameName(x.Name.Value, candidate)))
         {
-            throw new ArgumentException($"A layout element with name '{candidate}' already exists.");
+            throw new DomainRuleViolationException(ManifestTemplateErrors.DuplicateLayoutElementName(candidate));
         }
     }
 

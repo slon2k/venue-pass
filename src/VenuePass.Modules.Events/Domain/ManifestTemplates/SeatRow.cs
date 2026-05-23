@@ -34,8 +34,7 @@ public sealed class SeatRow : Entity<SeatRowId>
 
         if (row.Seats.Count == 0)
         {
-            throw new ArgumentException(
-                $"Row '{row.Label}' must contain at least one seat.");
+            throw new DomainRuleViolationException(ManifestTemplateErrors.RowMustContainSeats(label.Value));
         }
 
         return row;
@@ -49,8 +48,7 @@ public sealed class SeatRow : Entity<SeatRowId>
 
         if (_seats.Any(x => HasSameLabel(x.Label.Value, label.Value)))
         {
-            throw new ArgumentException(
-                $"Seat with label '{label}' already exists in row '{Label}'.");
+            throw new DomainRuleViolationException(ManifestTemplateErrors.DuplicateSeatLabel(label.Value, Label.Value));
         }
 
         _seats.Add(Seat.Create(label));

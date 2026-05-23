@@ -40,8 +40,7 @@ public sealed class Section : Entity<SectionId>
 
         if (section.Rows.Count == 0)
         {
-            throw new ArgumentException(
-                $"Section '{name}' must contain at least one row.");
+            throw new DomainRuleViolationException(ManifestTemplateErrors.SectionMustContainRows(name.Value));
         }
 
         return section;
@@ -55,8 +54,7 @@ public sealed class Section : Entity<SectionId>
 
         if (_rows.Any(x => HasSameLabel(x.Label.Value, label.Value)))
         {
-            throw new ArgumentException(
-                $"Row with label '{label}' already exists in section '{Name}'.");
+            throw new DomainRuleViolationException(ManifestTemplateErrors.DuplicateRowLabel(label.Value, Name.Value));
         }
 
         _rows.Add(SeatRow.Create(label, draft.Seats));
