@@ -3,16 +3,16 @@ using VenuePass.BuildingBlocks.Extensions;
 
 namespace VenuePass.Modules.Events.Domain.ManifestTemplates;
 
-public sealed class ManifestTemplateSection : Entity<ManifestTemplateSectionId>
+public sealed class Section : Entity<SectionId>
 {
     private readonly List<SeatRow> _rows = [];
 
-    private ManifestTemplateSection()
+    private Section()
     {
     }
 
-    private ManifestTemplateSection(
-        ManifestTemplateSectionId id,
+    private Section(
+        SectionId id,
         SectionName name)
         : base(id)
     {
@@ -23,14 +23,14 @@ public sealed class ManifestTemplateSection : Entity<ManifestTemplateSectionId>
 
     public IReadOnlyList<SeatRow> Rows => _rows.AsReadOnly();
 
-    internal static ManifestTemplateSection Create(
+    internal static Section Create(
         SectionName name,
         IReadOnlyList<RowDraft> rowDrafts)
     {
         ArgumentNullException.ThrowIfNull(rowDrafts);
 
-        var section = new ManifestTemplateSection(
-            ManifestTemplateSectionId.Create(),
+        var section = new Section(
+            SectionId.Create(),
             name);
 
         foreach (var rowDraft in rowDrafts)
@@ -66,10 +66,10 @@ public sealed class ManifestTemplateSection : Entity<ManifestTemplateSectionId>
         string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
 }
 
-public readonly record struct ManifestTemplateSectionId(Guid Value)
+public readonly record struct SectionId(Guid Value)
 {
-    public static ManifestTemplateSectionId Create() => new(Guid.CreateVersion7());
-    public static implicit operator Guid(ManifestTemplateSectionId id) => id.Value;
+    public static SectionId Create() => new(Guid.CreateVersion7());
+    public static implicit operator Guid(SectionId id) => id.Value;
     public override string ToString() => Value.ToString();
 };
 

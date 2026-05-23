@@ -6,7 +6,7 @@ namespace VenuePass.Modules.Events.Domain.ManifestTemplates;
 
 public sealed class ManifestTemplate : AggregateRoot<ManifestTemplateId>
 {
-    private readonly List<ManifestTemplateSection> _sections = [];
+    private readonly List<Section> _sections = [];
     private readonly List<GeneralAdmissionArea> _generalAdmissionAreas = [];
 
     private ManifestTemplate()
@@ -29,7 +29,7 @@ public sealed class ManifestTemplate : AggregateRoot<ManifestTemplateId>
     public ManifestTemplateDescription? Description { get; private set; }
     public VenueId VenueId { get; private set; }
 
-    public IReadOnlyList<ManifestTemplateSection> Sections => _sections.AsReadOnly();
+    public IReadOnlyList<Section> Sections => _sections.AsReadOnly();
     public IReadOnlyList<GeneralAdmissionArea> GeneralAdmissionAreas => _generalAdmissionAreas.AsReadOnly();
 
     public static ManifestTemplate Create(
@@ -75,7 +75,7 @@ public sealed class ManifestTemplate : AggregateRoot<ManifestTemplateId>
   
         EnsureLayoutElementNameIsUnique(name.Value);
 
-        _sections.Add(ManifestTemplateSection.Create(name, draft.Rows));
+        _sections.Add(Section.Create(name, draft.Rows));
     }
 
     private void AddGeneralAdmissionArea(GeneralAdmissionAreaDraft draft)
