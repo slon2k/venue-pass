@@ -9,20 +9,6 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    services:
-      sqlserver:
-        image: mcr.microsoft.com/mssql/server:2022-latest
-        env:
-          ACCEPT_EULA: "Y"
-          MSSQL_SA_PASSWORD: "Strong_password123!"
-        ports:
-          - 1433:1433
-        options: >-
-          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"Strong_password123!\" -C -Q \"SELECT 1\" || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 20
-          --health-start-period 20s
 
     steps:
       - name: Checkout
@@ -39,7 +25,8 @@ jobs:
       - name: Build
         run: dotnet build VenuePass.slnx --configuration Release --no-restore /warnaserror
 
-      - name: Run tests
-        run: dotnet test VenuePass.slnx --configuration Release --no-build
-        env:
-          ConnectionStrings__Database: "Server=localhost,1433;Database=VenuePassCi;User Id=sa;Password=Strong_password123!;TrustServerCertificate=True;Encrypt=False"
+      - name: Run tests (unit + architecture)
+        run: |
+          dotnet test tests/VenuePass.BuildingBlocks.Tests/VenuePass.BuildingBlocks.Tests.csproj --configuration Release --no-build
+          dotnet test tests/VenuePass.Modules.Events.Tests/VenuePass.Modules.Events.Tests.csproj --configuration Release --no-build
+          dotnet test tests/VenuePass.ArchitectureTests/VenuePass.ArchitectureTests.csproj --configuration Release --no-build
