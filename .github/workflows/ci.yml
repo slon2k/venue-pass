@@ -26,7 +26,7 @@ jobs:
           --health-start-period 30s
 
     env:
-      TEST_DB_CONNECTION_STRING: "Server=localhost,1433;Database=master;User Id=sa;Password=YourStrong_Passw0rd;TrustServerCertificate=True"
+      TEST_DB_CONNECTION_STRING: "Server=localhost,1433;Database=VenuePass_Tests;User Id=sa;Password=YourStrong_Passw0rd;TrustServerCertificate=True"
 
     steps:
       - name: Checkout
