@@ -20,9 +20,27 @@ public sealed class EventsIntegrationTestFixture : IAsyncLifetime
         await _sqlContainer.StartAsync();
         Factory = new EventsApiFactory(_sqlContainer.GetConnectionString());
 
-        using IServiceScope scope = Factory.Services.CreateScope();
-        EventsDbContext dbContext = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
-        await dbContext.Database.MigrateAsync();
+        await MigrateWithRetryAsync();
+    }
+
+    private async Task MigrateWithRetryAsync()
+    {
+        const int maxAttempts = 3;
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                using IServiceScope scope = Factory.Services.CreateScope();
+                EventsDbContext dbContext = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
+                await dbContext.Database.MigrateAsync();
+                return;
+            }
+            catch when (attempt < maxAttempts)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(attempt * 2));
+            }
+        }
     }
 
     public async Task DisposeAsync()
