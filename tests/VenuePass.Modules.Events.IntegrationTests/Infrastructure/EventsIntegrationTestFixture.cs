@@ -8,8 +8,19 @@ namespace VenuePass.Modules.Events.IntegrationTests.Infrastructure;
 
 public sealed class EventsIntegrationTestFixture : IAsyncLifetime
 {
-    private readonly MsSqlContainer _sqlContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-CU25-ubuntu-22.04")
-        .Build();
+    private readonly MsSqlContainer? _sqlContainer;
+    private readonly string? _externalConnectionString;
+
+    public EventsIntegrationTestFixture()
+    {
+        _externalConnectionString = Environment.GetEnvironmentVariable("TEST_DB_CONNECTION_STRING");
+
+        if (string.IsNullOrWhiteSpace(_externalConnectionString))
+        {
+            _sqlContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-CU25-ubuntu-22.04")
+                .Build();
+        }
+    }
 
     public EventsApiFactory Factory { get; private set; } = null!;
 
@@ -17,8 +28,19 @@ public sealed class EventsIntegrationTestFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        await _sqlContainer.StartAsync();
-        Factory = new EventsApiFactory(_sqlContainer.GetConnectionString());
+        string connectionString;
+
+        if (_sqlContainer is not null)
+        {
+            await _sqlContainer.StartAsync();
+            connectionString = _sqlContainer.GetConnectionString();
+        }
+        else
+        {
+            connectionString = _externalConnectionString!;
+        }
+
+        Factory = new EventsApiFactory(connectionString);
 
         using IServiceScope scope = Factory.Services.CreateScope();
         EventsDbContext dbContext = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
@@ -32,6 +54,9 @@ public sealed class EventsIntegrationTestFixture : IAsyncLifetime
             await Factory.DisposeAsync();
         }
 
-        await _sqlContainer.DisposeAsync();
+        if (_sqlContainer is not null)
+        {
+            await _sqlContainer.DisposeAsync();
+        }
     }
 }
