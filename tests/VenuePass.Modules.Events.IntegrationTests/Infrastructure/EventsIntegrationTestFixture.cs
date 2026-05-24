@@ -18,7 +18,9 @@ public sealed class EventsIntegrationTestFixture : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _sqlContainer.StartAsync();
-        Factory = new EventsApiFactory(_sqlContainer.GetConnectionString());
+
+        var connectionString = _sqlContainer.GetConnectionString() + ";Encrypt=False";
+        Factory = new EventsApiFactory(connectionString);
 
         await MigrateWithRetryAsync();
     }
