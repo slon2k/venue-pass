@@ -8,8 +8,19 @@ namespace VenuePass.Modules.Events.IntegrationTests.Infrastructure;
 
 public sealed class EventsIntegrationTestFixture : IAsyncLifetime
 {
-    private readonly MsSqlContainer _sqlContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-CU25-ubuntu-22.04")
-        .Build();
+    private readonly MsSqlContainer? _sqlContainer;
+    private readonly string? _externalConnectionString;
+
+    public EventsIntegrationTestFixture()
+    {
+        _externalConnectionString = Environment.GetEnvironmentVariable("TEST_DB_CONNECTION_STRING");
+
+        if (string.IsNullOrWhiteSpace(_externalConnectionString))
+        {
+            _sqlContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-CU25-ubuntu-22.04")
+                .Build();
+        }
+    }
 
     public EventsApiFactory Factory { get; private set; } = null!;
 
@@ -17,32 +28,23 @@ public sealed class EventsIntegrationTestFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        await _sqlContainer.StartAsync();
+        string connectionString;
 
-        var connectionString = _sqlContainer.GetConnectionString() + ";Encrypt=False";
+        if (_sqlContainer is not null)
+        {
+            await _sqlContainer.StartAsync();
+            connectionString = _sqlContainer.GetConnectionString();
+        }
+        else
+        {
+            connectionString = _externalConnectionString!;
+        }
+
         Factory = new EventsApiFactory(connectionString);
 
-        await MigrateWithRetryAsync();
-    }
-
-    private async Task MigrateWithRetryAsync()
-    {
-        const int maxAttempts = 3;
-
-        for (var attempt = 1; attempt <= maxAttempts; attempt++)
-        {
-            try
-            {
-                using IServiceScope scope = Factory.Services.CreateScope();
-                EventsDbContext dbContext = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
-                await dbContext.Database.MigrateAsync();
-                return;
-            }
-            catch when (attempt < maxAttempts)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(attempt * 2));
-            }
-        }
+        using IServiceScope scope = Factory.Services.CreateScope();
+        EventsDbContext dbContext = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
+        await dbContext.Database.MigrateAsync();
     }
 
     public async Task DisposeAsync()
@@ -52,6 +54,9 @@ public sealed class EventsIntegrationTestFixture : IAsyncLifetime
             await Factory.DisposeAsync();
         }
 
-        await _sqlContainer.DisposeAsync();
+        if (_sqlContainer is not null)
+        {
+            await _sqlContainer.DisposeAsync();
+        }
     }
 }

@@ -10,6 +10,24 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-CU25-ubuntu-22.04
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "IntegrationTest1!"
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'IntegrationTest1!' -C -Q 'SELECT 1' || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 30s
+
+    env:
+      TEST_DB_CONNECTION_STRING: "Server=localhost,1433;Database=venuepass_tests;User Id=sa;Password=IntegrationTest1!;TrustServerCertificate=True"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
