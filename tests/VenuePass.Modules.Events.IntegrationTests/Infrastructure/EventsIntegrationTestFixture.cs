@@ -1,4 +1,3 @@
-using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.MsSql;
@@ -9,13 +8,8 @@ namespace VenuePass.Modules.Events.IntegrationTests.Infrastructure;
 
 public sealed class EventsIntegrationTestFixture : IAsyncLifetime
 {
-    private const int MaxMigrationAttempts = 10;
-
-    private readonly MsSqlContainer _sqlContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest")
-        .WithPassword("yourStrong(!)Password")
+    private readonly MsSqlContainer _sqlContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-CU25-ubuntu-22.04")
         .Build();
-
-    private readonly string? _externalConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Database");
 
     public EventsApiFactory Factory { get; private set; } = null!;
 
@@ -23,17 +17,12 @@ public sealed class EventsIntegrationTestFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        if (string.IsNullOrWhiteSpace(_externalConnectionString))
-        {
-            await _sqlContainer.StartAsync();
-            Factory = new EventsApiFactory(_sqlContainer.GetConnectionString());
-        }
-        else
-        {
-            Factory = new EventsApiFactory(_externalConnectionString);
-        }
+        await _sqlContainer.StartAsync();
+        Factory = new EventsApiFactory(_sqlContainer.GetConnectionString());
 
-        await MigrateDatabaseWithRetryAsync();
+        using IServiceScope scope = Factory.Services.CreateScope();
+        EventsDbContext dbContext = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
+        await dbContext.Database.MigrateAsync();
     }
 
     public async Task DisposeAsync()
@@ -43,42 +32,6 @@ public sealed class EventsIntegrationTestFixture : IAsyncLifetime
             await Factory.DisposeAsync();
         }
 
-        if (string.IsNullOrWhiteSpace(_externalConnectionString))
-        {
-            await _sqlContainer.DisposeAsync();
-        }
-    }
-
-    private async Task MigrateDatabaseWithRetryAsync()
-    {
-        for (var attempt = 1; attempt <= MaxMigrationAttempts; attempt++)
-        {
-            try
-            {
-                using IServiceScope scope = Factory.Services.CreateScope();
-                EventsDbContext dbContext = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
-                await dbContext.Database.MigrateAsync();
-                return;
-            }
-            catch (Exception ex) when (IsTransientDatabaseStartupError(ex) && attempt < MaxMigrationAttempts)
-            {
-                var delay = TimeSpan.FromSeconds(Math.Min(attempt * 2, 10));
-                await Task.Delay(delay);
-            }
-        }
-
-        using IServiceScope finalScope = Factory.Services.CreateScope();
-        EventsDbContext finalDbContext = finalScope.ServiceProvider.GetRequiredService<EventsDbContext>();
-        await finalDbContext.Database.MigrateAsync();
-    }
-
-    private static bool IsTransientDatabaseStartupError(Exception exception)
-    {
-        if (exception is SqlException)
-        {
-            return true;
-        }
-
-        return exception.InnerException is not null && IsTransientDatabaseStartupError(exception.InnerException);
+        await _sqlContainer.DisposeAsync();
     }
 }
