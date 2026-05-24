@@ -5,7 +5,8 @@ using Xunit;
 
 namespace VenuePass.Modules.Events.IntegrationTests.Features.CreateVenue;
 
-public sealed class CreateVenueEndpointTests : IClassFixture<EventsIntegrationTestFixture>
+[Collection(EventsTestCollectionFixture.Name)]
+public sealed class CreateVenueEndpointTests
 {
     private readonly HttpClient _client;
 

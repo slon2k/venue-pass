@@ -5,15 +5,14 @@ using Xunit;
 
 namespace VenuePass.Modules.Events.IntegrationTests.Features.GetVenue;
 
-public sealed class GetVenueEndpointTests : IClassFixture<EventsIntegrationTestFixture>
+[Collection(EventsTestCollectionFixture.Name)]
+public sealed class GetVenueEndpointTests
 {
     private readonly HttpClient _client;
-    private readonly EventsIntegrationTestFixture _fixture;
 
     public GetVenueEndpointTests(EventsIntegrationTestFixture fixture)
     {
         _client = fixture.Client;
-        _fixture = fixture;
     }
 
     [Fact]

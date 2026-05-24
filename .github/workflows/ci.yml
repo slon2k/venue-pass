@@ -30,3 +30,6 @@ jobs:
           dotnet test tests/VenuePass.BuildingBlocks.Tests/VenuePass.BuildingBlocks.Tests.csproj --configuration Release --no-build
           dotnet test tests/VenuePass.Modules.Events.Tests/VenuePass.Modules.Events.Tests.csproj --configuration Release --no-build
           dotnet test tests/VenuePass.ArchitectureTests/VenuePass.ArchitectureTests.csproj --configuration Release --no-build
+
+      - name: Run integration tests
+        run: dotnet test tests/VenuePass.Modules.Events.IntegrationTests/VenuePass.Modules.Events.IntegrationTests.csproj --configuration Release --no-build
