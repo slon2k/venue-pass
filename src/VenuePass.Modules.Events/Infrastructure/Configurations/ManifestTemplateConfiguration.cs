@@ -51,12 +51,6 @@ public sealed class ManifestTemplateConfiguration : IEntityTypeConfiguration<Man
             .HasForeignKey(mt => mt.VenueId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        builder.Navigation(x => x.Sections)
-            .UsePropertyAccessMode(PropertyAccessMode.Field);
-
-        builder.Navigation(x => x.GeneralAdmissionAreas)
-            .UsePropertyAccessMode(PropertyAccessMode.Field);
-
         builder.OwnsMany(mt => mt.GeneralAdmissionAreas, ga =>
         {
             ga.ToTable("manifest_template_general_admission_areas");
@@ -112,9 +106,6 @@ public sealed class ManifestTemplateConfiguration : IEntityTypeConfiguration<Man
             .HasColumnName("name")
             .IsRequired();
 
-            s.Navigation(x => x.Rows)
-                .UsePropertyAccessMode(PropertyAccessMode.Field);
-
             s.OwnsMany(s => s.Rows, r =>
             {
                 r.ToTable("manifest_template_section_rows");
@@ -137,9 +128,6 @@ public sealed class ManifestTemplateConfiguration : IEntityTypeConfiguration<Man
                     .HasMaxLength(RowLabel.MaxLength)
                     .HasColumnName("label")
                     .IsRequired();
-
-                r.Navigation(x => x.Seats)
-                    .UsePropertyAccessMode(PropertyAccessMode.Field);
 
                 r.OwnsMany(r => r.Seats, seat =>
                 {
@@ -164,7 +152,19 @@ public sealed class ManifestTemplateConfiguration : IEntityTypeConfiguration<Man
                         .HasColumnName("label")
                         .IsRequired();
                 });
+
+                r.Navigation(x => x.Seats)
+                    .UsePropertyAccessMode(PropertyAccessMode.Field);
             });
+       
+            s.Navigation(x => x.Rows)
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
         });
+
+        builder.Navigation(x => x.Sections)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Navigation(x => x.GeneralAdmissionAreas)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
