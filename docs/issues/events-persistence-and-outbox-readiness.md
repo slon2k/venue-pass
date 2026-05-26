@@ -17,15 +17,15 @@ Provide the persistence foundation required by the Events module so venue and ma
 
 ## Acceptance Criteria
 
-- [ ] The Events schema contains the required tables and mappings for venue and manifest template persistence.
-- [ ] The required migrations exist and can be applied cleanly.
-- [ ] The outbox table exists but publication flow is not enabled yet.
+- [x] The Events schema contains the required tables and mappings for venue and manifest template persistence.
+- [x] The required migrations exist and can be applied cleanly.
+- [x] The outbox table exists but publication flow is not enabled yet.
 
 ## Vertical Slices
 
-- [ ] Persist venue and manifest template aggregate structure
-- [ ] Add migrations for venue and manifest template storage
-- [ ] Add outbox table without publication flow
+- [x] Persist venue and manifest template aggregate structure
+- [x] Add migrations for venue and manifest template storage
+- [x] Add outbox table without publication flow
 
 ## Risks and Assumptions
 
@@ -34,6 +34,6 @@ Provide the persistence foundation required by the Events module so venue and ma
 
 ## Definition of Done
 
-- [ ] Acceptance criteria met
-- [ ] Tests passing
-- [ ] Docs updated if behavior changed
+- [x] Acceptance criteria met
+- [x] Tests passing
+- [x] Docs updated if behavior changed

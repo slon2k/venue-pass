@@ -17,15 +17,17 @@ Enable the Events module to manage manifest templates end-to-end, starting with 
 
 ## Acceptance Criteria
 
-- [ ] A manifest template can be created through the Events API.
-- [ ] A manifest template can be retrieved through the Events API.
-- [ ] Seated structure and general admission areas are persisted correctly.
-- [ ] Template validation rejects invalid or incomplete structures.
+- [x] A manifest template can be created through the Events API.
+- [x] A manifest template can be retrieved through the Events API.
+- [x] Seated structure and general admission areas are persisted correctly.
+- [x] Template validation rejects invalid or incomplete structures.
 
 ## Vertical Slices
 
+- [x] Define manifest template domain model
 - [x] Create manifest template
 - [x] Get manifest template
+- [x] Add integration tests for manifest template flows
 
 ## Risks and Assumptions
 
@@ -34,6 +36,6 @@ Enable the Events module to manage manifest templates end-to-end, starting with 
 
 ## Definition of Done
 
-- [ ] Acceptance criteria met
-- [ ] Tests passing
-- [ ] Docs updated if behavior changed
+- [x] Acceptance criteria met
+- [x] Tests passing
+- [x] Docs updated if behavior changed
