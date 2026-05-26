@@ -14,8 +14,8 @@ Use these docs as canonical planning artifacts:
 - docs/architecture-overview.md: full architecture decisions and constraints
 - docs/architecture-outline.md: short architecture reference for planning and AI context
 - docs/roadmap.md: milestone sequencing (Now, Next, Later)
-- docs/milestone-plan.md: active milestone scope and definition of done
-- docs/milestones/milestone-01.md: issue seed for current milestone capability issues and slices
+- docs/milestone-plan.md: active milestone pointer (no detailed scope duplication)
+- docs/milestones/milestone-xx.md: per-milestone source of truth for scope, slices, and completion state
 - docs/tech-decisions.md: ADR-style technical decisions
 
 ## GitHub Project Structure
@@ -80,7 +80,7 @@ Model work in this hierarchy:
 Rules:
 
 - Each milestone in docs/roadmap.md has one milestone issue.
-- Each item in docs/milestone-plan.md In Scope maps to one or more parent capability issues.
+- Each in-scope item in the active `docs/milestones/milestone-xx.md` maps to one or more parent capability issues.
 - Each capability is decomposed into small, user-meaningful vertical slices.
 - Avoid decomposing planning into layer-only issues unless the work is genuinely cross-cutting and independently valuable.
 
@@ -150,7 +150,7 @@ Recommended built-in automation:
 Recommended manual checks:
 
 - If architecture-impact label is present, decide whether `docs/tech-decisions.md` needs an ADR entry
-- If milestone scope changes, update docs/milestone-plan.md and docs/roadmap.md first
+- If milestone scope changes, update the active `docs/milestones/milestone-xx.md` and `docs/roadmap.md` first
 
 ## Milestone Governance Cadence
 
@@ -166,7 +166,7 @@ Milestone close checklist:
 - All in-scope items complete
 - Build and tests pass
 - Architecture constraints still enforced
-- docs/milestone-plan.md updated to closed state
+- active `docs/milestones/milestone-xx.md` updated to closed state
 - docs/roadmap.md advanced (Next promoted to Now)
 
 ## Synchronization Rules
