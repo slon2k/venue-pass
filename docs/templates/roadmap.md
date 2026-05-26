@@ -2,11 +2,11 @@
 
 ## Now
 
-<!-- Active milestone — fully detailed with features and exit criteria -->
+<!-- Active milestone with outcome and link to milestone detail file -->
 
 - **Milestone**: (name)
   - Outcome: (what done looks like)
-  - Features: (list)
+  - Detail file: docs/milestones/(milestone-file).md
 
 ## Next
 

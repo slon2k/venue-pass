@@ -11,7 +11,7 @@
 
 - Start with project-plan and architecture-plan.
 - Create roadmap via roadmap-plan.
-- Define the active milestone via milestone-plan.
+- Define the active milestone in roadmap and detail it in docs/milestones/milestone-xx.md.
 - Decompose each feature before implementation.
 - Never reference file paths or line numbers in plans — describe behaviors and contracts.
 

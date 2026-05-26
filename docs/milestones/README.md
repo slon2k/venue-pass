@@ -11,5 +11,4 @@ This folder is the source of truth for milestone details.
 ## Planning Model
 
 - `docs/roadmap.md` tracks sequencing and status transitions across milestones
-- `docs/milestone-plan.md` is a lightweight pointer to the active milestone
 - Detailed execution content belongs in this folder
