@@ -1,69 +1,18 @@
-# VenuePass — Milestone Plan (01 - Events: Venues & Manifest Templates)
+# VenuePass — Active Milestone Pointer
 
-## Milestone Outcome
+This file intentionally stays lightweight to avoid duplicating milestone details.
 
-The Events module supports venue management and manifest template management end-to-end, with persistence in the `events` schema and retrieval APIs for both capabilities.
+Detailed milestone plans and closure records live in `docs/milestones/`.
 
-## In Scope
+## Active Milestone
 
-- [x] Venue management
-- [x] Manifest template management
-- [x] Events persistence and outbox readiness
+- `02 - Events: Event Creation & Publication` (draft/next execution target)
 
-## Out of Scope
+## Recently Closed
 
-- Event creation and publication
-- Manifest snapshot creation from templates
-- Ticketing synchronization from published events
-- Attendance workflows
-- Identity module implementation beyond existing development setup
-- Venue update/delete flows
-- Manifest template update/delete flows
+- `01 - Events: Venues & Manifest Templates`
 
-## Capability Breakdown
+## Milestone Detail Source of Truth
 
-### Venue management
-
-- [x] Create venue
-- [x] Get venue
-- [x] Harden venue validation and duplicate rules
-
-### Manifest template management
-
-- [x] Create manifest template
-- [x] Get manifest template
-
-### Events persistence and outbox readiness
-
-- [x] Persist venue and manifest template aggregate structure in the `events` schema
-- [x] Add migrations required for venues and manifest templates
-- [x] Add outbox table in the `events` schema without publication flow yet
-
-## Initial Manifest Template Scope
-
-Seated structure plus general admission areas.
-
-## Definition of Done
-
-- [x] All in-scope capability issues implemented and merged
-- [x] Venue creation and retrieval work through the API
-- [x] Manifest template creation and retrieval work through the API
-- [x] Venue and manifest template data persist in the `events` schema
-- [x] Venue duplicate rule is enforced consistently
-- [x] Architecture tests still pass
-- [x] Docs updated if contracts or behavior change
-
-## Validation Checklist
-
-- [x] `dotnet build VenuePass.slnx --configuration Release /warnaserror`
-- [x] `dotnet test VenuePass.slnx --configuration Release`
-- [x] Venue API flow tested end-to-end
-- [x] Manifest template API flow tested end-to-end
-- [x] Database schema contains required `events` objects for venues, templates, and outbox readiness
-
-## Risks and Dependencies
-
-- Manifest template modeling can expand quickly if seating structure rules are not kept tight.
-- Template persistence may drive several EF Core mapping decisions at once.
-- Outbox readiness should not accidentally pull publication behavior from M02 into this milestone.
-- Retrieval shape decisions made here will influence later event-creation flows.
+- Use `docs/milestones/milestone-xx.md` for full in/out scope, capability breakdown, definition of done, and validation checklists.
+- Use `docs/roadmap.md` for cross-milestone sequencing and status transitions (Now, Next, Later).
