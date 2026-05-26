@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using VenuePass.Modules.Events.Features.CreateManifestTemplate;
 using VenuePass.Modules.Events.Features.CreateVenue;
+using VenuePass.Modules.Events.Features.GetManifestTemplate;
 using VenuePass.Modules.Events.Features.GetVenue;
 using VenuePass.Modules.Events.Infrastructure;
 
@@ -45,6 +46,7 @@ public static class ModuleConfiguration
     {
         services.AddScoped<CreateManifestTemplateHandler>();
         services.AddScoped<CreateVenueHandler>();
+        services.AddScoped<GetManifestTemplateHandler>();
         services.AddScoped<GetVenueHandler>();
         return services;
     }

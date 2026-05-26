@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Routing;
 using VenuePass.Modules.Events.Features.CreateManifestTemplate;
 using VenuePass.Modules.Events.Features.CreateVenue;
+using VenuePass.Modules.Events.Features.GetManifestTemplate;
 using VenuePass.Modules.Events.Features.GetVenue;
 
 namespace VenuePass.Modules.Events;
@@ -11,6 +12,7 @@ public static class ModuleEndpointMappings
     {
         app.MapCreateManifestTemplate();
         app.MapCreateVenue();
+        app.MapGetManifestTemplate();
         app.MapGetVenue();
 
         return app;

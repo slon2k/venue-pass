@@ -29,7 +29,7 @@ This milestone should be planned primarily around user-meaningful capabilities. 
 ### Manifest template management
 
 - [x] Create manifest template
-- [ ] Get manifest template
+- [x] Get manifest template
 
 ## Supporting Technical Work
 
