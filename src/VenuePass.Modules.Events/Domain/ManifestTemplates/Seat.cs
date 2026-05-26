@@ -16,7 +16,11 @@ public sealed class Seat : Entity<SeatId>
 
     public SeatLabel Label { get; private set; } = null!;
 
-    internal static Seat Create(SeatLabel label) => new(SeatId.Create(), label);
+    internal static Seat Create(SeatLabel label)
+    {
+        ArgumentNullException.ThrowIfNull(label);
+        return new(SeatId.Create(), label);
+    }
 }
 
 public readonly record struct SeatId(Guid Value)

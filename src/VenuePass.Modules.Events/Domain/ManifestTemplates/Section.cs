@@ -27,6 +27,7 @@ public sealed class Section : Entity<SectionId>
         SectionName name,
         IReadOnlyList<RowDraft> rowDrafts)
     {
+        ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(rowDrafts);
 
         var section = new Section(

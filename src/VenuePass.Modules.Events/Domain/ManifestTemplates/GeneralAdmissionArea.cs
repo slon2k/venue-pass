@@ -26,10 +26,16 @@ public sealed class GeneralAdmissionArea : Entity<GeneralAdmissionAreaId>
 
     internal static GeneralAdmissionArea Create(
         GeneralAdmissionAreaName name,
-        GeneralAdmissionCapacity capacity) => new(
+        GeneralAdmissionCapacity capacity)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(capacity);
+
+        return new(
             GeneralAdmissionAreaId.Create(),
             name,
             capacity);
+    }
 }
 
 public readonly record struct GeneralAdmissionAreaId(Guid Value)

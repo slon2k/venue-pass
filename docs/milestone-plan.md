@@ -30,7 +30,7 @@ The Events module supports venue management and manifest template management end
 
 ### Manifest template management
 
-- [ ] Create manifest template
+- [x] Create manifest template
 - [ ] Get manifest template
 
 ### Events persistence and outbox readiness

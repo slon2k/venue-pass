@@ -20,7 +20,7 @@ public sealed class SeatRow : Entity<SeatRowId>
 
     public IReadOnlyList<Seat> Seats => _seats.AsReadOnly();
 
-    internal static SeatRow Create(RowLabel label, IEnumerable<SeatDraft> seatDrafts)
+    internal static SeatRow Create(RowLabel label, IReadOnlyList<SeatDraft> seatDrafts)
     {
         ArgumentNullException.ThrowIfNull(label);
         ArgumentNullException.ThrowIfNull(seatDrafts);
