@@ -73,7 +73,7 @@ body:
       label: Docs to Update
       description: List docs impacted by this feature.
       value: |
-        - [ ] docs/milestone-plan.md
+        - [ ] docs/milestones/milestone-xx.md
         - [ ] docs/roadmap.md (if scope changes)
         - [ ] docs/architecture-overview.md (if architecture changes)
         - [ ] docs/tech-decisions.md (if ADR-worthy)

@@ -14,7 +14,6 @@ Use these docs as canonical planning artifacts:
 - docs/architecture-overview.md: full architecture decisions and constraints
 - docs/architecture-outline.md: short architecture reference for planning and AI context
 - docs/roadmap.md: milestone sequencing (Now, Next, Later)
-- docs/milestone-plan.md: active milestone pointer (no detailed scope duplication)
 - docs/milestones/milestone-xx.md: per-milestone source of truth for scope, slices, and completion state
 - docs/tech-decisions.md: ADR-style technical decisions
 
@@ -38,13 +37,13 @@ Use labels instead of extra fields for secondary tracking:
 Use the following planning levels consistently:
 
 1. Milestone = delivery phase
-2. Parent issue = capability issue
+2. Parent issue = feature (capability issue)
 3. Sub-issue = vertical slice
 
 Definitions:
 
 - A milestone groups related work into a delivery phase with a clear outcome.
-- A parent issue describes a meaningful capability the system should gain.
+- A parent issue describes a meaningful feature/capability the system should gain.
 - A sub-issue describes one concrete vertical slice that moves that capability forward.
 
 Examples:
@@ -74,13 +73,13 @@ Those technical tasks are usually implementation checklist items inside a vertic
 Model work in this hierarchy:
 
 1. Milestone issue (delivery-phase level)
-2. Parent capability issue
+2. Parent feature (capability) issue
 3. Sub-issues as vertical slices
 
 Rules:
 
 - Each milestone in docs/roadmap.md has one milestone issue.
-- Each in-scope item in the active `docs/milestones/milestone-xx.md` maps to one or more parent capability issues.
+- Each in-scope item in the active `docs/milestones/milestone-xx.md` maps to one or more parent feature (capability) issues.
 - Each capability is decomposed into small, user-meaningful vertical slices.
 - Avoid decomposing planning into layer-only issues unless the work is genuinely cross-cutting and independently valuable.
 
@@ -121,7 +120,7 @@ Each issue should include:
 - Test plan
 - Docs to update
 
-Parent capability issues should also include:
+Parent feature (capability) issues should also include:
 
 - Capability statement
 - In-scope sub-slices

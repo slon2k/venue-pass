@@ -1,6 +1,6 @@
 ---
 name: milestone-plan
-description: "Detail the active milestone scope and exit criteria. Use when: preparing current release slice, selecting features, defining out-of-scope."
+description: "Detail the active milestone scope and exit criteria. Use when: preparing current release slice, selecting parent features (capability issues), defining out-of-scope."
 agent: agent
 ---
 
@@ -24,7 +24,7 @@ Before producing output, interview the user about milestone scope:
 Produce markdown suitable for `docs/milestones/${{ input:milestone_name }}.md`:
 
 1. Milestone outcome
-2. In-scope features
+2. In-scope parent features (capability issues)
 3. Out-of-scope list
 4. Milestone definition of done
 5. Validation checklist
