@@ -14,17 +14,17 @@ This milestone should be planned primarily around user-meaningful capabilities. 
 
 ## In Scope
 
-- [ ] Venue management
-- [ ] Manifest template management
-- [ ] Supporting technical work required to enable both capabilities
+- [x] Venue management
+- [x] Manifest template management
+- [x] Supporting technical work required to enable both capabilities
 
 ## Capability Breakdown
 
 ### Venue management
 
-- [ ] Create venue
-- [ ] Get venue
-- [ ] Harden venue validation and duplicate rules
+- [x] Create venue
+- [x] Get venue
+- [x] Harden venue validation and duplicate rules
 
 ### Manifest template management
 
@@ -33,9 +33,9 @@ This milestone should be planned primarily around user-meaningful capabilities. 
 
 ## Supporting Technical Work
 
-- [ ] Persist venue and manifest template aggregate structure in the `events` schema
-- [ ] Add migrations required for venues and manifest templates
-- [ ] Add outbox table in the `events` schema without publication flow yet
+- [x] Persist venue and manifest template aggregate structure in the `events` schema
+- [x] Add migrations required for venues and manifest templates
+- [x] Add outbox table in the `events` schema without publication flow yet
 
 ## Initial Manifest Template Scope
 
@@ -53,21 +53,21 @@ Seated structure plus general admission areas.
 
 ## Definition of Done
 
-- [ ] All in-scope capability issues implemented and merged
-- [ ] Venue creation and retrieval work through the API
-- [ ] Manifest template creation and retrieval work through the API
-- [ ] Venue and manifest template data persist in the `events` schema
-- [ ] Venue duplicate rule is enforced consistently
-- [ ] Architecture tests still pass
-- [ ] Docs updated if contracts or behavior change
+- [x] All in-scope capability issues implemented and merged
+- [x] Venue creation and retrieval work through the API
+- [x] Manifest template creation and retrieval work through the API
+- [x] Venue and manifest template data persist in the `events` schema
+- [x] Venue duplicate rule is enforced consistently
+- [x] Architecture tests still pass
+- [x] Docs updated if contracts or behavior change
 
 ## Validation Checklist
 
-- [ ] `dotnet build VenuePass.slnx --configuration Release /warnaserror`
-- [ ] `dotnet test VenuePass.slnx --configuration Release`
-- [ ] Venue API flow tested end-to-end
-- [ ] Manifest template API flow tested end-to-end
-- [ ] Database schema contains required `events` objects for venues, templates, and outbox readiness
+- [x] `dotnet build VenuePass.slnx --configuration Release /warnaserror`
+- [x] `dotnet test VenuePass.slnx --configuration Release`
+- [x] Venue API flow tested end-to-end
+- [x] Manifest template API flow tested end-to-end
+- [x] Database schema contains required `events` objects for venues, templates, and outbox readiness
 
 ## Risks and Dependencies
 
