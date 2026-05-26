@@ -27,25 +27,27 @@ public sealed class CreateVenueHandler(
                     new ValidationErrorDetail(e.PropertyName, e.ErrorMessage))]);
         }
 
+        Venue venue;
+
         try
         {
-            Venue venue = ToEntity(command);
-
-            if (await db.Venues.AnyAsync(v => v.Name == venue.Name && v.Address.City == venue.Address.City, ct))
-            {
-                return CreateVenueErrors.VenueAlreadyExists(venue.Name, venue.Address.City);
-            }
-
-            db.Venues.Add(venue);
-            await db.SaveChangesAsync(ct);
-
-            return ToResult(venue);
+            venue = ToEntity(command);
         }
         catch (ArgumentException ex)
         {
             logger.LogInformation(ex, "Domain validation rejected venue creation.");
             return CreateVenueErrors.InvalidData(ex.Message);
         }
+
+        if (await db.Venues.AnyAsync(v => v.Name == venue.Name && v.Address.City == venue.Address.City, ct))
+        {
+            return CreateVenueErrors.VenueAlreadyExists(venue.Name, venue.Address.City);
+        }
+
+        db.Venues.Add(venue);
+        await db.SaveChangesAsync(ct);
+
+        return ToResult(venue);        
     }
 
     private static Venue ToEntity(CreateVenueCommand command)

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using VenuePass.Modules.Events.Features.CreateManifestTemplate;
 using VenuePass.Modules.Events.Features.CreateVenue;
 using VenuePass.Modules.Events.Features.GetVenue;
 using VenuePass.Modules.Events.Infrastructure;
@@ -42,6 +43,7 @@ public static class ModuleConfiguration
 
     private static IServiceCollection RegisterHandlers(this IServiceCollection services)
     {
+        services.AddScoped<CreateManifestTemplateHandler>();
         services.AddScoped<CreateVenueHandler>();
         services.AddScoped<GetVenueHandler>();
         return services;
