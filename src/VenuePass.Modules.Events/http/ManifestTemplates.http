@@ -1,0 +1,137 @@
+@Events_HostAddress = http://localhost:5119
+@venueId = 019e509a-17ba-759e-9650-afa6daf5dc89
+@manifestTemplateId = 019e509a-17ba-759e-9650-afa6daf5dc90
+
+### Create manifest template - valid (seated + general admission)
+POST {{Events_HostAddress}}/events/manifest-templates
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Main Arena Template",
+  "description": "Primary layout for concerts",
+  "venueId": "{{venueId}}",
+  "sections": [
+    {
+      "name": "Floor",
+      "rows": [
+        {
+          "label": "A",
+          "seats": [
+            { "label": "1" },
+            { "label": "2" },
+            { "label": "3" }
+          ]
+        }
+      ]
+    }
+  ],
+  "generalAdmissionAreas": [
+    {
+      "name": "GA East",
+      "capacity": 300
+    }
+  ]
+}
+
+### Create manifest template - valid (whitespace normalization)
+POST {{Events_HostAddress}}/events/manifest-templates
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "   Secondary Template   ",
+  "description": "  Trim me  ",
+  "venueId": "{{venueId}}",
+  "sections": [
+    {
+      "name": "  Balcony  ",
+      "rows": [
+        {
+          "label": "  B  ",
+          "seats": [
+            { "label": "  10  " },
+            { "label": "  11  " }
+          ]
+        }
+      ]
+    }
+  ],
+  "generalAdmissionAreas": []
+}
+
+### Create manifest template - invalid (no layout elements)
+POST {{Events_HostAddress}}/events/manifest-templates
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Invalid Empty Layout",
+  "description": null,
+  "venueId": "{{venueId}}",
+  "sections": [],
+  "generalAdmissionAreas": []
+}
+
+### Create manifest template - invalid (missing venue)
+POST {{Events_HostAddress}}/events/manifest-templates
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Missing Venue Template",
+  "description": "Should return 404",
+  "venueId": "00000000-0000-0000-0000-000000000000",
+  "sections": [
+    {
+      "name": "Main",
+      "rows": [
+        {
+          "label": "A",
+          "seats": [
+            { "label": "1" }
+          ]
+        }
+      ]
+    }
+  ],
+  "generalAdmissionAreas": []
+}
+
+### Create manifest template - invalid (duplicate layout element names)
+POST {{Events_HostAddress}}/events/manifest-templates
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Duplicate Names Template",
+  "description": "Should return 400",
+  "venueId": "{{venueId}}",
+  "sections": [
+    {
+      "name": "SameName",
+      "rows": [
+        {
+          "label": "A",
+          "seats": [
+            { "label": "1" }
+          ]
+        }
+      ]
+    }
+  ],
+  "generalAdmissionAreas": [
+    {
+      "name": "SameName",
+      "capacity": 100
+    }
+  ]
+}
+
+### Get manifest template by ID (replace with valid ID from create response)
+GET {{Events_HostAddress}}/events/manifest-templates/{{manifestTemplateId}}
+Accept: application/json
+
+### Get non-existent manifest template
+GET {{Events_HostAddress}}/events/manifest-templates/00000000-0000-0000-0000-000000000000
+Accept: application/json
