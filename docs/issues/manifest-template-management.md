@@ -25,7 +25,7 @@ Enable the Events module to manage manifest templates end-to-end, starting with 
 ## Vertical Slices
 
 - [x] Create manifest template
-- [ ] Get manifest template
+- [x] Get manifest template
 
 ## Risks and Assumptions
 
