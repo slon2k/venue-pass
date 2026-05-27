@@ -19,19 +19,19 @@ Establish the Events module lifecycle foundation by introducing event creation a
 
 ## Acceptance Criteria
 
-- [ ] An event can be created through the Events API using required fields: `Name`, `EventDateUtc`, `VenueId`, and `ManifestTemplateId`.
-- [ ] Event creation rejects requests where `EventDateUtc` is not in the future.
-- [ ] Creating an event creates a manifest snapshot that is independent from later template edits.
-- [ ] An event can be retrieved through the Events API with expected core fields.
-- [ ] Manifest snapshot structure is persisted correctly and can be read back for the event.
-- [ ] Invalid create requests are rejected with consistent validation errors.
+- [x] An event can be created through the Events API using required fields: `Name`, `EventDateUtc`, `VenueId`, and `ManifestTemplateId`.
+- [x] Event creation rejects requests where `EventDateUtc` is not in the future.
+- [x] Creating an event creates a manifest snapshot that is independent from later template edits.
+- [x] An event can be retrieved through the Events API with expected core fields.
+- [x] Manifest snapshot structure is persisted correctly and can be read back for the event.
+- [x] Invalid create requests are rejected with consistent validation errors.
 
 ## Vertical Slices
 
-- [ ] A1: Implement Event aggregate lifecycle core for Draft and Published states
-- [ ] A2: Model and persist Manifest snapshot copied from selected ManifestTemplate
-- [ ] A3: Deliver CreateEvent and GetEvent end-to-end API behavior
-- [ ] A4: Add integration tests for create/get event and manifest snapshot structure
+- [x] A1: Implement Event aggregate lifecycle core for Draft and Published states
+- [x] A2: Model and persist Manifest snapshot copied from selected ManifestTemplate
+- [x] A3: Deliver CreateEvent and GetEvent end-to-end API behavior
+- [x] A4: Add integration tests for create/get event and manifest snapshot structure
 
 ## Functional Decisions Required Before A3
 
@@ -50,6 +50,6 @@ Reference: align with the Functional Requirements Baseline and Decision Log in m
 
 ## Definition of Done
 
-- [ ] Acceptance criteria met
-- [ ] Tests passing
-- [ ] Docs updated if behavior changed
+- [x] Acceptance criteria met
+- [x] Tests passing
+- [x] Docs updated if behavior changed

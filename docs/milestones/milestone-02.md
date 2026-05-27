@@ -10,7 +10,7 @@ Milestone 02 is delivered through parent feature (capability) issues and vertica
 
 ## In Scope
 
-- [ ] Capability A: Event lifecycle foundation
+- [x] Capability A: Event lifecycle foundation
 - [ ] Capability B: Event staffing
 - [ ] Capability C: Publication and integration
 
@@ -18,10 +18,10 @@ Milestone 02 is delivered through parent feature (capability) issues and vertica
 
 ### Capability A: Event lifecycle foundation
 
-- [ ] A1: Implement Event aggregate lifecycle core for Draft and Published states
-- [ ] A2: Model and persist Manifest snapshot copied from selected ManifestTemplate
-- [ ] A3: Deliver CreateEvent and GetEvent end-to-end API behavior
-- [ ] A4: Add integration tests for create/get event and manifest snapshot structure
+- [x] A1: Implement Event aggregate lifecycle core for Draft and Published states
+- [x] A2: Model and persist Manifest snapshot copied from selected ManifestTemplate
+- [x] A3: Deliver CreateEvent and GetEvent end-to-end API behavior
+- [x] A4: Add integration tests for create/get event and manifest snapshot structure
 
 ### Capability B: Event staffing
 
@@ -96,7 +96,7 @@ These requirements define minimum business behavior for M02 and should be treate
 
 - [x] Functional requirements above reviewed and accepted.
 - [x] Decisions D1-D5 resolved and documented.
-- [ ] Feature A acceptance criteria and tests aligned with the decisions.
+- [x] Feature A acceptance criteria and tests aligned with the decisions.
 
 ## Out of Scope
 
@@ -115,9 +115,9 @@ These requirements define minimum business behavior for M02 and should be treate
 
 ## Validation Checklist
 
-- [ ] dotnet build passes at solution level
-- [ ] dotnet test passes at solution level
-- [ ] CreateEvent and GetEvent flow verified end-to-end
+- [x] dotnet build passes at solution level
+- [x] dotnet test passes at solution level
+- [x] CreateEvent and GetEvent flow verified end-to-end
 - [ ] AssignEventManager authorization behavior verified
 - [ ] PublishEvent transition and outbox write verified
 - [ ] Outbox dispatcher processing verified in integration scenario
