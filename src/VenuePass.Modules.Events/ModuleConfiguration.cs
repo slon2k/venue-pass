@@ -10,6 +10,7 @@ using VenuePass.Modules.Events.Features.CreateVenue;
 using VenuePass.Modules.Events.Features.GetEvent;
 using VenuePass.Modules.Events.Features.GetManifestTemplate;
 using VenuePass.Modules.Events.Features.GetVenue;
+using VenuePass.Modules.Events.Features.ReassignEventManager;
 using VenuePass.Modules.Events.Infrastructure;
 
 namespace VenuePass.Modules.Events;
@@ -57,6 +58,7 @@ public static class ModuleConfiguration
         services.AddScoped<GetEventHandler>();
         services.AddScoped<GetManifestTemplateHandler>();
         services.AddScoped<GetVenueHandler>();
+        services.AddScoped<ReassignEventManagerHandler>();
         return services;
     }
 }
