@@ -169,6 +169,31 @@ public sealed class EventTests
         Assert.Equal("Events.Event.DateMustBeInTheFutureToPublish", exception.Code);
     }
 
+    // ── ReassignManager ───────────────────────────────────────────────────────
+
+    [Fact]
+    public void ReassignManager_UpdatesAssignedManagerId()
+    {
+        var ev = CreateDraftEvent();
+        var newManager = new UserId(Guid.Parse("00000000-0000-0000-0000-000000000002"));
+
+        ev.ReassignManager(newManager);
+
+        Assert.Equal(newManager, ev.AssignedManagerId);
+    }
+
+    [Fact]
+    public void ReassignManager_OnPublishedEvent_UpdatesAssignedManagerId()
+    {
+        var ev = CreateDraftEvent();
+        ev.Publish(At(FixedNow));
+        var newManager = new UserId(Guid.Parse("00000000-0000-0000-0000-000000000003"));
+
+        ev.ReassignManager(newManager);
+
+        Assert.Equal(newManager, ev.AssignedManagerId);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static Event CreateDraftEvent(DateTimeOffset? eventDate = null)

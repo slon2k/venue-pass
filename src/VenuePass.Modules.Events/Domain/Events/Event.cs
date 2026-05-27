@@ -70,6 +70,11 @@ public sealed class Event : AggregateRoot<EventId>
             assignedManagerId);
     }
 
+    public void ReassignManager(UserId newManagerId)
+    {
+        AssignedManagerId = newManagerId;
+    }
+
     public void Publish(TimeProvider dateTimeProvider)
     {
         if (State != EventState.Draft)
