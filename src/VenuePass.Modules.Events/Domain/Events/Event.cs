@@ -82,6 +82,11 @@ public sealed class Event : AggregateRoot<EventId>
             throw new DomainRuleViolationException(EventErrors.EventMustBeInDraftStateToPublish());
         }
 
+        if (ManifestId == default)
+        {
+            throw new DomainRuleViolationException(EventErrors.ManifestRequiredToPublish());
+        }
+
         if (EventDate <= dateTimeProvider.GetUtcNow())
         {
             throw new DomainRuleViolationException(EventErrors.EventDateMustBeInTheFutureToPublish());
