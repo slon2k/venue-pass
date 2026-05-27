@@ -25,7 +25,8 @@ public static class CreateEventEndpoint
 
     public sealed record CreateEventResponse(
         Guid EventId,
-        Guid ManifestId);
+        Guid ManifestId,
+        Guid AssignedManagerId);
 
     public static IEndpointRouteBuilder MapCreateEvent(this IEndpointRouteBuilder app)
     {
@@ -73,7 +74,8 @@ public static class CreateEventEndpoint
     {
         CreateEventResponse response = new(
             EventId: result.EventId,
-            ManifestId: result.ManifestId);
+            ManifestId: result.ManifestId,
+            AssignedManagerId: result.AssignedManagerId);
 
         return Results.Created($"/events/{response.EventId}", response);
     }

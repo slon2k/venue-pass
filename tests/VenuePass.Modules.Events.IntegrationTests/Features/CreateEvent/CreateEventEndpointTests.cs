@@ -53,6 +53,7 @@ public sealed class CreateEventEndpointTests
         Assert.NotNull(body);
         Assert.NotEqual(Guid.Empty, body.EventId);
         Assert.NotEqual(Guid.Empty, body.ManifestId);
+        Assert.Equal(Guid.Parse(managerId), body.AssignedManagerId);
 
         using IServiceScope scope = _fixture.Factory.Services.CreateScope();
         EventsDbContext db = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
@@ -240,7 +241,7 @@ public sealed class CreateEventEndpointTests
         DateTimeOffset EventDate,
         string? Description);
 
-    private sealed record CreateEventResponse(Guid EventId, Guid ManifestId);
+    private sealed record CreateEventResponse(Guid EventId, Guid ManifestId, Guid AssignedManagerId);
 
     private sealed record CreateVenueRequest(
         string Name,

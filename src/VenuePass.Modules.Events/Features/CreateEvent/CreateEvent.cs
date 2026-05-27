@@ -99,7 +99,7 @@ public sealed class CreateEventHandler(
         db.Manifests.Add(manifest);
         await db.SaveChangesAsync(ct);
 
-        return new CreateEventResult(@event.Id, manifest.Id);
+        return new CreateEventResult(@event.Id, manifest.Id, @event.AssignedManagerId);
     }
 }
 
@@ -113,4 +113,5 @@ public sealed record CreateEventCommand(
 
 public sealed record CreateEventResult(
     Guid EventId,
-    Guid ManifestId);
+    Guid ManifestId,
+    Guid AssignedManagerId);
