@@ -44,19 +44,19 @@ Unauthenticated requests to all endpoints return 401. Role-unauthorized requests
 
 ## Acceptance Criteria
 
-- [ ] Unauthenticated requests to all endpoints return 401
-- [ ] Role-unauthorized requests return 403
-- [ ] `POST /events` requires EventManager role; `AssignedManagerId` is set to caller's `sub`
-- [ ] Admin can reassign the manager of any event; `AssignedManagerId` updated in persistence
-- [ ] Unknown event on reassign returns 404
-- [ ] `GET /events/{id}` response includes `AssignedManagerId`
-- [ ] All existing A-slice integration tests pass with auth enabled
+- [x] Unauthenticated requests to all endpoints return 401
+- [x] Role-unauthorized requests return 403
+- [x] `POST /events` requires EventManager role; `AssignedManagerId` is set to caller's `sub`
+- [x] Admin can reassign the manager of any event; `AssignedManagerId` updated in persistence
+- [x] Unknown event on reassign returns 404
+- [x] `GET /events/{id}` response includes `AssignedManagerId`
+- [x] All existing A-slice integration tests pass with auth enabled
 
 ## Vertical Slices
 
-- [ ] B1: Auth infrastructure, endpoint guards, and CreateEvent auto-assignment
-- [ ] B2: ReassignEventManager domain and endpoint
-- [ ] B3: Integration tests for staffing and auth enforcement
+- [x] B1: Auth infrastructure, endpoint guards, and CreateEvent auto-assignment
+- [x] B2: ReassignEventManager domain and endpoint
+- [x] B3: Integration tests for staffing and auth enforcement
 
 ## Risks and Assumptions
 
@@ -66,6 +66,6 @@ Unauthenticated requests to all endpoints return 401. Role-unauthorized requests
 
 ## Definition of Done
 
-- [ ] Acceptance criteria met
-- [ ] Tests passing
-- [ ] Docs updated if behavior changed
+- [x] Acceptance criteria met
+- [x] Tests passing
+- [x] Docs updated if behavior changed

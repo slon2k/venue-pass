@@ -11,7 +11,7 @@ Milestone 02 is delivered through parent feature (capability) issues and vertica
 ## In Scope
 
 - [x] Capability A: Event lifecycle foundation
-- [ ] Capability B: Event staffing
+- [x] Capability B: Event staffing
 - [ ] Capability C: Publication and integration
 
 ## Capability Breakdown
@@ -25,9 +25,9 @@ Milestone 02 is delivered through parent feature (capability) issues and vertica
 
 ### Capability B: Event staffing
 
-- [ ] B1: Auth infrastructure, endpoint guards, and CreateEvent auto-assignment
-- [ ] B2: ReassignEventManager domain and endpoint
-- [ ] B3: Integration tests for staffing and auth enforcement
+- [x] B1: Auth infrastructure, endpoint guards, and CreateEvent auto-assignment
+- [x] B2: ReassignEventManager domain and endpoint
+- [x] B3: Integration tests for staffing and auth enforcement
 
 ### Capability C: Publication and integration
 
@@ -118,7 +118,7 @@ These requirements define minimum business behavior for M02 and should be treate
 - [x] dotnet build passes at solution level
 - [x] dotnet test passes at solution level
 - [x] CreateEvent and GetEvent flow verified end-to-end
-- [ ] AssignEventManager authorization behavior verified
+- [x] AssignEventManager authorization behavior verified
 - [ ] PublishEvent transition and outbox write verified
 - [ ] Outbox dispatcher processing verified in integration scenario
 
