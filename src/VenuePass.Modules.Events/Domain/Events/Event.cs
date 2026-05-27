@@ -19,17 +19,20 @@ public sealed class Event : AggregateRoot<EventId>
 
     public EventState State { get; private set; } = EventState.Draft;
 
+    public UserId AssignedManagerId { get; private set; }
+
     private Event()
     {
     }
 
     private Event(
         EventId id,
-        VenueId venueId,    
+        VenueId venueId,
         ManifestId manifestId,
         EventName name,
         DateTimeOffset eventDate,
-        EventDescription? description)
+        EventDescription? description,
+        UserId assignedManagerId)
         : base(id)
     {
         VenueId = venueId;
@@ -37,6 +40,7 @@ public sealed class Event : AggregateRoot<EventId>
         Name = name;
         EventDate = eventDate;
         Description = description;
+        AssignedManagerId = assignedManagerId;
     }
 
     public static Event Create(
@@ -46,6 +50,7 @@ public sealed class Event : AggregateRoot<EventId>
         EventName name,
         DateTimeOffset eventDate,
         EventDescription? description,
+        UserId assignedManagerId,
         TimeProvider dateTimeProvider)
     {
         ArgumentNullException.ThrowIfNull(name);
@@ -61,7 +66,8 @@ public sealed class Event : AggregateRoot<EventId>
             manifestId,
             name,
             eventDate,
-            description);
+            description,
+            assignedManagerId);
     }
 
     public void Publish(TimeProvider dateTimeProvider)

@@ -21,7 +21,7 @@ public sealed class CreateManifestTemplateEndpointTests
     public CreateManifestTemplateEndpointTests(EventsIntegrationTestFixture fixture)
     {
         _fixture = fixture;
-        _client = fixture.Client;
+        _client = fixture.CreateAdminClient();
     }
 
     [Fact]

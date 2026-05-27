@@ -41,6 +41,7 @@ public static class CreateManifestTemplateEndpoint
         app.MapPost("/events/manifest-templates", Handle)
             .WithName("CreateManifestTemplate")
             .WithTags("Events")
+            .RequireAuthorization("EventAdmin")
             .Produces<CreateManifestTemplateResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)

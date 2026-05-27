@@ -10,6 +10,7 @@ public sealed class EventTests
 {
     private static readonly DateTimeOffset FixedNow = new(2026, 5, 27, 12, 0, 0, TimeSpan.Zero);
     private static readonly DateTimeOffset FutureDate = FixedNow.AddDays(30);
+    private static readonly UserId AnyManager = new(Guid.Parse("00000000-0000-0000-0000-000000000001"));
 
     private static FakeTimeProvider At(DateTimeOffset now) => new(now);
 
@@ -25,6 +26,7 @@ public sealed class EventTests
             new EventName("Summer Concert"),
             FutureDate,
             null,
+            AnyManager,
             At(FixedNow));
 
         Assert.Equal(EventState.Draft, ev.State);
@@ -43,6 +45,7 @@ public sealed class EventTests
             new EventName("Summer Concert"),
             FutureDate,
             new EventDescription("An outdoor concert"),
+            AnyManager,
             At(FixedNow));
 
         Assert.NotEqual(Guid.Empty, ev.Id.Value);
@@ -63,6 +66,7 @@ public sealed class EventTests
             null!,
             FutureDate,
             null,
+            AnyManager,
             At(FixedNow));
 
         Assert.Throws<ArgumentNullException>(Act);
@@ -80,6 +84,7 @@ public sealed class EventTests
             new EventName("Concert"),
             pastDate,
             null,
+            AnyManager,
             At(FixedNow));
 
         var exception = Assert.Throws<DomainRuleViolationException>(Act);
@@ -96,6 +101,7 @@ public sealed class EventTests
             new EventName("Concert"),
             FixedNow,
             null,
+            AnyManager,
             At(FixedNow));
 
         var exception = Assert.Throws<DomainRuleViolationException>(Act);
@@ -176,6 +182,7 @@ public sealed class EventTests
             new EventName("Concert"),
             date,
             null,
+            AnyManager,
             At(FixedNow));
     }
 

@@ -11,10 +11,12 @@ namespace VenuePass.Modules.Events.IntegrationTests.Features.GetEvent;
 public sealed class GetEventEndpointTests
 {
     private readonly HttpClient _client;
+    private readonly HttpClient _adminClient;
 
     public GetEventEndpointTests(EventsIntegrationTestFixture fixture)
     {
-        _client = fixture.Client;
+        _client = fixture.CreateEventManagerClient();
+        _adminClient = fixture.CreateAdminClient();
     }
 
     [Fact]
@@ -76,7 +78,7 @@ public sealed class GetEventEndpointTests
             Country: "US",
             Capacity: 500);
 
-        HttpResponseMessage response = await _client.PostAsJsonAsync("/events/venues", request);
+        HttpResponseMessage response = await _adminClient.PostAsJsonAsync("/events/venues", request);
         CreateVenueResponse? body = await response.Content.ReadFromJsonAsync<CreateVenueResponse>();
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -113,7 +115,7 @@ public sealed class GetEventEndpointTests
                     Capacity: 300)
             ]);
 
-        HttpResponseMessage response = await _client.PostAsJsonAsync("/events/manifest-templates", request);
+        HttpResponseMessage response = await _adminClient.PostAsJsonAsync("/events/manifest-templates", request);
         CreateManifestTemplateResponse? body = await response.Content.ReadFromJsonAsync<CreateManifestTemplateResponse>();
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);

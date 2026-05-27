@@ -21,6 +21,7 @@ public static class GetVenueEndpoint
         app.MapGet("/events/venues/{id:guid}", Handle)
             .WithName("GetVenue")
             .WithTags("Events")
+            .RequireAuthorization()
             .Produces<GetVenueResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError);

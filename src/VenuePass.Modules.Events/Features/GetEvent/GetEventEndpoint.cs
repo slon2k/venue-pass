@@ -14,6 +14,7 @@ public static class GetEventEndpoint
         app.MapGet("/events/{id:guid}", Handle)
             .WithName("GetEvent")
             .WithTags("Events")
+            .RequireAuthorization()
             .Produces<GetEventResult>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError);

@@ -81,6 +81,7 @@ public sealed class CreateEventHandler(
                 new DomainEventName(command.Name),
                 command.EventDate,
                 description,
+                command.AssignedManagerId,
                 timeProvider);
         }
         catch (DomainRuleViolationException ex)
@@ -107,7 +108,8 @@ public sealed record CreateEventCommand(
     Guid ManifestTemplateId,
     string Name,
     DateTimeOffset EventDate,
-    string? Description);
+    string? Description,
+    UserId AssignedManagerId);
 
 public sealed record CreateEventResult(
     Guid EventId,
