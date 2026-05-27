@@ -2,38 +2,67 @@
 
 ## Summary
 
-Enable staffing for events by supporting manager assignment with role-based authorization and consistent failure behavior.
+Introduce JWT-based authorization across all Events module endpoints, auto-assign the creating EventManager to new events, and provide an Admin-only reassignment path for exceptional cases.
+
+## Roles
+
+| Role | Responsibilities |
+|------|-----------------|
+| Admin | Platform ops: venues, manifest templates, user management, manager reassignment |
+| EventManager | Event lifecycle: create, modify, publish their own events |
+
+## Endpoint Policy Table
+
+| Endpoint | Policy |
+|----------|--------|
+| `POST /venues` | Admin |
+| `GET /venues/{id}` | Any authenticated |
+| `POST /manifest-templates` | Admin |
+| `GET /manifest-templates/{id}` | Any authenticated |
+| `POST /events` | EventManager |
+| `POST /events/{id}/reassign-manager` | Admin |
+| `POST /events/{id}/publish` | EventManager + domain check (assigned) |
+| `GET /events/{id}` | Any authenticated |
+
+Unauthenticated requests to all endpoints return 401. Role-unauthorized requests return 403.
 
 ## Scope
 
 - In scope:
-  - Assign event manager domain behavior
-  - Assign event manager application/endpoint flow
-  - EventManager role claim enforcement for assignment
-  - Integration tests for success and failure paths
+  - `UserId` value object in `BuildingBlocks.Domain`
+  - JWT Bearer auth wired in API (dev signing key)
+  - `TestAuthHandler` for integration tests
+  - Auth guards applied to all 8 endpoints per policy table (includes M01 endpoint retrofit)
+  - `AssignedManagerId` on `Event` aggregate, auto-assigned from JWT `sub` on creation
+  - `ReassignEventManager` domain behavior and endpoint (Admin only)
+  - `GetEvent` response includes `AssignedManagerId`
+  - Integration tests for auth enforcement and reassignment
 - Out of scope:
-  - Event publication
-  - Manifest snapshot creation
-  - Identity provider expansion beyond required claim checks
+  - Publication guard (Capability C)
+  - Ex-manager self-reassignment (TBD, deferred)
+  - Real identity provider / Entra auth (Milestone 06)
 
 ## Acceptance Criteria
 
-- [ ] An event manager can be assigned to an existing event via API.
-- [ ] Assignment endpoint requires EventManager role claim.
-- [ ] Unauthorized requests are rejected consistently.
-- [ ] Invalid or not-found assignment requests are rejected consistently.
-- [ ] Assignment behavior is covered by integration tests.
+- [ ] Unauthenticated requests to all endpoints return 401
+- [ ] Role-unauthorized requests return 403
+- [ ] `POST /events` requires EventManager role; `AssignedManagerId` is set to caller's `sub`
+- [ ] Admin can reassign the manager of any event; `AssignedManagerId` updated in persistence
+- [ ] Unknown event on reassign returns 404
+- [ ] `GET /events/{id}` response includes `AssignedManagerId`
+- [ ] All existing A-slice integration tests pass with auth enabled
 
 ## Vertical Slices
 
-- [ ] B1: Implement AssignEventManager domain and application behavior
-- [ ] B2: Deliver AssignEventManager endpoint with EventManager claim requirement
-- [ ] B3: Add integration tests for success, unauthorized, and invalid/not-found paths
+- [ ] B1: Auth infrastructure, endpoint guards, and CreateEvent auto-assignment
+- [ ] B2: ReassignEventManager domain and endpoint
+- [ ] B3: Integration tests for staffing and auth enforcement
 
 ## Risks and Assumptions
 
 - Claim naming/shape must remain aligned with local JWT setup and future Identity module decisions.
-- Assignment policy may evolve if role model expands in Milestone 06.
+- `newManagerId` on reassignment is not validated against a real user store until Milestone 06.
+- Ex-manager reassignment ability is explicitly deferred and out of scope for M02.
 
 ## Definition of Done
 

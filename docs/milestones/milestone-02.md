@@ -25,9 +25,9 @@ Milestone 02 is delivered through parent feature (capability) issues and vertica
 
 ### Capability B: Event staffing
 
-- [ ] B1: Implement AssignEventManager domain and application behavior
-- [ ] B2: Deliver AssignEventManager endpoint with EventManager claim requirement
-- [ ] B3: Add integration tests for success, unauthorized, and invalid/not-found paths
+- [ ] B1: Auth infrastructure, endpoint guards, and CreateEvent auto-assignment
+- [ ] B2: ReassignEventManager domain and endpoint
+- [ ] B3: Integration tests for staffing and auth enforcement
 
 ### Capability C: Publication and integration
 
