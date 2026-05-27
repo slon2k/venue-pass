@@ -60,7 +60,12 @@ namespace VenuePass.Modules.Events.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("VenueId");
+                    b.HasIndex("ManifestId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_events_manifest_id");
+
+                    b.HasIndex("VenueId", "EventDate")
+                        .HasDatabaseName("IX_events_venue_id_event_date");
 
                     b.ToTable("events", "events");
                 });
@@ -119,7 +124,9 @@ namespace VenuePass.Modules.Events.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventId");
+                    b.HasIndex("EventId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_manifests_event_id");
 
                     b.HasIndex("VenueId");
 

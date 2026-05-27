@@ -150,10 +150,17 @@ namespace VenuePass.Modules.Events.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_events_venue_id",
+                name: "IX_events_venue_id_event_date",
                 schema: "events",
                 table: "events",
-                column: "venue_id");
+                columns: new[] { "venue_id", "event_date" });
+
+            migrationBuilder.CreateIndex(
+                name: "UX_events_manifest_id",
+                schema: "events",
+                table: "events",
+                column: "manifest_id",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_manifest_general_admission_areas_manifest_id",
@@ -180,16 +187,17 @@ namespace VenuePass.Modules.Events.Infrastructure.Migrations
                 column: "manifest_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_manifests_event_id",
-                schema: "events",
-                table: "manifests",
-                column: "event_id");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_manifests_venue_id",
                 schema: "events",
                 table: "manifests",
                 column: "venue_id");
+
+            migrationBuilder.CreateIndex(
+                name: "UX_manifests_event_id",
+                schema: "events",
+                table: "manifests",
+                column: "event_id",
+                unique: true);
         }
 
         /// <inheritdoc />
