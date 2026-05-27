@@ -15,11 +15,11 @@ public sealed class GetEventHandler(EventsDbContext db)
     {
         var eventId = new EventId(query.EventId);
 
-        var ev = await db.Events
+        var @event = await db.Events
             .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Id == eventId, ct);
 
-        if (ev is null)
+        if (@event is null)
         {
             return GetEventErrors.EventNotFound(query.EventId);
         }
@@ -32,17 +32,17 @@ public sealed class GetEventHandler(EventsDbContext db)
             .Include(m => m.GeneralAdmissionAreas)
             .FirstOrDefaultAsync(m => m.EventId == eventId, ct);
 
-        return ToResult(ev, manifest);
+        return ToResult(@event, manifest);
     }
 
-    private static GetEventResult ToResult(Domain.Events.Event ev, Manifest? manifest) => new(
-        EventId: ev.Id,
-        VenueId: ev.VenueId,
-        ManifestId: ev.ManifestId,
-        Name: ev.Name,
-        EventDate: ev.EventDate,
-        Description: ev.Description?.Value,
-        State: ev.State.ToString(),
+    private static GetEventResult ToResult(Event @event, Manifest? manifest) => new(
+        EventId: @event.Id,
+        VenueId: @event.VenueId,
+        ManifestId: @event.ManifestId,
+        Name: @event.Name,
+        EventDate: @event.EventDate,
+        Description: @event.Description?.Value,
+        State: @event.State.ToString(),
         Manifest: manifest is null ? null : ToManifestResult(manifest));
 
     private static GetEventManifestResult ToManifestResult(Manifest manifest) => new(

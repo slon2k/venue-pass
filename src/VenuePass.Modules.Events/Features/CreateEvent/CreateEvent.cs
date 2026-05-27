@@ -64,7 +64,7 @@ public sealed class CreateEventHandler(
 
         DomainEventId eventId = DomainEventId.Create();
         Manifest manifest;
-        DomainEvent ev;
+        DomainEvent @event;
 
         try
         {
@@ -74,7 +74,7 @@ public sealed class CreateEventHandler(
                 ? null
                 : new DomainEventDescription(command.Description);
 
-            ev = DomainEvent.Create(
+            @event = DomainEvent.Create(
                 eventId,
                 venueId,
                 manifest.Id,
@@ -94,11 +94,11 @@ public sealed class CreateEventHandler(
             return CreateEventErrors.InvalidData(ex.Message);
         }
 
-        db.Events.Add(ev);
+        db.Events.Add(@event);
         db.Manifests.Add(manifest);
         await db.SaveChangesAsync(ct);
 
-        return new CreateEventResult(ev.Id, manifest.Id);
+        return new CreateEventResult(@event.Id, manifest.Id);
     }
 }
 
