@@ -153,7 +153,7 @@ namespace VenuePass.Modules.Events.Infrastructure.Migrations
                 name: "IX_events_venue_id_event_date",
                 schema: "events",
                 table: "events",
-                columns: new[] { "venue_id", "event_date" });
+                columns: ["venue_id", "event_date"]);
 
             migrationBuilder.CreateIndex(
                 name: "UX_events_manifest_id",
