@@ -4,8 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using VenuePass.Modules.Events.Features.CreateEvent;
 using VenuePass.Modules.Events.Features.CreateManifestTemplate;
 using VenuePass.Modules.Events.Features.CreateVenue;
+using VenuePass.Modules.Events.Features.GetEvent;
 using VenuePass.Modules.Events.Features.GetManifestTemplate;
 using VenuePass.Modules.Events.Features.GetVenue;
 using VenuePass.Modules.Events.Infrastructure;
@@ -22,6 +24,7 @@ public static class ModuleConfiguration
             ?? throw new InvalidOperationException("Connection string 'Database' is missing.");
 
         services.AddDatabase(connectionString);
+        services.AddSingleton(TimeProvider.System);
         services.RegisterHandlers();
         services.AddValidatorsFromAssembly(typeof(ModuleConfiguration).Assembly);
 
@@ -44,8 +47,10 @@ public static class ModuleConfiguration
 
     private static IServiceCollection RegisterHandlers(this IServiceCollection services)
     {
+        services.AddScoped<CreateEventHandler>();
         services.AddScoped<CreateManifestTemplateHandler>();
         services.AddScoped<CreateVenueHandler>();
+        services.AddScoped<GetEventHandler>();
         services.AddScoped<GetManifestTemplateHandler>();
         services.AddScoped<GetVenueHandler>();
         return services;

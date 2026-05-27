@@ -1,6 +1,7 @@
 @Events_HostAddress = http://localhost:5119
 @venueId = 019e509a-17ba-759e-9650-afa6daf5dc89
-@manifestTemplateId = 019e509a-17ba-759e-9650-afa6daf5dc90
+@manifestTemplateId = 019e692a-bcd7-7307-990c-e5fb1dcf9e99
+# secondary manifest template ID: 019e692b-6d4f-7a56-800a-ded895f9c065
 
 ### Create manifest template - valid (seated + general admission)
 POST {{Events_HostAddress}}/events/manifest-templates

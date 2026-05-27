@@ -1,0 +1,108 @@
+@Events_HostAddress = http://localhost:5119
+
+# Use IDs from the ManifestTemplates.http and Venues.http runs, or replace with your own.
+@venueId = 019e509a-17ba-759e-9650-afa6daf5dc89
+@manifestTemplateId = 019e692a-bcd7-7307-990c-e5fb1dcf9e99
+
+# After a successful CreateEvent call, paste the returned eventId here.
+@eventId = 019e692c-6c04-756f-8419-2835a38feebb
+@manifestId = 019e692c-6c05-7ba1-bff2-2b66278f5c46
+
+### Create event - valid (with description)
+POST {{Events_HostAddress}}/events
+Accept: application/json
+Content-Type: application/json
+
+{
+  "venueId": "{{venueId}}",
+  "manifestTemplateId": "{{manifestTemplateId}}",
+  "name": "Summer Concert 2026",
+  "eventDate": "2026-08-15T19:00:00+00:00",
+  "description": "Outdoor summer concert at the main arena."
+}
+
+### Create event - valid (no description)
+POST {{Events_HostAddress}}/events
+Accept: application/json
+Content-Type: application/json
+
+{
+  "venueId": "{{venueId}}",
+  "manifestTemplateId": "{{manifestTemplateId}}",
+  "name": "Winter Gala",
+  "eventDate": "2026-12-20T20:00:00+00:00",
+  "description": null
+}
+
+### Create event - invalid (venue not found)
+POST {{Events_HostAddress}}/events
+Accept: application/json
+Content-Type: application/json
+
+{
+  "venueId": "00000000-0000-0000-0000-000000000000",
+  "manifestTemplateId": "{{manifestTemplateId}}",
+  "name": "Ghost Venue Event",
+  "eventDate": "2026-09-01T18:00:00+00:00",
+  "description": null
+}
+
+### Create event - invalid (manifest template not found)
+POST {{Events_HostAddress}}/events
+Accept: application/json
+Content-Type: application/json
+
+{
+  "venueId": "{{venueId}}",
+  "manifestTemplateId": "00000000-0000-0000-0000-000000000000",
+  "name": "Missing Template Event",
+  "eventDate": "2026-09-01T18:00:00+00:00",
+  "description": null
+}
+
+### Create event - invalid (event date in the past)
+POST {{Events_HostAddress}}/events
+Accept: application/json
+Content-Type: application/json
+
+{
+  "venueId": "{{venueId}}",
+  "manifestTemplateId": "{{manifestTemplateId}}",
+  "name": "Past Event",
+  "eventDate": "2020-01-01T00:00:00+00:00",
+  "description": null
+}
+
+### Create event - invalid (name too long — over 200 chars)
+POST {{Events_HostAddress}}/events
+Accept: application/json
+Content-Type: application/json
+
+{
+  "venueId": "{{venueId}}",
+  "manifestTemplateId": "{{manifestTemplateId}}",
+  "name": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  "eventDate": "2026-09-01T18:00:00+00:00",
+  "description": null
+}
+
+### Create event - invalid (empty name)
+POST {{Events_HostAddress}}/events
+Accept: application/json
+Content-Type: application/json
+
+{
+  "venueId": "{{venueId}}",
+  "manifestTemplateId": "{{manifestTemplateId}}",
+  "name": "",
+  "eventDate": "2026-09-01T18:00:00+00:00",
+  "description": null
+}
+
+### Get event by ID (replace @eventId above with value from create response)
+GET {{Events_HostAddress}}/events/{{eventId}}
+Accept: application/json
+
+### Get event - not found
+GET {{Events_HostAddress}}/events/00000000-0000-0000-0000-000000000000
+Accept: application/json
