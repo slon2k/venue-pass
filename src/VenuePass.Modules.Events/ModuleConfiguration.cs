@@ -28,6 +28,10 @@ public static class ModuleConfiguration
         services.RegisterHandlers();
         services.AddValidatorsFromAssembly(typeof(ModuleConfiguration).Assembly);
 
+        services.AddAuthorizationBuilder()
+            .AddPolicy("EventAdmin", policy => policy.RequireRole("EventAdmin"))
+            .AddPolicy("EventManager", policy => policy.RequireRole("EventManager"));
+
         return services;
     }
 

@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
 using VenuePass.BuildingBlocks.Application;
+using VenuePass.BuildingBlocks.Domain;
 using static VenuePass.BuildingBlocks.Presentation.ErrorHttpMappingExtensions;
 
 using DomainEventName = VenuePass.Modules.Events.Domain.Events.EventName;
@@ -30,6 +32,7 @@ public static class CreateEventEndpoint
         app.MapPost("/events", Handle)
             .WithName("CreateEvent")
             .WithTags("Events")
+            .RequireAuthorization("EventManager")
             .Produces<CreateEventResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)
@@ -42,14 +45,24 @@ public static class CreateEventEndpoint
     private static async Task<IResult> Handle(
         CreateEventRequest request,
         CreateEventHandler handler,
+        HttpContext httpContext,
         CancellationToken ct)
     {
+        var sub = httpContext.User.FindFirstValue("sub")
+            ?? httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (sub is null || !Guid.TryParse(sub, out Guid subGuid))
+        {
+            return Results.Problem(statusCode: StatusCodes.Status401Unauthorized);
+        }
+
         CreateEventCommand command = new(
             VenueId: request.VenueId,
             ManifestTemplateId: request.ManifestTemplateId,
             Name: request.Name,
             EventDate: request.EventDate,
-            Description: request.Description);
+            Description: request.Description,
+            AssignedManagerId: new UserId(subGuid));
 
         Result<CreateEventResult> result = await handler.Handle(command, ct);
 

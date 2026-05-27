@@ -14,7 +14,7 @@ public sealed class GetManifestTemplateEndpointTests
 
     public GetManifestTemplateEndpointTests(EventsIntegrationTestFixture fixture)
     {
-        _client = fixture.Client;
+        _client = fixture.CreateAdminClient();
     }
 
     [Fact]

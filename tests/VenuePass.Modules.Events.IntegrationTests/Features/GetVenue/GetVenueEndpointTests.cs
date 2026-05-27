@@ -12,7 +12,7 @@ public sealed class GetVenueEndpointTests
 
     public GetVenueEndpointTests(EventsIntegrationTestFixture fixture)
     {
-        _client = fixture.Client;
+        _client = fixture.CreateAdminClient();
     }
 
     [Fact]

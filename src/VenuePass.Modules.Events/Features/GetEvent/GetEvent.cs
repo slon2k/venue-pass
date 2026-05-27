@@ -43,30 +43,31 @@ public sealed class GetEventHandler(EventsDbContext db)
         EventDate: @event.EventDate,
         Description: @event.Description?.Value,
         State: @event.State.ToString(),
+        AssignedManagerId: @event.AssignedManagerId,
         Manifest: manifest is null ? null : ToManifestResult(manifest));
 
     private static GetEventManifestResult ToManifestResult(Manifest manifest) => new(
         ManifestId: manifest.Id,
-        Name: manifest.Name.Value,
+        Name: manifest.Name,
         Sections:
         [
             .. manifest.Sections.Select(section => new GetEventSectionResult(
-                Name: section.Name.Value,
+                Name: section.Name,
                 Rows:
                 [
                     .. section.Rows.Select(row => new GetEventRowResult(
-                        Label: row.Label.Value,
+                        Label: row.Label,
                         Seats:
                         [
-                            .. row.Seats.Select(seat => new GetEventSeatResult(seat.Label.Value))
+                            .. row.Seats.Select(seat => new GetEventSeatResult(seat.Label))
                         ]))
                 ]))
         ],
         GeneralAdmissionAreas:
         [
             .. manifest.GeneralAdmissionAreas.Select(area => new GetEventGeneralAdmissionAreaResult(
-                Name: area.Name.Value,
-                Capacity: area.Capacity.Value))
+                Name: area.Name,
+                Capacity: area.Capacity))
         ]);
 }
 
@@ -80,6 +81,7 @@ public sealed record GetEventResult(
     DateTimeOffset EventDate,
     string? Description,
     string State,
+    Guid AssignedManagerId,
     GetEventManifestResult? Manifest);
 
 public sealed record GetEventManifestResult(

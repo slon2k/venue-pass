@@ -26,6 +26,22 @@ public sealed class EventsIntegrationTestFixture : IAsyncLifetime
 
     public HttpClient Client => Factory.CreateClient();
 
+    public HttpClient CreateAdminClient(string? userId = null)
+    {
+        var client = Factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.SubHeader, userId ?? Guid.NewGuid().ToString());
+        client.DefaultRequestHeaders.Add(TestAuthHandler.RoleHeader, "EventAdmin");
+        return client;
+    }
+
+    public HttpClient CreateEventManagerClient(string? userId = null)
+    {
+        var client = Factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.SubHeader, userId ?? Guid.NewGuid().ToString());
+        client.DefaultRequestHeaders.Add(TestAuthHandler.RoleHeader, "EventManager");
+        return client;
+    }
+
     public async Task InitializeAsync()
     {
         string connectionString;

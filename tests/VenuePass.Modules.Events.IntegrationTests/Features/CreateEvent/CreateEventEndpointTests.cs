@@ -18,16 +18,21 @@ public sealed class CreateEventEndpointTests
 {
     private readonly EventsIntegrationTestFixture _fixture;
     private readonly HttpClient _client;
+    private readonly HttpClient _adminClient;
 
     public CreateEventEndpointTests(EventsIntegrationTestFixture fixture)
     {
         _fixture = fixture;
-        _client = fixture.Client;
+        _client = fixture.CreateEventManagerClient();
+        _adminClient = fixture.CreateAdminClient();
     }
 
     [Fact]
     public async Task CreateEvent_WhenRequestIsValid_Returns201WithEventAndManifestIds()
     {
+        var managerId = Guid.NewGuid().ToString();
+        var managerClient = _fixture.CreateEventManagerClient(managerId);
+
         Guid venueId = await CreateVenueAsync();
         Guid templateId = await CreateManifestTemplateAsync(venueId);
 
@@ -40,7 +45,7 @@ public sealed class CreateEventEndpointTests
             EventDate: DateTimeOffset.UtcNow.AddMonths(3),
             Description: "An outdoor summer concert.");
 
-        HttpResponseMessage response = await _client.PostAsJsonAsync("/events", request);
+        HttpResponseMessage response = await managerClient.PostAsJsonAsync("/events", request);
         CreateEventResponse? body = await response.Content.ReadFromJsonAsync<CreateEventResponse>();
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -59,6 +64,7 @@ public sealed class CreateEventEndpointTests
         Assert.NotNull(persistedEvent);
         Assert.Equal(venueId, persistedEvent.VenueId.Value);
         Assert.Equal(eventName, persistedEvent.Name.Value);
+        Assert.Equal(Guid.Parse(managerId), persistedEvent.AssignedManagerId.Value);
 
         Manifest? persistedManifest = await db.Manifests
             .AsNoTracking()
@@ -181,7 +187,7 @@ public sealed class CreateEventEndpointTests
             Country: "US",
             Capacity: 500);
 
-        HttpResponseMessage response = await _client.PostAsJsonAsync("/events/venues", request);
+        HttpResponseMessage response = await _adminClient.PostAsJsonAsync("/events/venues", request);
         CreateVenueResponse? body = await response.Content.ReadFromJsonAsync<CreateVenueResponse>();
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -218,7 +224,7 @@ public sealed class CreateEventEndpointTests
                     Capacity: 300)
             ]);
 
-        HttpResponseMessage response = await _client.PostAsJsonAsync("/events/manifest-templates", request);
+        HttpResponseMessage response = await _adminClient.PostAsJsonAsync("/events/manifest-templates", request);
         CreateManifestTemplateResponse? body = await response.Content.ReadFromJsonAsync<CreateManifestTemplateResponse>();
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);

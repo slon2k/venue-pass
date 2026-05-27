@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using VenuePass.BuildingBlocks.Domain;
 using VenuePass.Modules.Events.Domain.Events;
 using VenuePass.Modules.Events.Domain.Manifests;
 using VenuePass.Modules.Events.Domain.Venues;
@@ -77,5 +78,12 @@ internal sealed class EventConfiguration : IEntityTypeConfiguration<Event>
 
         builder.HasIndex(x => new { x.VenueId, x.EventDate })
             .HasDatabaseName("IX_events_venue_id_event_date");
+
+        builder.Property(x => x.AssignedManagerId)
+            .HasConversion(
+                id => id.Value,
+                value => new UserId(value))
+            .HasColumnName("assigned_manager_id")
+            .IsRequired();
     }
 }

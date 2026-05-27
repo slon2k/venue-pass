@@ -32,6 +32,7 @@ public static class CreateVenueEndpoint
         app.MapPost("/events/venues", Handle)
             .WithName("CreateVenue")
             .WithTags("Events")
+            .RequireAuthorization("EventAdmin")
             .Produces<CreateVenueResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status409Conflict)

@@ -36,6 +36,7 @@ public static class GetManifestTemplateEndpoint
         app.MapGet("/events/manifest-templates/{id:guid}", Handle)
             .WithName("GetManifestTemplate")
             .WithTags("Events")
+            .RequireAuthorization()
             .Produces<GetManifestTemplateResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
