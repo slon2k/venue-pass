@@ -10,11 +10,13 @@ namespace VenuePass.Modules.Events.IntegrationTests.Features.GetEvent;
 [Collection(EventsTestCollectionFixture.Name)]
 public sealed class GetEventEndpointTests
 {
+    private readonly EventsIntegrationTestFixture _fixture;
     private readonly HttpClient _client;
     private readonly HttpClient _adminClient;
 
     public GetEventEndpointTests(EventsIntegrationTestFixture fixture)
     {
+        _fixture = fixture;
         _client = fixture.CreateEventManagerClient();
         _adminClient = fixture.CreateAdminClient();
     }
@@ -25,10 +27,13 @@ public sealed class GetEventEndpointTests
         Guid venueId = await CreateVenueAsync();
         Guid templateId = await CreateManifestTemplateAsync(venueId);
 
+        var managerId = Guid.NewGuid().ToString();
+        var managerClient = _fixture.CreateEventManagerClient(managerId);
+
         var eventName = $"Winter Gala {Guid.NewGuid()}";
         DateTimeOffset eventDate = DateTimeOffset.UtcNow.AddMonths(6);
 
-        Guid eventId = await CreateEventAsync(venueId, templateId, eventName, eventDate);
+        Guid eventId = await CreateEventAsync(venueId, templateId, eventName, eventDate, managerClient);
 
         HttpResponseMessage response = await _client.GetAsync($"/events/{eventId}");
         GetEventResponse? body = await response.Content.ReadFromJsonAsync<GetEventResponse>();
@@ -41,6 +46,7 @@ public sealed class GetEventEndpointTests
         Assert.Equal(eventName, body.Name);
         Assert.Equal("Draft", body.State);
         Assert.Null(body.Description);
+        Assert.Equal(Guid.Parse(managerId), body.AssignedManagerId);
 
         Assert.NotNull(body.Manifest);
         Assert.NotEqual(Guid.Empty, body.Manifest.ManifestId);
@@ -128,8 +134,10 @@ public sealed class GetEventEndpointTests
         Guid venueId,
         Guid templateId,
         string name,
-        DateTimeOffset eventDate)
+        DateTimeOffset eventDate,
+        HttpClient? client = null)
     {
+        client ??= _client;
         CreateEventRequest request = new(
             VenueId: venueId,
             ManifestTemplateId: templateId,
@@ -137,7 +145,7 @@ public sealed class GetEventEndpointTests
             EventDate: eventDate,
             Description: null);
 
-        HttpResponseMessage response = await _client.PostAsJsonAsync("/events", request);
+        HttpResponseMessage response = await client.PostAsJsonAsync("/events", request);
         CreateEventResponse? body = await response.Content.ReadFromJsonAsync<CreateEventResponse>();
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -153,7 +161,7 @@ public sealed class GetEventEndpointTests
         DateTimeOffset EventDate,
         string? Description);
 
-    private sealed record CreateEventResponse(Guid EventId, Guid ManifestId);
+    private sealed record CreateEventResponse(Guid EventId, Guid ManifestId, Guid AssignedManagerId);
 
     private sealed record CreateVenueRequest(
         string Name,
@@ -199,6 +207,7 @@ public sealed class GetEventEndpointTests
         DateTimeOffset EventDate,
         string? Description,
         string State,
+        Guid AssignedManagerId,
         GetEventManifestResponse? Manifest);
 
     private sealed record GetEventManifestResponse(
