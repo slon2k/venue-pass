@@ -27,4 +27,8 @@ public static class ManifestErrors
     public static DomainError DuplicateSeatLabel(string seatLabel, string rowLabel) => new(
         "Events.Manifest.Seat.DuplicateLabel",
         $"Seat with label '{seatLabel}' already exists in row '{rowLabel}'.");
+
+    public static DomainError ManifestIsFrozen() => new(
+        "Events.Manifest.IsFrozen",
+        "Manifest is frozen and cannot be modified.");
 }

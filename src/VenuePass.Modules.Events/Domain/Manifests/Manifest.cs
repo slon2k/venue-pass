@@ -1,5 +1,6 @@
 using VenuePass.BuildingBlocks.Domain;
 using VenuePass.BuildingBlocks.Extensions;
+using VenuePass.Modules.Events.Domain.Events;
 using VenuePass.Modules.Events.Domain.Venues;
 
 using TemplateModel = VenuePass.Modules.Events.Domain.ManifestTemplates;
@@ -17,27 +18,41 @@ public sealed class Manifest : AggregateRoot<ManifestId>
 
     private Manifest(
         ManifestId id,
+        EventId eventId,
         ManifestName name,
         VenueId venueId)
         : base(id)
     {
         Name = name;
         VenueId = venueId;
+        EventId = eventId;
     }
 
     public ManifestName Name { get; private set; } = null!;
     public VenueId VenueId { get; private set; }
+    public EventId EventId { get; private set; }
+
+    public bool IsFrozen { get; private set; }
 
     public IReadOnlyList<Section> Sections => _sections.AsReadOnly();
     public IReadOnlyList<GeneralAdmissionArea> GeneralAdmissionAreas => _generalAdmissionAreas.AsReadOnly();
 
-    public static Manifest CreateFromTemplate(TemplateModel.ManifestTemplate template)
+    public void Freeze()
+    {
+        if (!IsFrozen)
+        {
+            IsFrozen = true;
+        }
+    }
+
+    public static Manifest CreateFromTemplate(EventId eventId, TemplateModel.ManifestTemplate template)
     {
         ArgumentNullException.ThrowIfNull(template);
 
         var manifest = new Manifest(
             ManifestId.Create(),
-            new ManifestName(template.Name.Value),
+            eventId,
+            new ManifestName(template.Name),
             template.VenueId);
 
         foreach (var templateSection in template.Sections)

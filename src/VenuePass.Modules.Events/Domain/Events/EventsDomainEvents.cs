@@ -1,14 +1,6 @@
 using VenuePass.BuildingBlocks.Domain;
+using VenuePass.Modules.Events.Domain.Manifests;
 
 namespace VenuePass.Modules.Events.Domain.Events;
 
-public record EventPublishedDomainEvent : DomainEvent
-{
-    public EventId EventId { get; init; }
-
-    public EventPublishedDomainEvent(EventId eventId)
-    {
-        EventId = eventId;
-    }
-}
-
+public record EventPublishedDomainEvent(EventId EventId, ManifestId ManifestId) : DomainEvent();

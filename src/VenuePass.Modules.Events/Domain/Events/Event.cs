@@ -1,12 +1,15 @@
 using VenuePass.BuildingBlocks.Domain;
 using VenuePass.BuildingBlocks.Extensions;
 using VenuePass.Modules.Events.Domain.Manifests;
+using VenuePass.Modules.Events.Domain.Venues;
 
 namespace VenuePass.Modules.Events.Domain.Events;
 
 public sealed class Event : AggregateRoot<EventId>
 {
     public ManifestId ManifestId { get; private set; }
+
+    public VenueId VenueId { get; private set; }
 
     public EventName Name { get; private set; } = null!;
 
@@ -22,12 +25,14 @@ public sealed class Event : AggregateRoot<EventId>
 
     private Event(
         EventId id,
+        VenueId venueId,    
         ManifestId manifestId,
         EventName name,
         DateTimeOffset eventDate,
         EventDescription? description)
         : base(id)
     {
+        VenueId = venueId;
         ManifestId = manifestId;
         Name = name;
         EventDate = eventDate;
@@ -35,41 +40,44 @@ public sealed class Event : AggregateRoot<EventId>
     }
 
     public static Event Create(
+        VenueId venueId,
         ManifestId manifestId,
         EventName name,
         DateTimeOffset eventDate,
-        EventDescription? description)
+        EventDescription? description,
+        TimeProvider dateTimeProvider)
     {
         ArgumentNullException.ThrowIfNull(name);
 
-        if (eventDate < DateTimeOffset.UtcNow)
+        if (eventDate <= dateTimeProvider.GetUtcNow())
         {
             throw new DomainRuleViolationException(EventErrors.EventDateMustBeInTheFuture());
         }
 
         return new(
             EventId.Create(),
+            venueId,
             manifestId,
             name,
             eventDate,
             description);
     }
 
-    public void Publish()
+    public void Publish(TimeProvider dateTimeProvider)
     {
         if (State != EventState.Draft)
         {
             throw new DomainRuleViolationException(EventErrors.EventMustBeInDraftStateToPublish());
         }
 
-        if (EventDate < DateTimeOffset.UtcNow)
+        if (EventDate <= dateTimeProvider.GetUtcNow())
         {
             throw new DomainRuleViolationException(EventErrors.EventDateMustBeInTheFutureToPublish());
         }
 
         State = EventState.Published;
 
-        AddDomainEvent(new EventPublishedDomainEvent(Id));
+        AddDomainEvent(new EventPublishedDomainEvent(Id, ManifestId));
     }
 }
 
