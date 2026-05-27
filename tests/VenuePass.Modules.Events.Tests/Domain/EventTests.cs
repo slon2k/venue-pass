@@ -19,6 +19,7 @@ public sealed class EventTests
     public void Create_WithFutureDate_ReturnsEventInDraftState()
     {
         var ev = Event.Create(
+            EventId.Create(),
             VenueId.Create(),
             ManifestId.Create(),
             new EventName("Summer Concert"),
@@ -36,6 +37,7 @@ public sealed class EventTests
         var manifestId = ManifestId.Create();
 
         var ev = Event.Create(
+            EventId.Create(),
             venueId,
             manifestId,
             new EventName("Summer Concert"),
@@ -55,6 +57,7 @@ public sealed class EventTests
     public void Create_WithNullName_ThrowsArgumentNullException()
     {
         void Act() => Event.Create(
+            EventId.Create(),
             VenueId.Create(),
             ManifestId.Create(),
             null!,
@@ -71,6 +74,7 @@ public sealed class EventTests
         var pastDate = FixedNow.AddDays(-1);
 
         void Act() => Event.Create(
+            EventId.Create(),
             VenueId.Create(),
             ManifestId.Create(),
             new EventName("Concert"),
@@ -86,6 +90,7 @@ public sealed class EventTests
     public void Create_WhenEventDateEqualsNow_ThrowsDomainRuleViolationException()
     {
         void Act() => Event.Create(
+            EventId.Create(),
             VenueId.Create(),
             ManifestId.Create(),
             new EventName("Concert"),
@@ -165,6 +170,7 @@ public sealed class EventTests
         var date = eventDate ?? FutureDate;
 
         return Event.Create(
+            EventId.Create(),
             VenueId.Create(),
             ManifestId.Create(),
             new EventName("Concert"),

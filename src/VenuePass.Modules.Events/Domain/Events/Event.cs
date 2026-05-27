@@ -40,6 +40,7 @@ public sealed class Event : AggregateRoot<EventId>
     }
 
     public static Event Create(
+        EventId id,
         VenueId venueId,
         ManifestId manifestId,
         EventName name,
@@ -55,7 +56,7 @@ public sealed class Event : AggregateRoot<EventId>
         }
 
         return new(
-            EventId.Create(),
+            id,
             venueId,
             manifestId,
             name,
