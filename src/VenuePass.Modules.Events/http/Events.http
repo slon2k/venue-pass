@@ -5,13 +5,19 @@
 @manifestTemplateId = 019e692a-bcd7-7307-990c-e5fb1dcf9e99
 
 # After a successful CreateEvent call, paste the returned eventId here.
-@eventId = 019e692c-6c04-756f-8419-2835a38feebb
-@manifestId = 019e692c-6c05-7ba1-bff2-2b66278f5c46
+@eventId = 019e6a72-4951-7ef4-aeac-b6949a204e2d
+@manifestId = 019e6a72-4952-7ebd-955d-25b75d754819
+
+# Dev JWT: sub=00000000-0000-0000-0000-000000000001, role=EventManager, exp=never
+# Signed with the key in appsettings.Development.json — for local testing only.
+# CreateEvent uses sub as AssignedManagerId; PublishEvent verifies caller matches.
+@managerToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJyb2xlIjoiRXZlbnRNYW5hZ2VyIiwiZXhwIjo5OTk5OTk5OTk5fQ.uY1m3u8JXwYtFOgijHhX4A7Iw3Fn7uT3uYntTwMPK8Q
 
 ### Create event - valid (with description)
 POST {{Events_HostAddress}}/events
 Accept: application/json
 Content-Type: application/json
+Authorization: Bearer {{managerToken}}
 
 {
   "venueId": "{{venueId}}",
@@ -25,6 +31,7 @@ Content-Type: application/json
 POST {{Events_HostAddress}}/events
 Accept: application/json
 Content-Type: application/json
+Authorization: Bearer {{managerToken}}
 
 {
   "venueId": "{{venueId}}",
@@ -38,6 +45,7 @@ Content-Type: application/json
 POST {{Events_HostAddress}}/events
 Accept: application/json
 Content-Type: application/json
+Authorization: Bearer {{managerToken}}
 
 {
   "venueId": "00000000-0000-0000-0000-000000000000",
@@ -51,6 +59,7 @@ Content-Type: application/json
 POST {{Events_HostAddress}}/events
 Accept: application/json
 Content-Type: application/json
+Authorization: Bearer {{managerToken}}
 
 {
   "venueId": "{{venueId}}",
@@ -64,6 +73,7 @@ Content-Type: application/json
 POST {{Events_HostAddress}}/events
 Accept: application/json
 Content-Type: application/json
+Authorization: Bearer {{managerToken}}
 
 {
   "venueId": "{{venueId}}",
@@ -77,6 +87,7 @@ Content-Type: application/json
 POST {{Events_HostAddress}}/events
 Accept: application/json
 Content-Type: application/json
+Authorization: Bearer {{managerToken}}
 
 {
   "venueId": "{{venueId}}",
@@ -90,6 +101,7 @@ Content-Type: application/json
 POST {{Events_HostAddress}}/events
 Accept: application/json
 Content-Type: application/json
+Authorization: Bearer {{managerToken}}
 
 {
   "venueId": "{{venueId}}",
@@ -106,3 +118,25 @@ Accept: application/json
 ### Get event - not found
 GET {{Events_HostAddress}}/events/00000000-0000-0000-0000-000000000000
 Accept: application/json
+
+# ── Publish Event ────────────────────────────────────────────────────────────
+# Requires: event created with the managerToken above (so AssignedManagerId matches sub).
+# Paste the eventId returned from CreateEvent into @eventId at the top of this file.
+
+### Publish event - valid (204 No Content)
+POST {{Events_HostAddress}}/events/{{eventId}}/publish
+Authorization: Bearer {{managerToken}}
+
+### Publish event - not found (404)
+POST {{Events_HostAddress}}/events/00000000-0000-0000-0000-000000000000/publish
+Authorization: Bearer {{managerToken}}
+
+### Publish event - wrong caller (403)
+# Generate a different JWT (different sub) and use it here to test the 403 path.
+# Example token: sub=00000000-0000-0000-0000-000000000099, role=EventManager
+@otherManagerToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwOTkiLCJyb2xlIjoiRXZlbnRNYW5hZ2VyIiwiZXhwIjo5OTk5OTk5OTk5fQ.udl5HS7LdTqKOL1LpL-ylSNET09oFYv7kxuinjFrXVQ
+POST {{Events_HostAddress}}/events/{{eventId}}/publish
+Authorization: Bearer {{otherManagerToken}}
+
+### Publish event - no token (401)
+POST {{Events_HostAddress}}/events/{{eventId}}/publish

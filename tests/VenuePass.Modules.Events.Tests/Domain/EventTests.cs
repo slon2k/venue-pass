@@ -169,6 +169,25 @@ public sealed class EventTests
         Assert.Equal("Events.Event.DateMustBeInTheFutureToPublish", exception.Code);
     }
 
+    [Fact]
+    public void Publish_WhenManifestIdIsEmpty_ThrowsDomainRuleViolationException()
+    {
+        var ev = Event.Create(
+            EventId.Create(),
+            VenueId.Create(),
+            default,
+            new EventName("Concert"),
+            FutureDate,
+            null,
+            AnyManager,
+            At(FixedNow));
+
+        void Act() => ev.Publish(At(FixedNow));
+
+        var exception = Assert.Throws<DomainRuleViolationException>(Act);
+        Assert.Equal("Events.Event.ManifestRequiredToPublish", exception.Code);
+    }
+
     // ── ReassignManager ───────────────────────────────────────────────────────
 
     [Fact]

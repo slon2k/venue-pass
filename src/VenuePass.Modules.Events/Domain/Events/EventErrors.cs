@@ -15,4 +15,8 @@ public static class EventErrors
     public static DomainError EventMustBeInDraftStateToPublish() => new(
         "Events.Event.MustBeInDraftStateToPublish",
         "Event must be in draft state to be published.");
+
+    public static DomainError ManifestRequiredToPublish() => new(
+        "Events.Event.ManifestRequiredToPublish",
+        "Event must have a manifest snapshot to be published.");
 }

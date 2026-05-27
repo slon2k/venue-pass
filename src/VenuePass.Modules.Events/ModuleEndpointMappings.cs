@@ -5,6 +5,7 @@ using VenuePass.Modules.Events.Features.CreateVenue;
 using VenuePass.Modules.Events.Features.GetEvent;
 using VenuePass.Modules.Events.Features.GetManifestTemplate;
 using VenuePass.Modules.Events.Features.GetVenue;
+using VenuePass.Modules.Events.Features.PublishEvent;
 using VenuePass.Modules.Events.Features.ReassignEventManager;
 
 namespace VenuePass.Modules.Events;
@@ -19,6 +20,7 @@ public static class ModuleEndpointMappings
         app.MapGetEvent();
         app.MapGetManifestTemplate();
         app.MapGetVenue();
+        app.MapPublishEvent();
         app.MapReassignEventManager();
 
         return app;
