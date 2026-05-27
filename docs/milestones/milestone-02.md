@@ -37,6 +37,67 @@ Milestone 02 is delivered through parent feature (capability) issues and vertica
 - [ ] C4: Ensure outbox dispatcher processes EventPublished reliably
 - [ ] C5: Add integration tests for outbox write and dispatch observability
 
+## Functional Requirements Baseline (M02)
+
+These requirements define minimum business behavior for M02 and should be treated as implementation gates for slices A1-A3.
+
+## Accepted Decisions (Locked For M02)
+
+1. `ManifestTemplateId` is required in `CreateEvent`.
+2. Attach/replace manifest flow is deferred (out of scope for M02).
+3. `CreateEvent` uses minimal required fields: `Name`, `EventDateUtc`, `VenueId`, `ManifestTemplateId`.
+4. Publication preconditions are strict minimal checks:
+	- event is in `Draft`
+	- manifest snapshot exists
+	- current UTC time is strictly less than `EventDateUtc`
+	- referenced venue remains valid
+5. Error classification rule:
+	- validation errors for missing/format/range/reference checks at the command boundary
+	- domain errors for invalid state transitions and invariant violations inside aggregate/domain model
+
+### Event Creation Requirements
+
+- [x] Event has required `Name` and required `EventDateUtc`.
+- [x] `EventDateUtc` must be strictly in the future at creation time.
+- [x] `VenueId` is required at creation and must reference an existing venue.
+- [x] Event starts in `Draft` state.
+- [x] `CreateEvent` rejects past or invalid dates, missing required fields, or unknown references with validation/domain errors.
+
+### Manifest Attachment Requirements
+
+- [x] `ManifestTemplateId` rule is explicit: required at creation for M02.
+- [x] Attach/replace manifest flow is deferred to a later milestone.
+- [x] Since manifest is required at creation, snapshot must be copied during creation.
+- [x] Snapshot is independent from later template edits.
+
+### Lifecycle and Publication Requirements
+
+- [x] Allowed transition in M02: `Draft -> Published`.
+- [x] Publication preconditions are explicit and testable.
+- [x] Publication is rejected when current UTC time is greater than or equal to `EventDateUtc`.
+- [x] Structural manifest edits are rejected after publication.
+- [x] Successful publication writes `EventPublished(EventId, ManifestId)` to outbox.
+
+### API Contract Requirements
+
+- [x] `CreateEvent` request/response contract baseline is fixed for M02 (minimal required fields).
+- [x] `GetEvent` response includes lifecycle state and event date fields.
+- [x] Date-time representation is standardized as UTC in contracts.
+
+## Decision Log (Must Be Closed Before Slice A3)
+
+- [x] D1: `ManifestTemplateId` is required in `CreateEvent`.
+- [x] D2: Attach/replace manifest is deferred (not in M02).
+- [x] D3: Final field set for event creation is minimal required set.
+- [x] D4: Publication preconditions checklist is fixed and explicit.
+- [x] D5: Error classification matrix for validation vs domain rule violations is fixed.
+
+## Slice Start Gate
+
+- [x] Functional requirements above reviewed and accepted.
+- [x] Decisions D1-D5 resolved and documented.
+- [ ] Feature A acceptance criteria and tests aligned with the decisions.
+
 ## Out of Scope
 
 - CancelEvent behavior and cancellation workflows

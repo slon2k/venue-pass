@@ -21,6 +21,7 @@ Enable event publication by enforcing lifecycle guards, locking structural manif
 
 - [ ] A draft event can be published through the Events API.
 - [ ] Publishing is rejected when required manifest state is missing.
+- [ ] Publishing is rejected when current UTC time is greater than or equal to `EventDateUtc`.
 - [ ] Publishing writes EventPublished(EventId, ManifestId) to outbox.
 - [ ] Outbox dispatcher processes EventPublished and processing is observable in tests/logs.
 - [ ] Structural changes to manifest are rejected after publication.

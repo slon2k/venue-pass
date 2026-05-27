@@ -19,7 +19,8 @@ Establish the Events module lifecycle foundation by introducing event creation a
 
 ## Acceptance Criteria
 
-- [ ] An event can be created through the Events API using venue and manifest template identifiers.
+- [ ] An event can be created through the Events API using required fields: `Name`, `EventDateUtc`, `VenueId`, and `ManifestTemplateId`.
+- [ ] Event creation rejects requests where `EventDateUtc` is not in the future.
 - [ ] Creating an event creates a manifest snapshot that is independent from later template edits.
 - [ ] An event can be retrieved through the Events API with expected core fields.
 - [ ] Manifest snapshot structure is persisted correctly and can be read back for the event.
@@ -31,6 +32,16 @@ Establish the Events module lifecycle foundation by introducing event creation a
 - [ ] A2: Model and persist Manifest snapshot copied from selected ManifestTemplate
 - [ ] A3: Deliver CreateEvent and GetEvent end-to-end API behavior
 - [ ] A4: Add integration tests for create/get event and manifest snapshot structure
+
+## Functional Decisions Required Before A3
+
+- [x] Required event fields at creation are fixed for M02 (`Name`, `EventDateUtc`, `VenueId`, `ManifestTemplateId`).
+- [x] `ManifestTemplateId` is required at creation for M02.
+- [x] Attach/replace manifest flow is deferred from M02.
+- [x] Publication preconditions in `Draft` are fixed in milestone decision log.
+- [x] API contract date-time representation is UTC.
+
+Reference: align with the Functional Requirements Baseline and Decision Log in milestone file.
 
 ## Risks and Assumptions
 
