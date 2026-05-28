@@ -1,6 +1,6 @@
 namespace VenuePass.BuildingBlocks.Domain;
 
-public abstract class AggregateRoot<TId> : Entity<TId> where TId : notnull
+public abstract class AggregateRoot<TId> : Entity<TId>, IAggregateRoot where TId : notnull
 {
     private readonly List<DomainEvent> _domainEvents = [];
 
