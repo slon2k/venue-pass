@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 using VenuePass.BuildingBlocks.Application;
 using VenuePass.BuildingBlocks.Domain;
+using VenuePass.Modules.Events.Domain.Manifests;
 using VenuePass.Modules.Events.Infrastructure;
 
 using DomainEvent = VenuePass.Modules.Events.Domain.Events.Event;
@@ -42,6 +43,11 @@ public sealed class PublishEventHandler(
         {
             return Result.Failure(Error.Conflict(ex.Code, ex.Message));
         }
+
+        Manifest? manifest = await db.Manifests
+            .FirstOrDefaultAsync(m => m.Id == @event.ManifestId, ct);
+
+        manifest?.Freeze();
 
         await db.SaveChangesAsync(ct);
 
