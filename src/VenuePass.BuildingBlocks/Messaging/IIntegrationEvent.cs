@@ -2,7 +2,7 @@ namespace VenuePass.BuildingBlocks.Messaging;
 
 public interface IIntegrationEvent
 {
-    Guid EventId { get; }
+    Guid MessageId { get; }
 
     DateTimeOffset OccurredOn { get; }
 }

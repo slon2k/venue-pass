@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<ItemGroup>
 		<ProjectReference Include="..\VenuePass.BuildingBlocks\VenuePass.BuildingBlocks.csproj" />
+		<ProjectReference Include="..\VenuePass.Modules.Events.Contracts\VenuePass.Modules.Events.Contracts.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 	  <PackageReference Include="FluentValidation" />

@@ -1,9 +1,10 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using VenuePass.BuildingBlocks.Domain;
-using VenuePass.Modules.Events.Contracts;
+using VenuePass.Modules.Events.Contracts.IntegrationEvents;
 using VenuePass.Modules.Events.Domain.Events;
 using VenuePass.Modules.Events.Domain.Manifests;
+using VenuePass.Modules.Events.Domain.ManifestTemplates;
 using VenuePass.Modules.Events.Domain.Venues;
 using VenuePass.Modules.Events.Features.PublishEvent;
 using VenuePass.Modules.Events.Infrastructure;
@@ -28,14 +29,21 @@ public sealed class PublishEventOutboxTests
 
         var managerId = new UserId(Guid.Parse("00000000-0000-0000-0000-000000000001"));
         var venueEventId = EventId.Create();
-        var manifestId = ManifestId.Create();
+        // var manifestId = ManifestId.Create();
 
         var timeProvider = new FakeTimeProvider(FixedNow);
 
+        var manifest = Manifest.CreateFromTemplate(venueEventId, ManifestTemplate.Create(
+            new ManifestTemplateName("Template"),
+            null,
+            VenueId.Create(),
+            [new SectionDraft("Section", [new RowDraft("Row", [new SeatDraft("Seat")])])],
+            []));
+        
         var @event = Event.Create(
             venueEventId,
             VenueId.Create(),
-            manifestId,
+            manifest.Id,
             new EventName("Outbox Test Event"),
             FutureDate,
             null,
@@ -43,6 +51,7 @@ public sealed class PublishEventOutboxTests
             timeProvider);
 
         db.Events.Add(@event);
+        db.Manifests.Add(manifest);
         await db.SaveChangesAsync();
 
         var handler = new PublishEventHandler(db, timeProvider);
@@ -57,14 +66,14 @@ public sealed class PublishEventOutboxTests
         var messages = await db.OutboxMessages.ToListAsync();
         var message = Assert.Single(messages);
 
-        Assert.Equal(typeof(EventPublishedIntegrationEvent).FullName, message.Type);
+        Assert.Equal(typeof(EventPublishedIntegrationEvent).AssemblyQualifiedName, message.Type);
         Assert.NotNull(message.Payload);
 
         var payload = JsonSerializer.Deserialize<EventPublishedIntegrationEvent>(message.Payload);
         Assert.NotNull(payload);
-        Assert.Equal(venueEventId.Value, payload.VenueEventId);
-        Assert.Equal(manifestId.Value, payload.ManifestId);
-        Assert.NotEqual(Guid.Empty, payload.EventId);
+        Assert.Equal(venueEventId.Value, payload.EventId);
+        Assert.Equal(manifest.Id, payload.ManifestId);
+        Assert.NotEqual(Guid.Empty, payload.MessageId);
     }
 
     private sealed class FakeTimeProvider(DateTimeOffset now) : TimeProvider
