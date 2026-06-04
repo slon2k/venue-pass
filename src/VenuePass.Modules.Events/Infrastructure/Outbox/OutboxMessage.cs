@@ -71,4 +71,12 @@ public sealed class OutboxMessage
         LastAttemptedOn = attemptedOn;
         Error = null;
     }
+
+    public void MarkAbandoned(DateTimeOffset abandonedOn, string error)
+    {
+        AttemptCount++;
+        LastAttemptedOn = abandonedOn;
+        ProcessedOn = abandonedOn;
+        Error = $"ABANDONED: {error}";
+    }
 }

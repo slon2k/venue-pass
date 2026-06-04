@@ -13,6 +13,7 @@ using VenuePass.Modules.Events.Features.GetVenue;
 using VenuePass.Modules.Events.Features.PublishEvent;
 using VenuePass.Modules.Events.Features.ReassignEventManager;
 using VenuePass.Modules.Events.Infrastructure;
+using VenuePass.Modules.Events.Infrastructure.Outbox;
 
 namespace VenuePass.Modules.Events;
 
@@ -29,6 +30,7 @@ public static class ModuleConfiguration
         services.AddSingleton(TimeProvider.System);
         services.RegisterHandlers();
         services.AddValidatorsFromAssembly(typeof(ModuleConfiguration).Assembly);
+        services.AddHostedService<EventsOutboxDispatcher>();
 
         services.AddAuthorizationBuilder()
             .AddPolicy("EventAdmin", policy => policy.RequireRole("EventAdmin"))

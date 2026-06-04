@@ -22,14 +22,14 @@ This is the first real execution of the outbox pattern in the codebase.
     asserts `ProcessedOn` is set
 - Out of scope:
   - Real subscriber handler in the Ticketing module (Milestone 03)
-  - Dead-letter queues, exponential back-off, or retry caps beyond a fixed delay
+  - Dead-letter queues and exponential back-off
   - Integration tests that go through the full HTTP publish path (slice C5)
   - Any new migration
 
 ## Acceptance Criteria
 
-- [ ] `IIntegrationEventHandler<T>` is declared in `VenuePass.BuildingBlocks.Messaging`
-- [ ] `EventsOutboxDispatcher` is a `BackgroundService` that:
+- [x] `IIntegrationEventHandler<T>` is declared in `VenuePass.BuildingBlocks.Messaging`
+- [x] `EventsOutboxDispatcher` is a `BackgroundService` that:
   - Queries a bounded batch of `OutboxMessages` where `ProcessedOn IS NULL`
     and `NextAttemptOn <= utcNow`, ordered by `OccurredOn ASC`
   - Resolves the CLR type from `OutboxMessage.Type` and deserializes `Payload`
@@ -42,13 +42,13 @@ This is the first real execution of the outbox pattern in the codebase.
     and saves within that message's scope — a failure on message N does not
     roll back the committed state of messages 1 through N-1
   - Logs at minimum one line per dispatched message (type + id)
-- [ ] If no handler is registered for a given message type the message is still
+- [x] If no handler is registered for a given message type the message is still
       marked processed (skip without error)
-- [ ] `EventsOutboxDispatcher` is registered via `services.AddHostedService<EventsOutboxDispatcher>()`
+- [x] `EventsOutboxDispatcher` is registered via `services.AddHostedService<EventsOutboxDispatcher>()`
       in `ModuleConfiguration`
-- [ ] A unit test (in `VenuePass.Modules.Events.Tests`) seeds one outbox row,
+- [x] A unit test (in `VenuePass.Modules.Events.Tests`) seeds one outbox row,
       calls a single dispatcher execution, and asserts `ProcessedOn != null`
-- [ ] `dotnet build` and `dotnet test` pass
+- [x] `dotnet build` and `dotnet test` pass
 
 ## Design Notes
 
@@ -134,11 +134,11 @@ exponential back-off needed yet.
 
 ## Vertical Slices
 
-- [ ] Add `IIntegrationEventHandler<T>` to `BuildingBlocks.Messaging`
-- [ ] Implement `EventsOutboxDispatcher` (`BackgroundService` + batch query + type
+- [x] Add `IIntegrationEventHandler<T>` to `BuildingBlocks.Messaging`
+- [x] Implement `EventsOutboxDispatcher` (`BackgroundService` + batch query + type
       resolution + handler invoke + processed/failure marking)
-- [ ] Register dispatcher in `ModuleConfiguration`
-- [ ] Add unit test
+- [x] Register dispatcher in `ModuleConfiguration`
+- [x] Add unit test
 
 ## Risks and Assumptions
 
@@ -156,6 +156,6 @@ exponential back-off needed yet.
 
 ## Definition of Done
 
-- [ ] Acceptance criteria met
-- [ ] Tests passing
-- [ ] Docs updated if behavior changed
+- [x] Acceptance criteria met
+- [x] Tests passing
+- [x] Docs updated if behavior changed
