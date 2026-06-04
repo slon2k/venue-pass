@@ -24,7 +24,14 @@ public sealed class EventsIntegrationTestFixture : IAsyncLifetime
 
     public EventsApiFactory Factory { get; private set; } = null!;
 
+    public string ConnectionString { get; private set; } = null!;
+
     public HttpClient Client => Factory.CreateClient();
+
+    public EventsApiFactory CreateFactory(
+        bool enableOutboxDispatcher = false,
+        Action<IServiceCollection>? configureTestServices = null)
+        => new(ConnectionString, enableOutboxDispatcher, configureTestServices);
 
     public HttpClient CreateAdminClient(string? userId = null)
     {
@@ -56,7 +63,9 @@ public sealed class EventsIntegrationTestFixture : IAsyncLifetime
             connectionString = _externalConnectionString!;
         }
 
-        Factory = new EventsApiFactory(connectionString);
+        ConnectionString = connectionString;
+
+        Factory = new EventsApiFactory(ConnectionString);
 
         using IServiceScope scope = Factory.Services.CreateScope();
         EventsDbContext dbContext = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
