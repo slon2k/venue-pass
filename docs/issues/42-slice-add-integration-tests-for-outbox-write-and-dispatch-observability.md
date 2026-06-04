@@ -24,7 +24,7 @@ outbox dispatcher processes rows reliably in a real database-backed test run.
 ### Must-have for this PR
 
 - Publication endpoint:
-  - Publish valid draft -> `200 OK`, event state becomes `Published`
+  - Publish valid draft -> `204 NoContent`, event state becomes `Published`
   - Publish valid draft -> manifest is frozen (`IsFrozen = true`)
   - Publish valid draft -> exactly one outbox row is written
   - Publish already-published event -> rejected (`409 Conflict`), state unchanged
@@ -42,11 +42,7 @@ outbox dispatcher processes rows reliably in a real database-backed test run.
 
 ### Next PR (recommended follow-up)
 
-- Publish rejected when event date is in the past
 - Publish rejected when venue no longer exists
-- Dispatcher skips ineligible message (`NextAttemptOn > now`)
-- Dispatcher marks message processed when no handler is registered
-- Dispatcher poison-pill behavior (unresolvable type / invalid payload)
 - Dispatcher failure isolation in a mixed batch (one fails, others still commit)
 - Max-attempt abandonment integration assertion
 

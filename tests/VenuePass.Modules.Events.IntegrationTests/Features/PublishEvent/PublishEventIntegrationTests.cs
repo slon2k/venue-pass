@@ -128,6 +128,55 @@ public sealed class PublishEventEndpointIntegrationTests
 
         Assert.NotNull(persistedEvent);
         Assert.Equal(EventState.Published, persistedEvent!.State);
+
+        var outboxMessages = await db.OutboxMessages
+            .AsNoTracking()
+            .Where(x => x.Type == typeof(EventPublishedIntegrationEvent).AssemblyQualifiedName)
+            .ToListAsync();
+
+        int publishMessagesForEvent = outboxMessages.Count(x =>
+        {
+            return TryDeserializeEventPublishedPayload(x.Payload, out var payload)
+                && payload?.EventId == setup.EventId;
+        });
+
+        Assert.Equal(1, publishMessagesForEvent);
+    }
+
+    [Fact]
+    public async Task Publish_WhenEventDateInPast_ReturnsConflictAndStateUnchanged()
+    {
+        var managerId = Guid.NewGuid().ToString();
+        using var managerClient = _fixture.CreateEventManagerClient(managerId);
+        using var adminClient = _fixture.CreateAdminClient();
+
+        var setup = await ArrangePublishableEventAsync(adminClient, managerClient);
+
+        await using (var arrangeScope = _fixture.Factory.Services.CreateAsyncScope())
+        {
+            EventsDbContext arrangeDb = arrangeScope.ServiceProvider.GetRequiredService<EventsDbContext>();
+            DateTimeOffset pastDate = DateTimeOffset.UtcNow.AddMinutes(-5);
+
+            await arrangeDb.Database.ExecuteSqlInterpolatedAsync($"""
+                UPDATE [events].[events]
+                SET [event_date] = {pastDate}
+                WHERE [id] = {setup.EventId}
+                """);
+        }
+
+        HttpResponseMessage response = await managerClient.PostAsync($"/events/{setup.EventId}/publish", null);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+
+        using IServiceScope scope = _fixture.Factory.Services.CreateScope();
+        EventsDbContext db = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
+
+        Event? persistedEvent = await db.Events
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == new EventId(setup.EventId));
+
+        Assert.NotNull(persistedEvent);
+        Assert.Equal(EventState.Draft, persistedEvent!.State);
     }
 
     [Fact]
@@ -187,8 +236,8 @@ public sealed class PublishEventEndpointIntegrationTests
 
         OutboxMessage? match = candidates.FirstOrDefault(x =>
         {
-            EventPublishedIntegrationEvent? payload = JsonSerializer.Deserialize<EventPublishedIntegrationEvent>(x.Payload);
-            return payload?.EventId == eventId;
+            return TryDeserializeEventPublishedPayload(x.Payload, out var payload)
+                && payload?.EventId == eventId;
         });
 
         return match ?? throw new Xunit.Sdk.XunitException($"Outbox message for event '{eventId}' was not found.");
@@ -273,6 +322,22 @@ public sealed class PublishEventEndpointIntegrationTests
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         Assert.NotNull(body);
         return body!;
+    }
+
+    private static bool TryDeserializeEventPublishedPayload(
+        string payload,
+        out EventPublishedIntegrationEvent? integrationEvent)
+    {
+        try
+        {
+            integrationEvent = JsonSerializer.Deserialize<EventPublishedIntegrationEvent>(payload);
+            return integrationEvent is not null;
+        }
+        catch (JsonException)
+        {
+            integrationEvent = null;
+            return false;
+        }
     }
 
     private sealed record CreateEventRequest(
@@ -414,6 +479,137 @@ public sealed class OutboxDispatcherIntegrationTests
         Assert.Contains(FailingPublishEventHandler.ErrorMessage, persisted.Error);
     }
 
+    [Fact]
+    public async Task Dispatcher_WhenNoHandlerRegistered_MarksMessageProcessed()
+    {
+        await using EventsApiFactory factory = _fixture.CreateFactory(enableOutboxDispatcher: true);
+
+        using HttpClient adminClient = factory.CreateClient();
+        adminClient.DefaultRequestHeaders.Add(TestAuthHandler.SubHeader, Guid.NewGuid().ToString());
+        adminClient.DefaultRequestHeaders.Add(TestAuthHandler.RoleHeader, "EventAdmin");
+
+        var managerId = Guid.NewGuid().ToString();
+        using HttpClient managerClient = factory.CreateClient();
+        managerClient.DefaultRequestHeaders.Add(TestAuthHandler.SubHeader, managerId);
+        managerClient.DefaultRequestHeaders.Add(TestAuthHandler.RoleHeader, "EventManager");
+
+        var setup = await ArrangePublishableEventAsync(adminClient, managerClient);
+
+        HttpResponseMessage publishResponse = await managerClient.PostAsync($"/events/{setup.EventId}/publish", null);
+        Assert.Equal(HttpStatusCode.NoContent, publishResponse.StatusCode);
+
+        await WaitUntilAsync(async () =>
+        {
+            await using var scope = factory.Services.CreateAsyncScope();
+            EventsDbContext db = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
+
+            OutboxMessage message = await GetOutboxMessageForEventAsync(db, setup.EventId);
+            return message.ProcessedOn is not null;
+        }, timeout: TimeSpan.FromSeconds(12));
+
+        await using var assertScope = factory.Services.CreateAsyncScope();
+        EventsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<EventsDbContext>();
+
+        OutboxMessage persisted = await GetOutboxMessageForEventAsync(assertDb, setup.EventId);
+        Assert.NotNull(persisted.ProcessedOn);
+    }
+
+    [Fact]
+    public async Task Dispatcher_WhenMessageTypeIsUnresolvable_MarksMessageProcessed()
+    {
+        await using EventsApiFactory factory = _fixture.CreateFactory(enableOutboxDispatcher: true);
+
+        Guid messageId;
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            EventsDbContext db = seedScope.ServiceProvider.GetRequiredService<EventsDbContext>();
+            var message = OutboxMessage.Create(
+                occurredOn: DateTimeOffset.UtcNow,
+                type: "Missing.Type.Name, Missing.Assembly",
+                payload: "{\"x\":1}");
+
+            db.OutboxMessages.Add(message);
+            await db.SaveChangesAsync();
+            messageId = message.Id;
+        }
+
+        await WaitUntilAsync(async () =>
+        {
+            await using var scope = factory.Services.CreateAsyncScope();
+            EventsDbContext db = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
+            OutboxMessage? message = await db.OutboxMessages.AsNoTracking().FirstOrDefaultAsync(x => x.Id == messageId);
+            return message is not null && message.ProcessedOn is not null;
+        }, timeout: TimeSpan.FromSeconds(12));
+    }
+
+    [Fact]
+    public async Task Dispatcher_WhenMessagePayloadIsInvalid_MarksMessageProcessed()
+    {
+        await using EventsApiFactory factory = _fixture.CreateFactory(enableOutboxDispatcher: true);
+
+        Guid messageId;
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            EventsDbContext db = seedScope.ServiceProvider.GetRequiredService<EventsDbContext>();
+            var message = OutboxMessage.Create(
+                occurredOn: DateTimeOffset.UtcNow,
+                type: typeof(EventPublishedIntegrationEvent).AssemblyQualifiedName!,
+                payload: "not-json");
+
+            db.OutboxMessages.Add(message);
+            await db.SaveChangesAsync();
+            messageId = message.Id;
+        }
+
+        await WaitUntilAsync(async () =>
+        {
+            await using var scope = factory.Services.CreateAsyncScope();
+            EventsDbContext db = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
+            OutboxMessage? message = await db.OutboxMessages.AsNoTracking().FirstOrDefaultAsync(x => x.Id == messageId);
+            return message is not null && message.ProcessedOn is not null;
+        }, timeout: TimeSpan.FromSeconds(12));
+    }
+
+    [Fact]
+    public async Task Dispatcher_WhenMessageIsNotYetEligible_SkipsMessage()
+    {
+        await using EventsApiFactory factory = _fixture.CreateFactory(enableOutboxDispatcher: true);
+
+        Guid messageId;
+        DateTimeOffset expectedNextAttempt;
+
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            EventsDbContext db = seedScope.ServiceProvider.GetRequiredService<EventsDbContext>();
+            var message = OutboxMessage.Create(
+                occurredOn: DateTimeOffset.UtcNow,
+                type: typeof(EventPublishedIntegrationEvent).AssemblyQualifiedName!,
+                payload: JsonSerializer.Serialize(new EventPublishedIntegrationEvent(
+                    MessageId: Guid.CreateVersion7(),
+                    EventId: Guid.CreateVersion7(),
+                    ManifestId: Guid.CreateVersion7(),
+                    OccurredOn: DateTimeOffset.UtcNow)));
+
+            expectedNextAttempt = DateTimeOffset.UtcNow.AddMinutes(2);
+            message.RecordFailure(DateTimeOffset.UtcNow, expectedNextAttempt, "seeded failure");
+
+            db.OutboxMessages.Add(message);
+            await db.SaveChangesAsync();
+            messageId = message.Id;
+        }
+
+        await Task.Delay(TimeSpan.FromSeconds(6));
+
+        await using var assertScope = factory.Services.CreateAsyncScope();
+        EventsDbContext assertDb = assertScope.ServiceProvider.GetRequiredService<EventsDbContext>();
+        OutboxMessage? persisted = await assertDb.OutboxMessages.AsNoTracking().FirstOrDefaultAsync(x => x.Id == messageId);
+
+        Assert.NotNull(persisted);
+        Assert.Null(persisted!.ProcessedOn);
+        Assert.Equal(1, persisted.AttemptCount);
+        Assert.Equal(expectedNextAttempt, persisted.NextAttemptOn);
+    }
+
     private static async Task WaitUntilAsync(Func<Task<bool>> predicate, TimeSpan timeout)
     {
         var start = DateTimeOffset.UtcNow;
@@ -441,8 +637,8 @@ public sealed class OutboxDispatcherIntegrationTests
 
         OutboxMessage? match = candidates.FirstOrDefault(x =>
         {
-            EventPublishedIntegrationEvent? payload = JsonSerializer.Deserialize<EventPublishedIntegrationEvent>(x.Payload);
-            return payload?.EventId == eventId;
+            return TryDeserializeEventPublishedPayload(x.Payload, out var payload)
+                && payload?.EventId == eventId;
         });
 
         return match ?? throw new Xunit.Sdk.XunitException($"Outbox message for event '{eventId}' was not found.");
@@ -595,5 +791,21 @@ public sealed class OutboxDispatcherIntegrationTests
 
         public Task Handle(EventPublishedIntegrationEvent integrationEvent, CancellationToken cancellationToken)
             => throw new InvalidOperationException(ErrorMessage);
+    }
+
+    private static bool TryDeserializeEventPublishedPayload(
+        string payload,
+        out EventPublishedIntegrationEvent? integrationEvent)
+    {
+        try
+        {
+            integrationEvent = JsonSerializer.Deserialize<EventPublishedIntegrationEvent>(payload);
+            return integrationEvent is not null;
+        }
+        catch (JsonException)
+        {
+            integrationEvent = null;
+            return false;
+        }
     }
 }
