@@ -12,7 +12,7 @@ Milestone 02 is delivered through parent feature (capability) issues and vertica
 
 - [x] Capability A: Event lifecycle foundation
 - [x] Capability B: Event staffing
-- [ ] Capability C: Publication and integration
+- [x] Capability C: Publication and integration
 
 ## Capability Breakdown
 
@@ -31,11 +31,11 @@ Milestone 02 is delivered through parent feature (capability) issues and vertica
 
 ### Capability C: Publication and integration
 
-- [ ] C1: Implement PublishEvent state transition guards, including no publish without manifest
-- [ ] C2: Enforce manifest structural immutability after publication
-- [ ] C3: Write EventPublished(EventId, ManifestId) to outbox on publication
-- [ ] C4: Ensure outbox dispatcher processes EventPublished reliably
-- [ ] C5: Add integration tests for outbox write and dispatch observability
+- [x] C1: Implement PublishEvent state transition guards, including no publish without manifest
+- [x] C2: Enforce manifest structural immutability after publication
+- [x] C3: Write EventPublished(EventId, ManifestId) to outbox on publication
+- [x] C4: Ensure outbox dispatcher processes EventPublished reliably
+- [x] C5: Add integration tests for outbox write and dispatch observability
 
 ## Functional Requirements Baseline (M02)
 
@@ -46,14 +46,8 @@ These requirements define minimum business behavior for M02 and should be treate
 1. `ManifestTemplateId` is required in `CreateEvent`.
 2. Attach/replace manifest flow is deferred (out of scope for M02).
 3. `CreateEvent` uses minimal required fields: `Name`, `EventDateUtc`, `VenueId`, `ManifestTemplateId`.
-4. Publication preconditions are strict minimal checks:
-	- event is in `Draft`
-	- manifest snapshot exists
-	- current UTC time is strictly less than `EventDateUtc`
-	- referenced venue remains valid
-5. Error classification rule:
-	- validation errors for missing/format/range/reference checks at the command boundary
-	- domain errors for invalid state transitions and invariant violations inside aggregate/domain model
+4. Publication preconditions are strict minimal checks: event is in `Draft`; manifest snapshot exists; current UTC time is strictly less than `EventDateUtc`; referenced venue remains valid.
+5. Error classification rule: validation errors for missing/format/range/reference checks at the command boundary; domain errors for invalid state transitions and invariant violations inside aggregate/domain model.
 
 ### Event Creation Requirements
 
@@ -106,12 +100,12 @@ These requirements define minimum business behavior for M02 and should be treate
 
 ## Definition of Done
 
-- [ ] All in-scope capability issues are implemented and merged
-- [ ] Integration tests are included in each implemented slice
-- [ ] EventPublished outbox write and dispatch path is validated
-- [ ] Architecture tests pass without new module-boundary violations
-- [ ] Baseline CI remains green
-- [ ] Milestone and issue docs are updated to reflect completion state
+- [x] All in-scope capability issues are implemented and merged
+- [x] Integration tests are included in each implemented slice
+- [x] EventPublished outbox write and dispatch path is validated
+- [x] Architecture tests pass without new module-boundary violations
+- [x] Baseline CI remains green
+- [x] Milestone and issue docs are updated to reflect completion state
 
 ## Validation Checklist
 
@@ -119,8 +113,8 @@ These requirements define minimum business behavior for M02 and should be treate
 - [x] dotnet test passes at solution level
 - [x] CreateEvent and GetEvent flow verified end-to-end
 - [x] AssignEventManager authorization behavior verified
-- [ ] PublishEvent transition and outbox write verified
-- [ ] Outbox dispatcher processing verified in integration scenario
+- [x] PublishEvent transition and outbox write verified
+- [x] Outbox dispatcher processing verified in integration scenario
 
 ## Risks and Dependencies
 

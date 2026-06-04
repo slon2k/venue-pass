@@ -26,30 +26,30 @@ eventually consume.
 
 ## Acceptance Criteria
 
-- [ ] `EventPublishedIntegrationEvent` exists in
+- [x] `EventPublishedIntegrationEvent` exists in
       `VenuePass.Modules.Events.Contracts` and implements `IIntegrationEvent`
-- [ ] `IAggregateRoot` is declared in `VenuePass.BuildingBlocks.Domain` and
+- [x] `IAggregateRoot` is declared in `VenuePass.BuildingBlocks.Domain` and
       `AggregateRoot<TId>` implements it
-- [ ] `EventsDbContext.SaveChangesAsync` iterates tracked `IAggregateRoot`
+- [x] `EventsDbContext.SaveChangesAsync` iterates tracked `IAggregateRoot`
       entries, creates one `OutboxMessage` per domain event, clears domain
       events, then calls `base.SaveChangesAsync`
-- [ ] The `Type` stored in the outbox row is the full CLR type name of the
+- [x] The `Type` stored in the outbox row is the full CLR type name of the
       integration event (`typeof(EventPublishedIntegrationEvent).FullName`)
-- [ ] The `Payload` is a JSON-serialised `EventPublishedIntegrationEvent`
+- [x] The `Payload` is a JSON-serialised `EventPublishedIntegrationEvent`
       using `System.Text.Json`
-- [ ] A unit test (in `VenuePass.Modules.Events.Tests`) verifies that
+- [x] A unit test (in `VenuePass.Modules.Events.Tests`) verifies that
       after `PublishEventHandler.Handle(...)`, the tracked
       `OutboxMessages` set contains exactly one message with the correct
       type and deserializable payload
-- [ ] `dotnet build` and `dotnet test` pass
+- [x] `dotnet build` and `dotnet test` pass
 
 ## Vertical Slices
 
-- [ ] Add `IAggregateRoot` to `BuildingBlocks.Domain`; implement on
+- [x] Add `IAggregateRoot` to `BuildingBlocks.Domain`; implement on
       `AggregateRoot<TId>`
-- [ ] Add `EventPublishedIntegrationEvent` to `Contracts/`
-- [ ] Override `SaveChangesAsync` in `EventsDbContext`
-- [ ] Add unit test
+- [x] Add `EventPublishedIntegrationEvent` to `Contracts/`
+- [x] Override `SaveChangesAsync` in `EventsDbContext`
+- [x] Add unit test
 
 ## Design Notes
 
@@ -168,6 +168,6 @@ Assert.Equal((Guid)publishedEvent.ManifestId, payload.ManifestId);
 
 ## Definition of Done
 
-- [ ] Acceptance criteria met
-- [ ] Tests passing
-- [ ] Docs updated if behavior changed
+- [x] Acceptance criteria met
+- [x] Tests passing
+- [x] Docs updated if behavior changed
