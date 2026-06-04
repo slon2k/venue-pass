@@ -73,16 +73,20 @@ VenuePass.slnx
 │  ├─ VenuePass.BuildingBlocks/
 │  │  ├─ Domain/          (small base abstractions only)
 │  │  ├─ Application/     (result types, shared interfaces)
+│  │  ├─ Extensions/      (cross-cutting helpers)
 │  │  ├─ Infrastructure/  (current-user, outbox abstractions, helpers)
-│  │  └─ Messaging/       (integration event base/contracts)
+│  │  ├─ Messaging/       (integration event base/contracts)
+│  │  └─ Presentation/    (error/http mapping helpers)
 │  │
 │  ├─ VenuePass.Modules.Events/
-│  │  ├─ Features/CreateVenue/
-│  │  ├─ Domain/Venues/
-│  │  ├─ Infrastructure/ (DbContext, configurations, migrations)
-│  │  ├─ Contracts/
+│  │  ├─ Features/
+│  │  ├─ Domain/
+│  │  ├─ Infrastructure/ (DbContext, configurations, outbox)
 │  │  ├─ ModuleConfiguration.cs
 │  │  └─ ModuleEndpointMappings.cs
+│  │
+│  ├─ VenuePass.Modules.Events.Contracts/
+│  │  └─ IntegrationEvents/
 │  │
 │  ├─ VenuePass.Modules.Ticketing/
 │  │  ├─ Features/
@@ -103,7 +107,9 @@ VenuePass.slnx
 │
 ├─ tests/
 │  ├─ VenuePass.ArchitectureTests/
-│  └─ VenuePass.BuildingBlocks.Tests/
+│  ├─ VenuePass.BuildingBlocks.Tests/
+│  ├─ VenuePass.Modules.Events.Tests/
+│  └─ VenuePass.Modules.Events.IntegrationTests/
 │
 ├─ docs/
 │
@@ -114,14 +120,15 @@ VenuePass.slnx
 
 ## 5. Internal Module Structure
 
-Each module is **one project**.
+Each module is organized as a bounded area, usually as one project.
+Events currently uses a companion contracts project (`VenuePass.Modules.Events.Contracts`) for integration event contracts.
 
 The internal organization is:
 
 - **feature-first** in `Features/`
 - **aggregate/business-concept-first** in `Domain/`
 - **technical concerns** in `Infrastructure/`
-- **public cross-module interfaces** in `Contracts/`
+- **public cross-module interfaces/contracts** in `Contracts/` folders or dedicated `*.Contracts` projects
 
 ### Recommended structure pattern
 
@@ -159,6 +166,8 @@ Domain/
 
 ### Recommended module shape
 
+If a module needs contract isolation, keep contracts in a companion project.
+
 ```text
 VenuePass.Modules.Events/
 ├─ Features/
@@ -180,9 +189,10 @@ VenuePass.Modules.Events/
 │  ├─ Configurations/
 │  ├─ Outbox/
 │  └─ Migrations/
-├─ Contracts/
-│  └─ IEventsModule.cs
 └─ ModuleConfiguration.cs
+
+VenuePass.Modules.Events.Contracts/
+└─ IntegrationEvents/
 ```
 
 ### Domain structure examples

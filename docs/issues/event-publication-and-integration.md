@@ -19,20 +19,20 @@ Enable event publication by enforcing lifecycle guards, locking structural manif
 
 ## Acceptance Criteria
 
-- [ ] A draft event can be published through the Events API.
-- [ ] Publishing is rejected when required manifest state is missing.
-- [ ] Publishing is rejected when current UTC time is greater than or equal to `EventDateUtc`.
-- [ ] Publishing writes EventPublished(EventId, ManifestId) to outbox.
-- [ ] Outbox dispatcher processes EventPublished and processing is observable in tests/logs.
-- [ ] Structural changes to manifest are rejected after publication.
+- [x] A draft event can be published through the Events API.
+- [x] Publishing is rejected when required manifest state is missing.
+- [x] Publishing is rejected when current UTC time is greater than or equal to `EventDateUtc`.
+- [x] Publishing writes EventPublished(EventId, ManifestId) to outbox.
+- [x] Outbox dispatcher processes EventPublished and processing is observable in tests/logs.
+- [x] Structural changes to manifest are rejected after publication.
 
 ## Vertical Slices
 
-- [ ] C1: Implement PublishEvent state transition guards, including no publish without manifest
-- [ ] C2: Enforce manifest structural immutability after publication
-- [ ] C3: Write EventPublished(EventId, ManifestId) to outbox on publication
-- [ ] C4: Ensure outbox dispatcher processes EventPublished reliably
-- [ ] C5: Add integration tests for outbox write and dispatch observability
+- [x] C1: Implement PublishEvent state transition guards, including no publish without manifest
+- [x] C2: Enforce manifest structural immutability after publication
+- [x] C3: Write EventPublished(EventId, ManifestId) to outbox on publication
+- [x] C4: Ensure outbox dispatcher processes EventPublished reliably
+- [x] C5: Add integration tests for outbox write and dispatch observability
 
 ## Risks and Assumptions
 
@@ -41,6 +41,6 @@ Enable event publication by enforcing lifecycle guards, locking structural manif
 
 ## Definition of Done
 
-- [ ] Acceptance criteria met
-- [ ] Tests passing
-- [ ] Docs updated if behavior changed
+- [x] Acceptance criteria met
+- [x] Tests passing
+- [x] Docs updated if behavior changed
