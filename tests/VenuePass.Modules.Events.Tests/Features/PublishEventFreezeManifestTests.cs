@@ -67,7 +67,7 @@ public sealed class PublishEventFreezeManifestTests
     }
 
     [Fact]
-    public async Task Handle_WhenManifestDoesNotExist_StillSucceeds()
+    public async Task Handle_WhenManifestDoesNotExist_Fails()
     {
         // Arrange — event references a manifest ID not persisted in this context
         var options = new DbContextOptionsBuilder<EventsDbContext>()
@@ -101,7 +101,8 @@ public sealed class PublishEventFreezeManifestTests
         var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert — graceful: no manifest found does not break publication
-        Assert.True(result.IsSuccess);
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Events.PublishEvent.ManifestNotFound", result.Error.Code);
     }
 
     private sealed class FakeTimeProvider(DateTimeOffset now) : TimeProvider
