@@ -1,53 +1,68 @@
+<!-- Milestone = delivery phase. Work inside the milestone should be grouped by parent capability issues (aka features) and implemented through vertical-slice sub-issues. -->
 # Milestone Template
 
 ## Milestone Outcome
 
 <!-- One sentence: what is true when this milestone is complete? -->
 
-## Delivery Model
-
-<!-- Milestone = delivery phase. Work inside the milestone should be grouped by parent capability issues (aka features) and implemented through vertical-slice sub-issues. -->
-
 ## In Scope
 
-<!-- Parent feature issues (capability issues) included in this milestone -->
+- [ ] Capability A
+- [ ] Capability B
 
-- [ ] Feature (Capability) 1
-- [ ] Feature (Capability) 2
+## Capability Breakdown
 
-## Feature (Capability) Breakdown
+### Capability A
 
-<!-- For each parent feature/capability issue, list the expected vertical-slice sub-issues. Avoid listing layer-only tasks like DbContext, EF config, or endpoint as standalone slices unless they are truly cross-cutting. -->
+- [ ] Slice 1
+- [ ] Slice 2
 
-### Feature (Capability) 1
+### Capability B
 
-- [ ] Slice A
-- [ ] Slice B
+- [ ] Slice 3
+- [ ] Slice 4
 
-### Feature (Capability) 2
+## Functional Requirements Baseline
 
-- [ ] Slice C
-- [ ] Slice D
+<!-- Minimum business behavior this milestone must deliver.
+     Each requirement should be testable. Group by domain area. -->
+
+- [ ] Requirement 1
+- [ ] Requirement 2
+
+## Accepted Decisions
+
+<!-- Design and scope decisions locked for this milestone. -->
+
+1. Decision 1
+2. Decision 2
+
+## Slice Start Gate
+
+<!-- Preconditions before slice implementation begins. Omit if ready. -->
+
+- [ ] Precondition 1
 
 ## Out of Scope
 
-<!-- Explicitly excluded from this milestone to prevent scope creep -->
+<!-- Explicitly excluded to prevent scope creep -->
 
 ## Definition of Done
 
-<!-- All conditions that must be met to close this milestone -->
-
-- [ ] All in-scope feature (capability) issues implemented and merged
-- [ ] Tests passing
-- [ ] Docs updated
+- [ ] All in-scope capabilities implemented and merged
+- [ ] Integration tests validate key cross-cutting flows
+- [ ] Architecture tests pass
+- [ ] CI green
+- [ ] Docs updated if behavior changed
 
 ## Validation Checklist
 
-<!-- Manual or automated checks to run before closing -->
+<!-- Milestone-specific checks to run before closing.
+     Go beyond "build passes" — list the key flows to verify. -->
 
-- [ ] Build passes
-- [ ] Key flows tested end-to-end
+- [ ] Flow 1 verified end-to-end
+- [ ] Flow 2 verified end-to-end
 
 ## Risks and Dependencies
 
-<!-- Blockers, unknowns, or external dependencies for this milestone -->
+<!-- Blockers, unknowns, or external dependencies -->

@@ -1,20 +1,57 @@
 # Architecture Outline
 
-## Context and Assumptions
+## System Purpose
 
-<!-- Key technical context: runtime, language, hosting model, team size -->
+<!-- One paragraph: what does this system do and why does it exist? -->
 
-## Components
+## Tech Stack
 
-<!-- List each component with a one-line responsibility description -->
+| Concern | Choice |
+|---------|--------|
+| Runtime | |
+| API | |
+| Persistence | |
+| Messaging | |
+| Testing | |
+| Hosting | |
 
-| Component | Responsibility |
-|-----------|---------------|
-| | |
+## Module Map
 
-## Data Flow
+<!-- List each module with ownership. Use a diagram if helpful. -->
 
-<!-- Describe how data moves between components. Use a diagram if helpful -->
+| Module | Source of truth for | Key concepts |
+|--------|---------------------|--------------|
+| | | |
+
+## Project Structure
+
+<!-- Top-level folder layout and conventions (feature-first, aggregate-first, etc.) -->
+
+## Communication Model
+
+<!-- How do modules/components interact? Cover:
+     - Inside a module (direct calls, domain events)
+     - Across modules (integration events, sync contracts)
+     - Consistency model (immediate vs eventual) -->
+
+## Boundary Rules
+
+<!-- Non-negotiable constraints that prevent coupling.
+     These should be enforceable (architecture tests, code review). -->
+
+1. Rule 1
+2. Rule 2
+
+## Persistence Model
+
+<!-- DB topology, schema strategy, migration ownership -->
+
+| Property | Value |
+|----------|-------|
+| Database | |
+| Schema strategy | |
+| DbContext | |
+| Migrations | |
 
 ## Integration Points
 
@@ -30,6 +67,6 @@
 
 ## ADR Candidates
 
-<!-- Non-obvious decisions worth recording. Each becomes a separate ADR -->
+<!-- Non-obvious decisions worth recording. Each becomes a separate ADR. -->
 
 - [ ] ADR: (decision title)
