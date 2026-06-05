@@ -29,6 +29,8 @@ public sealed class TicketingDbContext(DbContextOptions<TicketingDbContext> opti
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema(Schema);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(TicketingDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
     }
 }
