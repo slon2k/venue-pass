@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using VenuePass.Modules.Events.Contracts;
 using VenuePass.Modules.Events.Features.CreateEvent;
 using VenuePass.Modules.Events.Features.CreateManifestTemplate;
 using VenuePass.Modules.Events.Features.CreateVenue;
@@ -31,6 +32,7 @@ public static class ModuleConfiguration
         services.RegisterHandlers();
         services.AddValidatorsFromAssembly(typeof(ModuleConfiguration).Assembly);
         services.AddHostedService<EventsOutboxDispatcher>();
+        services.AddScoped<IEventsModuleContract, EventsModuleContract>();
 
         services.AddAuthorizationBuilder()
             .AddPolicy("EventAdmin", policy => policy.RequireRole("EventAdmin"))
