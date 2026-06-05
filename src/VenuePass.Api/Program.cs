@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using VenuePass.Modules.Events;
+using VenuePass.Modules.Ticketing;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 builder.Services.AddEventsModule(builder.Configuration);
+builder.Services.AddTicketingModule(builder.Configuration);
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -35,6 +37,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapEventsModule();
+app.MapTicketingModule();
 app.Run();
 
 public partial class Program;
