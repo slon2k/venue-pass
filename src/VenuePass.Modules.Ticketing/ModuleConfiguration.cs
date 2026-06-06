@@ -2,6 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using VenuePass.BuildingBlocks.Messaging;
+using VenuePass.Modules.Events.Contracts.IntegrationEvents;
+using VenuePass.Modules.Ticketing.Features.EventPublished;
 using VenuePass.Modules.Ticketing.Infrastructure;
 
 namespace VenuePass.Modules.Ticketing;
@@ -42,8 +45,7 @@ public static class ModuleConfiguration
 
     private static IServiceCollection RegisterHandlers(this IServiceCollection services)
     {
-        // Add scoped services for command and query handlers here, e.g.:
-        // services.AddScoped<CreateTicketHandler>();
+        services.AddScoped<IIntegrationEventHandler<EventPublishedIntegrationEvent>, EventPublishedHandler>();
         return services;
     }
 }
