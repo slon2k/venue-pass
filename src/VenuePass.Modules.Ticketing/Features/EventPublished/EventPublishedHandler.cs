@@ -1,3 +1,4 @@
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 using VenuePass.BuildingBlocks.Messaging;
@@ -39,6 +40,29 @@ internal sealed class EventPublishedHandler(
         db.PublishedEventReferences.Add(reference);
         db.Inventories.Add(inventory);
 
-        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsDuplicatePublishedEventReference(ex))
+        {
+            // Another concurrent handler already persisted this event.
+            db.ChangeTracker.Clear();
+        }
+    }
+
+    internal static bool IsDuplicatePublishedEventReference(DbUpdateException exception)
+    {
+        if (exception.InnerException is SqlException sqlException)
+        {
+            return sqlException.Number is 2601 or 2627;
+        }
+
+        return exception.InnerException?.Message.Contains(
+                   "IX_published_event_references_event_id",
+                   StringComparison.OrdinalIgnoreCase) == true
+            || exception.Message.Contains(
+                   "IX_published_event_references_event_id",
+                   StringComparison.OrdinalIgnoreCase);
     }
 }
