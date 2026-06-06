@@ -125,5 +125,10 @@ internal sealed class InventoryConfiguration : IEntityTypeConfiguration<Inventor
                 .IsRequired();
         });
 
+        builder.Navigation(i => i.Seats)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Navigation(i => i.Pools)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
