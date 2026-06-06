@@ -1,6 +1,5 @@
 using VenuePass.BuildingBlocks.Domain;
 using VenuePass.Modules.Ticketing.Domain.PublishedEvents;
-using VenuePass.Modules.Events.Contracts;
 
 namespace VenuePass.Modules.Ticketing.Domain.Inventories;
 
@@ -22,27 +21,42 @@ public sealed class Inventory : AggregateRoot<InventoryId>
 
     public static Inventory CreateFromManifest(
         PublishedEventReferenceId eventReferenceId,
-        ManifestExportDto manifest)
+        InventoryManifest manifest)
     {
+        ArgumentNullException.ThrowIfNull(manifest);
+
         var inventory = new Inventory(
             InventoryId.Create(),
             eventReferenceId
         );
 
         foreach (var section in manifest.Sections)
+        {
             foreach (var row in section.Rows)
+            {
                 foreach (var seat in row.Seats)
+                {
                     inventory._seats.Add(InventorySeat.Create(
                         sourceSeatId: seat.SeatId,
                         sectionName: section.Name,
                         rowLabel: row.Label,
                         seatLabel: seat.Label));
+                }
+            }
+        }
 
         foreach (var area in manifest.GeneralAdmissionAreas)
+        {
             inventory._pools.Add(GeneralAdmissionPool.Create(
                 sourceAreaId: area.AreaId,
                 name: area.Name,
                 capacity: area.Capacity));
+        }
+
+        if (inventory._seats.Count == 0 && inventory._pools.Count == 0)
+        {
+            throw new DomainRuleViolationException(InventoryErrors.MustContainStockItems());
+        }
 
         return inventory;
     }
