@@ -4,6 +4,7 @@ using System.Text.Json;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using VenuePass.BuildingBlocks.Messaging;
 using VenuePass.Modules.Events.Contracts.IntegrationEvents;
@@ -482,7 +483,10 @@ public sealed class OutboxDispatcherIntegrationTests
     [Fact]
     public async Task Dispatcher_WhenNoHandlerRegistered_MarksMessageProcessed()
     {
-        await using EventsApiFactory factory = _fixture.CreateFactory(enableOutboxDispatcher: true);
+        await using EventsApiFactory factory = _fixture.CreateFactory(
+            enableOutboxDispatcher: true,
+            configureTestServices: services =>
+                services.RemoveAll<IIntegrationEventHandler<EventPublishedIntegrationEvent>>());
 
         using HttpClient adminClient = factory.CreateClient();
         adminClient.DefaultRequestHeaders.Add(TestAuthHandler.SubHeader, Guid.NewGuid().ToString());

@@ -22,6 +22,9 @@ internal sealed class PublishedEventReferenceConfiguration : IEntityTypeConfigur
             .HasColumnName("event_id")
             .IsRequired();
 
+        builder.HasIndex(x => x.EventId)
+            .IsUnique();
+
         builder.Property(x => x.ManifestId)
             .HasColumnName("manifest_id")
             .IsRequired();
