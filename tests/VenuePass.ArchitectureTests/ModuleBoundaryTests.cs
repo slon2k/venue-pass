@@ -6,57 +6,92 @@ namespace VenuePass.ArchitectureTests;
 
 public sealed class ModuleBoundaryTests
 {
-    private static readonly (string AssemblyName, string RootNamespace)[] Modules =
+    private static readonly ModuleDescriptor[] Modules =
     [
-        ("VenuePass.Modules.Events", "VenuePass.Modules.Events"),
-        ("VenuePass.Modules.Ticketing", "VenuePass.Modules.Ticketing"),
-        ("VenuePass.Modules.Attendance", "VenuePass.Modules.Attendance"),
-        ("VenuePass.Modules.Identity", "VenuePass.Modules.Identity")
+        new("VenuePass.Modules.Events", "VenuePass.Modules.Events", "VenuePass.Modules.Events.Contracts"),
+        new("VenuePass.Modules.Ticketing", "VenuePass.Modules.Ticketing", "VenuePass.Modules.Ticketing.Contracts"),
+        new("VenuePass.Modules.Attendance", "VenuePass.Modules.Attendance"),
+        new("VenuePass.Modules.Identity", "VenuePass.Modules.Identity")
     ];
 
     [Fact]
     public void Modules_should_not_depend_on_other_modules()
     {
-        foreach ((string assemblyName, string rootNamespace) in Modules)
+        foreach (ModuleDescriptor module in Modules)
         {
-            string[] otherModuleNamespaces = Modules
-                .Where(m => m.RootNamespace != rootNamespace)
-                .Select(m => m.RootNamespace)
+            string[] otherModuleAssemblies = Modules
+                .Where(m => m.AssemblyName != module.AssemblyName)
+                .Select(m => m.AssemblyName)
                 .ToArray();
 
-            var result = Types.InAssembly(LoadAssembly(assemblyName))
-                .That()
-                .ResideInNamespace(rootNamespace)
-                .ShouldNot()
-                .HaveDependencyOnAny(otherModuleNamespaces)
-                .GetResult();
+            Assembly assembly = LoadAssembly(module.AssemblyName);
+            string[] referencedAssemblies = assembly
+                .GetReferencedAssemblies()
+                .Select(name => name.Name)
+                .OfType<string>()
+                .ToArray();
+
+            string[] invalidReferences = referencedAssemblies
+                .Intersect(otherModuleAssemblies, StringComparer.Ordinal)
+                .ToArray();
 
             Assert.True(
-                result.IsSuccessful,
-                $"Assembly '{assemblyName}' must not depend on other modules.");
+                invalidReferences.Length == 0,
+                $"Assembly '{module.AssemblyName}' must not depend on other module implementations. Found: {string.Join(", ", invalidReferences)}");
+        }
+    }
+
+    [Fact]
+    public void Contracts_should_not_depend_on_module_implementations()
+    {
+        string[] moduleAssemblies = Modules
+            .Select(m => m.AssemblyName)
+            .ToArray();
+
+        foreach (ModuleDescriptor module in Modules.Where(m => m.ContractAssemblyName is not null))
+        {
+            Assembly contractAssembly = LoadAssembly(module.ContractAssemblyName!);
+            string[] referencedAssemblies = contractAssembly
+                .GetReferencedAssemblies()
+                .Select(name => name.Name)
+                .OfType<string>()
+                .ToArray();
+
+            string[] invalidReferences = referencedAssemblies
+                .Intersect(moduleAssemblies, StringComparer.Ordinal)
+                .ToArray();
+
+            Assert.True(
+                invalidReferences.Length == 0,
+                $"Contract assembly '{module.ContractAssemblyName}' must not depend on module implementations. Found: {string.Join(", ", invalidReferences)}");
         }
     }
 
     [Fact]
     public void Domain_layer_should_not_depend_on_infrastructure_or_features()
     {
-        foreach ((string assemblyName, string rootNamespace) in Modules)
+        foreach (ModuleDescriptor module in Modules)
         {
-            var result = Types.InAssembly(LoadAssembly(assemblyName))
+            var result = Types.InAssembly(LoadAssembly(module.AssemblyName))
                 .That()
-                .ResideInNamespace($"{rootNamespace}.Domain")
+                .ResideInNamespace($"{module.RootNamespace}.Domain")
                 .ShouldNot()
                 .HaveDependencyOnAny(
-                    $"{rootNamespace}.Infrastructure",
-                    $"{rootNamespace}.Features",
+                    $"{module.RootNamespace}.Infrastructure",
+                    $"{module.RootNamespace}.Features",
                     "Microsoft.EntityFrameworkCore")
                 .GetResult();
 
             Assert.True(
                 result.IsSuccessful,
-                $"Domain layer in '{assemblyName}' must be infrastructure-free.");
+                $"Domain layer in '{module.AssemblyName}' must be infrastructure-free.");
         }
     }
+
+    private sealed record ModuleDescriptor(
+        string AssemblyName,
+        string RootNamespace,
+        string? ContractAssemblyName = null);
 
     private static Assembly LoadAssembly(string assemblyName)
     {

@@ -14,7 +14,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\VenuePass.Modules.Events\VenuePass.Modules.Events.csproj" />
+    <ProjectReference Include="..\..\src\VenuePass.Modules.Events.Contracts\VenuePass.Modules.Events.Contracts.csproj" />
     <ProjectReference Include="..\..\src\VenuePass.Modules.Ticketing\VenuePass.Modules.Ticketing.csproj" />
+    <ProjectReference Include="..\..\src\VenuePass.Modules.Ticketing.Contracts\VenuePass.Modules.Ticketing.Contracts.csproj" />
     <ProjectReference Include="..\..\src\VenuePass.Modules.Attendance\VenuePass.Modules.Attendance.csproj" />
     <ProjectReference Include="..\..\src\VenuePass.Modules.Identity\VenuePass.Modules.Identity.csproj" />
   </ItemGroup>

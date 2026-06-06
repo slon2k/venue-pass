@@ -2,9 +2,13 @@
 	<ItemGroup>
 		<ProjectReference Include="..\VenuePass.BuildingBlocks\VenuePass.BuildingBlocks.csproj" />
     <ProjectReference Include="..\VenuePass.Modules.Ticketing.Contracts\VenuePass.Modules.Ticketing.Contracts.csproj" />
+    <ProjectReference Include="..\VenuePass.Modules.Events.Contracts\VenuePass.Modules.Events.Contracts.csproj" />
 	</ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="VenuePass.Modules.Ticketing.Tests" />
   </ItemGroup>
 </Project>
