@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
 using VenuePass.BuildingBlocks.Domain;
+using VenuePass.Modules.Ticketing.Domain.PublishedEvents;
 
 namespace VenuePass.Modules.Ticketing.Infrastructure;
 
@@ -8,8 +9,7 @@ public sealed class TicketingDbContext(DbContextOptions<TicketingDbContext> opti
 {
     public const string Schema = "ticketing";
 
-    // Define DbSet properties for your entities here, e.g.:
-    // public DbSet<Ticket> Tickets => Set<Ticket>();
+    public DbSet<PublishedEventReference> PublishedEventReferences => Set<PublishedEventReference>();
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
