@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.MsSql;
 using VenuePass.Modules.Events.Infrastructure;
+using VenuePass.Modules.Ticketing.Infrastructure;
 using Xunit;
 
 namespace VenuePass.Modules.Events.IntegrationTests.Infrastructure;
@@ -70,6 +71,9 @@ public sealed class EventsIntegrationTestFixture : IAsyncLifetime
         using IServiceScope scope = Factory.Services.CreateScope();
         EventsDbContext dbContext = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
         await dbContext.Database.MigrateAsync();
+
+        TicketingDbContext ticketingDbContext = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+        await ticketingDbContext.Database.MigrateAsync();
     }
 
     public async Task DisposeAsync()

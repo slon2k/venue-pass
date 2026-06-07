@@ -51,6 +51,44 @@ public sealed class EventsOutboxDispatcherTests
     }
 
     [Fact]
+    public async Task DispatchBatchAsync_MultipleHandlers_InvokesEachHandlerAndMarksProcessed()
+    {
+        // Arrange
+        var now = new DateTimeOffset(2026, 6, 4, 12, 2, 0, TimeSpan.Zero);
+        var timeProvider = new FakeTimeProvider(now);
+        var recorder = new HandlingRecorder();
+        var services = CreateServices(
+            dbName: Guid.NewGuid().ToString(),
+            configureServices: s =>
+            {
+                s.AddSingleton(recorder);
+                s.AddScoped<IIntegrationEventHandler<TestIntegrationEvent>, FirstRecordingHandler>();
+                s.AddScoped<IIntegrationEventHandler<TestIntegrationEvent>, SecondRecordingHandler>();
+            });
+
+        var payload = new TestIntegrationEvent(Guid.CreateVersion7(), now, "multi-handler");
+        var message = OutboxMessage.Create(now, typeof(TestIntegrationEvent).AssemblyQualifiedName!, JsonSerializer.Serialize(payload));
+
+        await SeedMessageAsync(services, message);
+
+        var dispatcher = CreateDispatcher(services, timeProvider);
+
+        // Act
+        await dispatcher.DispatchBatchAsync(CancellationToken.None);
+
+        // Assert
+        var saved = await GetMessageAsync(services, message.Id);
+        Assert.NotNull(saved);
+        Assert.NotNull(saved!.ProcessedOn);
+        Assert.Equal(0, saved.AttemptCount);
+        Assert.Null(saved.Error);
+
+        Assert.Equal(2, recorder.Invocations.Count);
+        Assert.Contains("first:multi-handler", recorder.Invocations);
+        Assert.Contains("second:multi-handler", recorder.Invocations);
+    }
+
+    [Fact]
     public async Task DispatchBatchAsync_NoHandler_MarksProcessedGracefully()
     {
         // Arrange
@@ -307,6 +345,8 @@ public sealed class EventsOutboxDispatcherTests
         public int CallCount => HandledEvents.Count;
 
         public List<TestIntegrationEvent> HandledEvents { get; } = [];
+
+        public List<string> Invocations { get; } = [];
     }
 
     private sealed class RecordingHandler(HandlingRecorder recorder) : IIntegrationEventHandler<TestIntegrationEvent>
@@ -314,6 +354,24 @@ public sealed class EventsOutboxDispatcherTests
         public Task Handle(TestIntegrationEvent integrationEvent, CancellationToken cancellationToken)
         {
             recorder.HandledEvents.Add(integrationEvent);
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class FirstRecordingHandler(HandlingRecorder recorder) : IIntegrationEventHandler<TestIntegrationEvent>
+    {
+        public Task Handle(TestIntegrationEvent integrationEvent, CancellationToken cancellationToken)
+        {
+            recorder.Invocations.Add($"first:{integrationEvent.Value}");
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class SecondRecordingHandler(HandlingRecorder recorder) : IIntegrationEventHandler<TestIntegrationEvent>
+    {
+        public Task Handle(TestIntegrationEvent integrationEvent, CancellationToken cancellationToken)
+        {
+            recorder.Invocations.Add($"second:{integrationEvent.Value}");
             return Task.CompletedTask;
         }
     }
