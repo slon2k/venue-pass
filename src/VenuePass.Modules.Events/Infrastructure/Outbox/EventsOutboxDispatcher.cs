@@ -117,10 +117,10 @@ internal sealed class EventsOutboxDispatcher(
             return;
         }
 
-        var handlerType = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
-        var handler = scope.ServiceProvider.GetService(handlerType);
+        var handlerTypes = typeof(IEnumerable<>).MakeGenericType(typeof(IIntegrationEventHandler<>).MakeGenericType(eventType));
+        var handlers = (IEnumerable<object>)scope.ServiceProvider.GetService(handlerTypes)!;
 
-        if (handler is null)
+        if (handlers is null || !handlers.Any())
         {
             logger.LogWarning(
                 "No handler registered for '{EventType}'. Marking message {MessageId} processed.",
@@ -132,10 +132,13 @@ internal sealed class EventsOutboxDispatcher(
 
         try
         {
-            var method = handlerType.GetMethod(nameof(IIntegrationEventHandler<IIntegrationEvent>.Handle))!;
-            var task = (Task)method.Invoke(handler, [payload, ct])!;
-            await task;
-
+            foreach (var handler in handlers)
+            {
+                var handlerType = handler.GetType();
+                var method = handlerType.GetMethod(nameof(IIntegrationEventHandler<>.Handle))!;
+                var task = (Task)method.Invoke(handler, [payload, ct])!;
+                await task;
+            }
             message.MarkProcessed(now);
             await db.SaveChangesAsync(ct);
 
