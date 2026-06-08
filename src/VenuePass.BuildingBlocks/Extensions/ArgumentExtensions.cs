@@ -25,4 +25,20 @@ public static class ArgumentExtensions
             throw new ArgumentOutOfRangeException(argumentName, $"'{argumentName}' must be between {minValue} and {maxValue}.");
         }
     }
+
+    public static void ThrowIfNotInRange(this decimal argument, string argumentName, decimal minValue, decimal maxValue)
+    {
+        if (argument < minValue || argument > maxValue)
+        {
+            throw new ArgumentOutOfRangeException(argumentName, $"'{argumentName}' must be between {minValue} and {maxValue}.");
+        }
+    }
+
+    public static void ThrowIfLengthNotEqual(this string argument, string argumentName, int requiredLength)
+    {
+        if (argument.Length != requiredLength)
+        {
+            throw new ArgumentException($"'{argumentName}' must be exactly {requiredLength} characters long.", argumentName);
+        }
+    }
 }

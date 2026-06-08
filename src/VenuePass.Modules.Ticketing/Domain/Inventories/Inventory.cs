@@ -30,42 +30,40 @@ public sealed class Inventory : AggregateRoot<InventoryId>
             eventReferenceId
         );
 
-        foreach (var section in manifest.Sections)
+        var sourceSeatIds = manifest.Sections
+            .SelectMany(section => section.Rows)
+            .SelectMany(row => row.Seats)
+            .Select(seat => seat.SeatId)
+            .ToList();
+
+        if (sourceSeatIds.Count != sourceSeatIds.Distinct().Count())
         {
-            foreach (var row in section.Rows)
-            {
-                foreach (var seat in row.Seats)
-                {
-                    inventory._seats.Add(InventorySeat.Create(
-                        sourceSeatId: seat.SeatId,
-                        sectionName: section.Name,
-                        rowLabel: row.Label,
-                        seatLabel: seat.Label));
-                }
-            }
+            throw new DomainRuleViolationException(InventoryErrors.DuplicateSourceSeats());
         }
 
-        foreach (var area in manifest.GeneralAdmissionAreas)
+        var sourceAreaIds = manifest.GeneralAdmissionAreas
+            .Select(area => area.AreaId)
+            .ToList();
+
+        if (sourceAreaIds.Count != sourceAreaIds.Distinct().Count())
         {
-            inventory._pools.Add(GeneralAdmissionPool.Create(
-                sourceAreaId: area.AreaId,
-                name: area.Name,
-                capacity: area.Capacity));
+            throw new DomainRuleViolationException(InventoryErrors.DuplicateSourceGeneralAdmissionAreas());
         }
 
         if (inventory._seats.Count == 0 && inventory._pools.Count == 0)
         {
-            throw new DomainRuleViolationException(InventoryErrors.MustContainStockItems());
+            throw new DomainRuleViolationException(InventoryErrors.MustContainInventoryItems());
         }
 
         return inventory;
     }
 }
 
-public record InventoryId(Guid Value)
+public readonly record struct InventoryId(Guid Value)
 {
     public static InventoryId Create() => new(Guid.CreateVersion7());
     public static implicit operator Guid(InventoryId id) => id.Value;
+    public bool IsEmpty => Value == Guid.Empty;
     public override string ToString() => Value.ToString();
 }
 

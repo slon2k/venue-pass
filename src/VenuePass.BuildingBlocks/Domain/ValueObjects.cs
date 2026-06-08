@@ -16,12 +16,19 @@ public readonly record struct DateTimeRange
         End = end;
     }
 
-    public bool Contains(DateTimeOffset dateTime)
-        => (Start, End) switch
-        {
-            (null, null) => true,
-            (null, var end) => dateTime <= end,
-            (var start, null) => dateTime >= start,
-            (var start, var end) => dateTime >= start && dateTime <= end
-        };
+    public bool Contains(DateTimeOffset dateTime) => (Start, End) switch
+    {
+        (null, null) => true,
+        (null, var end) => dateTime <= end,
+        (var start, null) => dateTime >= start,
+        (var start, var end) => dateTime >= start && dateTime <= end
+    };
+
+    public static DateTimeRange Unbounded() => new(null, null);
+
+    public static DateTimeRange StartingAt(DateTimeOffset start) => new(start, null);
+
+    public static DateTimeRange EndingAt(DateTimeOffset end) => new(null, end);
+
+    public static DateTimeRange Between(DateTimeOffset start, DateTimeOffset end) => new(start, end);
 }

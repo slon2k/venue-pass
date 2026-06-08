@@ -44,7 +44,7 @@ internal sealed class InventoryConfiguration : IEntityTypeConfiguration<Inventor
             s.Property(s => s.Id)
                 .HasConversion(
                     id => id.Value,
-                    value => new SeatId(value))
+                    value => new InventorySeatId(value))
                 .ValueGeneratedNever()
                 .HasColumnName("id");
             

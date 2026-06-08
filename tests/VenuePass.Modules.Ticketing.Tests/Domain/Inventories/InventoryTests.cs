@@ -137,8 +137,8 @@ public sealed class InventoryTests
         var exception = Assert.Throws<DomainRuleViolationException>(() => Inventory.CreateFromManifest(eventReferenceId, manifest));
 
         // Assert
-        Assert.Equal(InventoryErrors.MustContainStockItems().Code, exception.Code);
-        Assert.Equal(InventoryErrors.MustContainStockItems().Message, exception.Message);
+        Assert.Equal(InventoryErrors.MustContainInventoryItems().Code, exception.Code);
+        Assert.Equal(InventoryErrors.MustContainInventoryItems().Message, exception.Message);
     }
 
     private static InventoryManifest CreateManifest(

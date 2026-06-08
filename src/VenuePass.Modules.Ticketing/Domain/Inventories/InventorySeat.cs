@@ -3,7 +3,7 @@ using VenuePass.BuildingBlocks.Extensions;
 
 namespace VenuePass.Modules.Ticketing.Domain.Inventories;
 
-public sealed class InventorySeat : Entity<SeatId>
+public sealed class InventorySeat : Entity<InventorySeatId>
 {
     public Guid SourceSeatId { get; private set; }
     public SectionName Section { get; private set; } = null!;
@@ -14,7 +14,7 @@ public sealed class InventorySeat : Entity<SeatId>
     private InventorySeat() { }
 
     private InventorySeat(
-        SeatId id,
+        InventorySeatId id,
         Guid sourceSeatId,
         SectionName section,
         RowLabel row,
@@ -35,7 +35,7 @@ public sealed class InventorySeat : Entity<SeatId>
         string seatLabel)
     {
         return new InventorySeat(
-            SeatId.Create(),
+            InventorySeatId.Create(),
             sourceSeatId,
             new SectionName(sectionName),
             new RowLabel(rowLabel),
@@ -45,10 +45,11 @@ public sealed class InventorySeat : Entity<SeatId>
     }
 }
 
-public record SeatId(Guid Value)
+public readonly record struct InventorySeatId(Guid Value)
 {
-    public static SeatId Create() => new(Guid.CreateVersion7());
-    public static implicit operator Guid(SeatId id) => id.Value;
+    public static InventorySeatId Create() => new(Guid.CreateVersion7());
+    public static implicit operator Guid(InventorySeatId id) => id.Value;
+    public bool IsEmpty => Value == Guid.Empty;
     public override string ToString() => Value.ToString();
 };
 
