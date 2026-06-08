@@ -50,6 +50,31 @@ public sealed class Inventory : AggregateRoot<InventoryId>
             throw new DomainRuleViolationException(InventoryErrors.DuplicateSourceGeneralAdmissionAreas());
         }
 
+        foreach (var section in manifest.Sections)
+        {
+            foreach (var row in section.Rows)
+            {
+                foreach (var seat in row.Seats)
+                {
+                    inventory._seats.Add(
+                        InventorySeat.Create(
+                            seat.SeatId,
+                            section.Name,
+                            row.Label,
+                            seat.Label));
+                }
+            }
+        }
+
+        foreach (var area in manifest.GeneralAdmissionAreas)
+        {
+            inventory._pools.Add(
+                GeneralAdmissionPool.Create(
+                    area.AreaId,
+                    area.Name,
+                    area.Capacity));
+        }
+
         if (inventory._seats.Count == 0 && inventory._pools.Count == 0)
         {
             throw new DomainRuleViolationException(InventoryErrors.MustContainInventoryItems());
