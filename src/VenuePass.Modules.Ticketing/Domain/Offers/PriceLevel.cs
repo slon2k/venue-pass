@@ -149,7 +149,9 @@ public sealed record PriceLevelName
 
     public static implicit operator string(PriceLevelName name) => name.Value;
 
-    public static bool HasSameValue(PriceLevelName? left, PriceLevelName? right) => (left, right) switch
+    public bool SameAs(PriceLevelName? other) => SameAs(this, other);
+
+    public static bool SameAs(PriceLevelName? left, PriceLevelName? right) => (left, right) switch
     {
         (null, null) => true,
         (null, _) => false,

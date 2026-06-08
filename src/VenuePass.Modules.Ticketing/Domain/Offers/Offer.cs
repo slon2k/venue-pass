@@ -50,7 +50,7 @@ public sealed class Offer : AggregateRoot<OfferId>
         );
     }
 
-    public void ConfigurePricing(
+    public void ConfigurePriceLevel(
         PriceLevelName priceLevelName,
         IEnumerable<PriceLevelInventorySeatItemInput> inventorySeatItems,
         IEnumerable<PriceLevelGeneralAdmissionPoolItemInput> generalAdmissionPoolItems)
@@ -69,7 +69,7 @@ public sealed class Offer : AggregateRoot<OfferId>
             seatItems,
             poolItems);
 
-        _priceLevels.RemoveAll(pl => PriceLevelName.HasSameValue(pl.Name, priceLevelName));
+        _priceLevels.RemoveAll(pl => pl.Name.SameAs(priceLevelName));
 
         _priceLevels.Add(priceLevel);
     }
