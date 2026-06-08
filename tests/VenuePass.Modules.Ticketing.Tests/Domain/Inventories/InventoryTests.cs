@@ -137,8 +137,73 @@ public sealed class InventoryTests
         var exception = Assert.Throws<DomainRuleViolationException>(() => Inventory.CreateFromManifest(eventReferenceId, manifest));
 
         // Assert
-        Assert.Equal(InventoryErrors.MustContainStockItems().Code, exception.Code);
-        Assert.Equal(InventoryErrors.MustContainStockItems().Message, exception.Message);
+        Assert.Equal(InventoryErrors.MustContainInventoryItems().Code, exception.Code);
+        Assert.Equal(InventoryErrors.MustContainInventoryItems().Message, exception.Message);
+    }
+
+    [Fact]
+    public void CreateFromManifest_WhenManifestIsNull_ThrowsArgumentNullException()
+    {
+        // Arrange
+        var eventReferenceId = PublishedEventReferenceId.Create();
+
+        // Act
+        void Act() => _ = Inventory.CreateFromManifest(eventReferenceId, null!);
+
+        // Assert
+        Assert.Throws<ArgumentNullException>(Act);
+    }
+
+    [Fact]
+    public void CreateFromManifest_WhenManifestContainsDuplicateSourceSeatIds_ThrowsDomainRuleViolation()
+    {
+        // Arrange
+        var eventReferenceId = PublishedEventReferenceId.Create();
+        var duplicateSeatId = Guid.CreateVersion7();
+        var manifest = CreateManifest(
+            sections:
+            [
+                new InventorySectionInput(
+                    "Main",
+                    [
+                        new InventoryRowInput(
+                            "A",
+                            [
+                                new InventorySeatInput(duplicateSeatId, "1"),
+                                new InventorySeatInput(duplicateSeatId, "2")
+                            ])
+                    ])
+            ]);
+
+        // Act
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            Inventory.CreateFromManifest(eventReferenceId, manifest));
+
+        // Assert
+        Assert.Equal(InventoryErrors.DuplicateSourceSeats().Code, exception.Code);
+        Assert.Equal(InventoryErrors.DuplicateSourceSeats().Message, exception.Message);
+    }
+
+    [Fact]
+    public void CreateFromManifest_WhenManifestContainsDuplicateSourceGeneralAdmissionAreaIds_ThrowsDomainRuleViolation()
+    {
+        // Arrange
+        var eventReferenceId = PublishedEventReferenceId.Create();
+        var duplicateAreaId = Guid.CreateVersion7();
+        var manifest = CreateManifest(
+            generalAdmissionAreas:
+            [
+                new InventoryGeneralAdmissionAreaInput(duplicateAreaId, "Floor", 100),
+                new InventoryGeneralAdmissionAreaInput(duplicateAreaId, "Lawn", 200)
+            ]);
+
+        // Act
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            Inventory.CreateFromManifest(eventReferenceId, manifest));
+
+        // Assert
+        Assert.Equal(InventoryErrors.DuplicateSourceGeneralAdmissionAreas().Code, exception.Code);
+        Assert.Equal(InventoryErrors.DuplicateSourceGeneralAdmissionAreas().Message, exception.Message);
     }
 
     private static InventoryManifest CreateManifest(

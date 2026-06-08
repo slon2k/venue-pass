@@ -43,10 +43,11 @@ public sealed class GeneralAdmissionPool : Entity<GeneralAdmissionPoolId>
     }
 }
 
-public record GeneralAdmissionPoolId(Guid Value)
+public readonly record struct GeneralAdmissionPoolId(Guid Value)
 {
     public static GeneralAdmissionPoolId Create() => new(Guid.CreateVersion7());
     public static implicit operator Guid(GeneralAdmissionPoolId id) => id.Value;
+    public bool IsEmpty => Value == Guid.Empty;
     public override string ToString() => Value.ToString();
 };
 
