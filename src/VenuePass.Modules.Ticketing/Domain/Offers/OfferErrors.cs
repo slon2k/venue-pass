@@ -27,4 +27,16 @@ public static class OfferErrors
     public static DomainError MustProvideAtLeastOnePriceLevel() => new(
         "Ticketing.Offer.MustProvideAtLeastOnePriceLevel",
         "At least one price level must be provided.");
+
+    public static DomainError SeatNotInInventory(Guid seatId) => new(
+        "Ticketing.Offer.SeatNotInInventory",
+        $"Seat with ID '{seatId}' is not part of the inventory.");
+
+    public static DomainError GeneralAdmissionPoolNotInInventory(Guid poolId) => new(
+        "Ticketing.Offer.GeneralAdmissionPoolNotInInventory",
+        $"General admission pool with ID '{poolId}' is not part of the inventory.");
+
+    public static DomainError InventoryMismatch(Guid passedInventoryId, Guid expectedInventoryId) => new(
+        "Ticketing.Offer.InventoryMismatch",
+        $"Inventory '{passedInventoryId}' does not match the offer's expected inventory '{expectedInventoryId}'.");
 }

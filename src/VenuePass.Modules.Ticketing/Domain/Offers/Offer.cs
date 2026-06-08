@@ -51,11 +51,13 @@ public sealed class Offer : AggregateRoot<OfferId>
     }
 
     public void ConfigurePriceLevel(
+        Inventory inventory,
         PriceLevelName priceLevelName,
         IEnumerable<PriceLevelInventorySeatItemInput> inventorySeatItems,
         IEnumerable<PriceLevelGeneralAdmissionPoolItemInput> generalAdmissionPoolItems)
     {
         ArgumentNullException.ThrowIfNull(priceLevelName);
+        ArgumentNullException.ThrowIfNull(inventory);
         ArgumentNullException.ThrowIfNull(inventorySeatItems);
         ArgumentNullException.ThrowIfNull(generalAdmissionPoolItems);
 
@@ -63,6 +65,9 @@ public sealed class Offer : AggregateRoot<OfferId>
 
         var seatItems = inventorySeatItems.ToArray();
         var poolItems = generalAdmissionPoolItems.ToArray();
+
+        EnsureCorrectInventory(inventory);
+        EnsureSeatsAndPoolsExistInInventory(inventory, seatItems, poolItems);
 
         var priceLevel = PriceLevel.Create(
             priceLevelName,
@@ -72,6 +77,36 @@ public sealed class Offer : AggregateRoot<OfferId>
         _priceLevels.RemoveAll(pl => pl.Name.SameAs(priceLevelName));
 
         _priceLevels.Add(priceLevel);
+    }
+
+    private static void EnsureSeatsAndPoolsExistInInventory(Inventory inventory, PriceLevelInventorySeatItemInput[] inventorySeatItems, PriceLevelGeneralAdmissionPoolItemInput[] generalAdmissionPoolItems)
+    {
+        var seatIds = inventory.Seats.Select(i => i.Id).ToHashSet();
+        var poolIds = inventory.Pools.Select(i => i.Id).ToHashSet();
+
+        foreach (var item in inventorySeatItems)
+        {
+            if (!seatIds.Contains(item.InventorySeatId))
+            {
+                throw new DomainRuleViolationException(OfferErrors.SeatNotInInventory(item.InventorySeatId));
+            }
+        }
+
+        foreach (var item in generalAdmissionPoolItems)
+        {
+            if (!poolIds.Contains(item.GeneralAdmissionPoolId))
+            {
+                throw new DomainRuleViolationException(OfferErrors.GeneralAdmissionPoolNotInInventory(item.GeneralAdmissionPoolId));
+            }
+        }
+    }
+
+    private void EnsureCorrectInventory(Inventory inventory)
+    {
+        if (inventory.Id != InventoryId)
+        {
+            throw new DomainRuleViolationException(OfferErrors.InventoryMismatch(inventory.Id.Value, InventoryId.Value));
+        }
     }
 
     public void Activate()
