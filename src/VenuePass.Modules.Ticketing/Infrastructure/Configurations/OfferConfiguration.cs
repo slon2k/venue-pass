@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
 using VenuePass.Modules.Ticketing.Domain.Inventories;
 using VenuePass.Modules.Ticketing.Domain.Offers;
 
@@ -48,11 +47,13 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
                 currency => currency.Value,
                 value => new Currency(value))
             .HasMaxLength(Currency.Length)
+            .IsFixedLength()
             .HasColumnName("currency")
             .IsRequired();
 
         builder.Property(o => o.Status)
             .HasConversion<string>()
+            .HasMaxLength(32)
             .HasColumnName("status")
             .IsRequired();
 
@@ -69,10 +70,7 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
         {
             level.ToTable("offer_price_levels");
 
-            level.WithOwner()
-                .HasForeignKey("offer_id");
-
-            level.HasKey("offer_id", nameof(PriceLevel.Id));
+            level.HasKey(l => l.Id);
 
             level.Property(l => l.Id)
                 .HasConversion(
@@ -80,6 +78,9 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
                     value => new PriceLevelId(value))
                 .ValueGeneratedNever()
                 .HasColumnName("id");
+
+            level.WithOwner()
+                .HasForeignKey("offer_id");
 
             level.Property(l => l.Name)
                 .HasConversion(
@@ -89,14 +90,20 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
                 .HasColumnName("name")
                 .IsRequired();
 
+            level.HasIndex("offer_id", nameof(PriceLevel.Name))
+                .IsUnique()
+                .HasDatabaseName("ux_offer_price_levels_offer_id_name");
+
             level.OwnsMany(l => l.InventorySeatItems, seatItem =>
             {
                 seatItem.ToTable("offer_price_level_inventory_seat_items");
 
                 seatItem.WithOwner()
-                    .HasForeignKey("offer_id", "price_level_id");
+                    .HasForeignKey("price_level_id");
 
-                seatItem.HasKey("offer_id", "price_level_id", nameof(PriceLevelInventorySeatItem.InventorySeatId));
+                seatItem.HasKey(
+                    "price_level_id",
+                    nameof(PriceLevelInventorySeatItem.InventorySeatId));
 
                 seatItem.Property(i => i.InventorySeatId)
                     .HasConversion(
@@ -110,6 +117,7 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
                         amount => amount.Value,
                         value => new Amount(value))
                     .HasColumnName("price")
+                    .HasPrecision(18, 2)
                     .IsRequired();
             });
 
@@ -118,9 +126,11 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
                 poolItem.ToTable("offer_price_level_general_admission_pool_items");
 
                 poolItem.WithOwner()
-                    .HasForeignKey("offer_id", "price_level_id");
+                    .HasForeignKey("price_level_id");
 
-                poolItem.HasKey("offer_id", "price_level_id", nameof(PriceLevelGeneralAdmissionPoolItem.GeneralAdmissionPoolId));
+                poolItem.HasKey(
+                    "price_level_id",
+                    nameof(PriceLevelGeneralAdmissionPoolItem.GeneralAdmissionPoolId));
 
                 poolItem.Property(i => i.GeneralAdmissionPoolId)
                     .HasConversion(
@@ -134,6 +144,7 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
                         amount => amount.Value,
                         value => new Amount(value))
                     .HasColumnName("price")
+                    .HasPrecision(18, 2)
                     .IsRequired();
             });
 
