@@ -10,9 +10,9 @@ Milestone 03 is delivered through parent feature (capability) issues and vertica
 
 ## In Scope
 
-- [ ] Capability A: Module scaffolding and Events module contract
-- [ ] Capability B: Event synchronization and inventory creation
-- [ ] Capability C: Offers and pricing
+- [x] Capability A: Module scaffolding and Events module contract
+- [x] Capability B: Event synchronization and inventory creation
+- [x] Capability C: Offers and pricing
 - [ ] Capability D: Inventory status query
 - [ ] Capability E: Integration tests
 
@@ -20,24 +20,24 @@ Milestone 03 is delivered through parent feature (capability) issues and vertica
 
 ### Capability A: Module scaffolding and Events module contract
 
-- [ ] A1: Scaffold Ticketing module (project, DbContext, schema, registration, initial migration)
-- [ ] A2: Create Events.Contracts companion project additions (IEventsModuleContract, ManifestExport DTOs)
-- [ ] A3: Implement IEventsModuleContract in Events module (manifest export for frozen manifests)
+- [x] A1: Scaffold Ticketing module (project, DbContext, schema, registration, initial migration)
+- [x] A2: Create Events.Contracts companion project additions (IEventsModuleContract, ManifestExport DTOs)
+- [x] A3: Implement IEventsModuleContract in Events module (manifest export for frozen manifests)
 
 ### Capability B: Event synchronization and inventory creation
 
-- [ ] B1: Implement PublishedEventReference domain entity and persistence
-- [ ] B2: Implement Inventory aggregate with InventorySeat and GeneralAdmissionPool
-- [ ] B3: Implement EventPublishedHandler (subscriber: idempotency check, fetch manifest, create inventory)
-- [ ] B4: Register handler in Ticketing module configuration and verify end-to-end dispatch, verify that cross-module handler resolution works. Add multiple handlers support.
+- [x] B1: Implement PublishedEventReference domain entity and persistence
+- [x] B2: Implement Inventory aggregate with InventorySeat and GeneralAdmissionPool
+- [x] B3: Implement EventPublishedHandler (subscriber: idempotency check, fetch manifest, create inventory)
+- [x] B4: Register handler in Ticketing module configuration and verify end-to-end dispatch, verify that cross-module handler resolution works. Add multiple handlers support.
 
 ### Capability C: Offers and pricing
 
-- [ ] C1: Implement Offer aggregate with PriceLevel and state lifecycle (Draft, Active, Closed)
-- [ ] C2: Deliver CreateOffer endpoint and handler
-- [ ] C3: Deliver ConfigurePricing endpoint and handler (add/update price levels on offer)
-- [ ] C4: Deliver ActivateOffer endpoint and handler (state transition with preconditions)
-- [ ] C5: Deliver GetOffer and GetOffers query endpoints
+- [x] C1: Implement Offer aggregate with PriceZone and status lifecycle (Draft, Active, Closed)
+- [x] C2: Deliver CreateOffer endpoint and handler
+- [x] C3: Deliver ConfigurePricing endpoint and handler (replace-all price zones via SetPriceZones)
+- [x] C4: Deliver ActivateOffer endpoint and handler (status transition with preconditions)
+- [x] C5: Deliver GetOffer and GetOffers query endpoints
 
 ### Capability D: Inventory status query
 
@@ -66,11 +66,11 @@ These requirements define minimum business behavior for M03 and should be treate
 
 - [ ] An Offer belongs to exactly one Inventory (one event).
 - [ ] An Offer starts in `Draft` state.
-- [ ] An Offer in `Draft` can have price levels added or modified.
-- [ ] An Offer can be activated only if it has at least one price level configured.
-- [ ] An active Offer cannot have its price levels modified.
-- [ ] A PriceLevel specifies a name, price (positive decimal), and currency.
-- [ ] A PriceLevel targets either specific inventory seats (by ID list) or a GeneralAdmissionPool.
+- [ ] An Offer in `Draft` can have price zones replaced via the replace-all `SetPriceZones` operation.
+- [ ] An Offer can be activated only if it has at least one price zone (with at least one item) configured.
+- [ ] An active Offer cannot have its price zones modified.
+- [ ] A PriceZone specifies a name and price (positive decimal); currency is set at the Offer level.
+- [ ] A PriceZone targets either specific inventory seats (by ID list) or a GeneralAdmissionPool (by ID list).
 - [ ] Multiple Offers may exist for the same event (e.g., "Early Bird", "VIP", "Standard").
 
 ### Inventory Status Requirements
@@ -81,8 +81,8 @@ These requirements define minimum business behavior for M03 and should be treate
 ### API Contract Requirements
 
 - [ ] CreateOffer request includes: inventory ID, name, optional sale window.
-- [ ] ConfigurePricing request includes: offer ID, price level details, target seat IDs or pool ID.
-- [ ] GetOffer response includes: offer state, name, sale window, price levels with targets.
+- [ ] ConfigurePricing request includes: offer ID, price zone list (name, price, seat IDs, pool IDs).
+- [ ] GetOffer response includes: offer status, name, currency, sale window, price zones with targets.
 - [ ] GetInventoryStatus response includes: per-section seat counts, per-pool capacity/available.
 
 ## Accepted Decisions (Locked For M03)
@@ -92,13 +92,13 @@ These requirements define minimum business behavior for M03 and should be treate
 3. Manifest export returns data only for frozen manifests; unfrozen returns null.
 4. Inventory structure is **flat seats + separate pools**: `InventorySeat` carries section/row/seat metadata as denormalized values (no nested InventorySection/InventoryRow aggregates).
 5. Offer is a separate aggregate from Inventory — independent lifecycle and commercial concerns.
-6. PriceLevel targeting is explicit (seat ID list or pool ID) for M03; section-based grouping is deferred.
-7. Offer state lifecycle: `Draft → Active → Closed`. No reactivation in M03.
+6. PriceZone targeting is explicit (seat ID list or pool ID list) for M03; section-based grouping is deferred.
+7. Offer status lifecycle: `Draft → Active → Closed`. No reactivation in M03.
 8. Ticketing module owns its own outbox table for future integration events (e.g., `OfferActivated`), but no outbox writes are required in M03.
 9. `PublishedEventReference` stores IDs only + sync timestamp. Metadata belongs to Events module
 10. Use event-centric URLs for API consumers, map internally: `GET /events/{eventId}/inventory → GetInventoryStatus`
 11. Throw for retry when manifest fetch fails in subscriber.
-12. Offer fields = InventoryId, Name, SaleStart?, SaleEnd?
+12. Offer fields = InventoryId, Name, Currency, SalesRange (DateTimeOffset? Start, DateTimeOffset? End)
 
 ## Slice Start Gate
 
@@ -143,5 +143,5 @@ These requirements define minimum business behavior for M03 and should be treate
 - Outbox dispatcher must correctly resolve and invoke Ticketing's `EventPublishedHandler` across module boundaries (first real cross-module dispatch)
 - `IEventsModuleContract` implementation must handle the case where Events DbContext is in a different DI scope than Ticketing's handler scope
 - Inventory seat count scales with manifest size; large manifests may require batch insert optimization
-- Offer/PriceLevel targeting model may need revision when reservations arrive in M04 — design for extensibility without over-engineering
+- Offer/PriceZone targeting model may need revision when reservations arrive in M04 — design for extensibility without over-engineering
 - Integration test infrastructure from M02 must support multi-module scenarios (Ticketing + Events in same test host)

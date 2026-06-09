@@ -2,16 +2,16 @@
 
 ## Summary
 
-Enable event managers to create sellable offers for a published event's inventory and configure pricing. Offers represent commercial products (e.g., "Early Bird", "VIP", "Standard") with price levels that target specific seats or general admission pools. This capability delivers the full CRUD lifecycle for offers including state transitions from Draft through Active.
+Enable event managers to create sellable offers for a published event's inventory and configure pricing. Offers represent commercial products (e.g., "Early Bird", "VIP", "Standard") with price zones that target specific seats or general admission pools. This capability delivers the full CRUD lifecycle for offers including status transitions from Draft through Active.
 
 ## Scope
 
 - In scope:
-  - `Offer` aggregate root with `PriceLevel` child entities
-  - Offer state lifecycle: `Draft → Active → Closed`
+  - `Offer` aggregate root with `PriceZone` child entities
+  - Offer status lifecycle: `Draft → Active → Closed`
   - `CreateOffer` endpoint and handler
-  - `ConfigurePricing` endpoint and handler (add/update/remove price levels)
-  - `ActivateOffer` endpoint and handler (state transition with preconditions)
+  - `ConfigurePricing` endpoint and handler (replace-all price zones on offer)
+  - `ActivateOffer` endpoint and handler (status transition with preconditions)
   - `GetOffer` and `GetOffers` query endpoints
   - EF Core persistence configuration and migration
   - Validation (FluentValidation for request input)
@@ -30,24 +30,24 @@ Enable event managers to create sellable offers for a published event's inventor
 
 ## Acceptance Criteria
 
-- [ ] `Offer` aggregate exists with `InventoryId`, `Name`, `State`, optional `SaleStart`/`SaleEnd`, and collection of `PriceLevel`
-- [ ] Offer starts in `Draft` state on creation
-- [ ] `PriceLevel` has `Name`, `Price` (positive decimal), `Currency`, and targeting (seat IDs or pool ID)
-- [ ] Price levels can be added to a Draft offer
-- [ ] Price levels can be updated or removed from a Draft offer
-- [ ] Price levels cannot be modified on an Active offer (domain rule)
-- [ ] Offer can be activated only if at least one price level exists
-- [ ] Activating an offer transitions state from `Draft` to `Active`
-- [ ] Activating a non-Draft offer is rejected
-- [ ] `CreateOffer` endpoint: `POST /events/{eventId}/offers` → 201 with offer ID
-- [ ] `ConfigurePricing` endpoint: `PUT /offers/{offerId}/price-levels` → 200
-- [ ] `ActivateOffer` endpoint: `POST /offers/{offerId}/activate` → 200
-- [ ] `GetOffer` endpoint: `GET /offers/{offerId}` → 200 with offer details including price levels
-- [ ] `GetOffers` endpoint: `GET /events/{eventId}/offers` → 200 with list of offers
-- [ ] All mutation endpoints require `EventManager` role
-- [ ] Query endpoints require authentication
-- [ ] Validation rejects: missing name, non-positive price, empty currency, empty seat target list
-- [ ] `dotnet build` and `dotnet test` pass
+- [x] `Offer` aggregate exists with `InventoryId`, `Name`, `Currency`, `Status`, optional `SalesRange` (start/end), and collection of `PriceZone`
+- [x] Offer starts in `Draft` status on creation
+- [x] `PriceZone` has `Name`, `Price` (positive decimal), and targeting (seat items or pool items)
+- [x] Price zones can be added to a Draft offer
+- [x] Price zones can be replaced on a Draft offer (replace-all via `SetPriceZones`)
+- [x] Price zones cannot be modified on an Active offer (domain rule)
+- [x] Offer can be activated only if at least one price zone (with at least one item) exists
+- [x] Activating an offer transitions status from `Draft` to `Active`
+- [x] Activating a non-Draft offer is rejected
+- [x] `CreateOffer` endpoint: `POST /events/{eventId}/offers` → 201 with offer ID
+- [x] `ConfigurePricing` endpoint: `PUT /offers/{offerId}/price-zones` → 204
+- [x] `ActivateOffer` endpoint: `POST /offers/{offerId}/activate` → 204
+- [x] `GetOffer` endpoint: `GET /offers/{offerId}` → 200 with offer details including price zones
+- [x] `GetOffers` endpoint: `GET /events/{eventId}/offers` → 200 with list of offers
+- [x] All mutation endpoints require `EventManager` role
+- [x] Query endpoints require authentication
+- [x] Validation rejects: missing name, non-positive price, empty currency, empty seat target list
+- [x] `dotnet build` and `dotnet test` pass
 
 ## Design Notes
 
@@ -58,148 +58,75 @@ namespace VenuePass.Modules.Ticketing.Domain.Offers;
 
 public sealed class Offer : AggregateRoot<OfferId>
 {
-    private readonly List<PriceLevel> _priceLevels = [];
+    private readonly List<PriceZone> _priceZones = [];
 
     public InventoryId InventoryId { get; private set; }
-    public string Name { get; private set; }
-    public OfferState State { get; private set; }
-    public DateTimeOffset? SaleStart { get; private set; }
-    public DateTimeOffset? SaleEnd { get; private set; }
-    public IReadOnlyList<PriceLevel> PriceLevels => _priceLevels;
-
-    private Offer() { }
+    public OfferName Name { get; private set; }
+    public Currency Currency { get; private set; }
+    public OfferStatus Status { get; private set; }
+    public DateTimeRange SalesRange { get; private set; }
+    public IReadOnlyList<PriceZone> PriceZones => _priceZones.AsReadOnly();
 
     public static Offer Create(
         InventoryId inventoryId,
-        string name,
-        DateTimeOffset? saleStart,
-        DateTimeOffset? saleEnd)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        OfferName name,
+        DateTimeRange salesRange,
+        Currency currency) { ... }
 
-        if (saleStart.HasValue && saleEnd.HasValue && saleEnd <= saleStart)
-            throw new DomainRuleViolationException("Sale end must be after sale start.");
+    // Upsert a single price zone by name (case-insensitive); validates inventory
+    // membership and cross-zone target conflicts against existing zones.
+    public void ConfigurePriceZone(
+        Inventory inventory,
+        PriceZoneName name,
+        Amount price,
+        IEnumerable<PriceZoneInventorySeatItemInput> seatItems,
+        IEnumerable<PriceZoneGeneralAdmissionPoolItemInput> poolItems) { ... }
 
-        return new Offer
-        {
-            Id = OfferId.Create(),
-            InventoryId = inventoryId,
-            Name = name,
-            State = OfferState.Draft,
-            SaleStart = saleStart,
-            SaleEnd = saleEnd
-        };
-    }
+    // Replace-all: atomically clears and sets the full price zone collection.
+    public void SetPriceZones(
+        Inventory inventory,
+        IReadOnlyList<PriceZoneInput> inputs) { ... }
 
-    public void SetPriceLevels(IReadOnlyList<PriceLevel> priceLevels)
-    {
-        if (State != OfferState.Draft)
-            throw new DomainRuleViolationException("Cannot modify pricing on a non-draft offer.");
-
-        _priceLevels.Clear();
-        _priceLevels.AddRange(priceLevels);
-    }
-
-    public void Activate()
-    {
-        if (State != OfferState.Draft)
-            throw new DomainRuleViolationException("Only draft offers can be activated.");
-
-        if (_priceLevels.Count == 0)
-            throw new DomainRuleViolationException("Cannot activate an offer without price levels.");
-
-        State = OfferState.Active;
-    }
+    public void Activate() { ... }
 }
 
-public enum OfferState { Draft, Active, Closed }
+public enum OfferStatus { Draft, Active, Closed }
 ```
 
-### PriceLevel
+> **Scope adjustments from original design:** `PriceLevel` was renamed to `PriceZone` for clarity. `Currency` was lifted to the `Offer` level (one currency per offer, not per zone). `State`/`OfferState` became `Status`/`OfferStatus`. `SaleStart`/`SaleEnd` became `DateTimeRange SalesRange` (both optional). The original `PriceLevelTarget` value object was replaced by separate `PriceZoneInventorySeatItem` and `PriceZoneGeneralAdmissionPoolItem` entity types.
+
+### PriceZone
 
 ```csharp
 namespace VenuePass.Modules.Ticketing.Domain.Offers;
 
-public sealed class PriceLevel
+public sealed class PriceZone : Entity<PriceZoneId>
 {
-    public Guid Id { get; private set; }
-    public OfferId OfferId { get; private set; }
-    public string Name { get; private set; }
-    public decimal Price { get; private set; }
-    public string Currency { get; private set; }
-    public PriceLevelTarget Target { get; private set; }
+    public PriceZoneName Name { get; private set; }
+    public Amount Price { get; private set; }
+    public IReadOnlyList<PriceZoneInventorySeatItem> InventorySeatItems { get; }
+    public IReadOnlyList<PriceZoneGeneralAdmissionPoolItem> GeneralAdmissionPoolItems { get; }
+    public bool HasItems { get; }
 
-    private PriceLevel() { }
-
-    public static PriceLevel Create(
-        OfferId offerId,
-        string name,
-        decimal price,
-        string currency,
-        PriceLevelTarget target)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentException.ThrowIfNullOrWhiteSpace(currency);
-
-        if (price <= 0)
-            throw new DomainRuleViolationException("Price must be positive.");
-
-        if (target is null || target.IsEmpty)
-            throw new DomainRuleViolationException("Price level must target at least one seat or pool.");
-
-        return new PriceLevel
-        {
-            Id = Guid.CreateVersion7(),
-            OfferId = offerId,
-            Name = name,
-            Price = price,
-            Currency = currency,
-            Target = target
-        };
-    }
+    internal static PriceZone Create(
+        PriceZoneName name,
+        Amount price,
+        IReadOnlyCollection<PriceZoneInventorySeatItemInput> seatItems,
+        IReadOnlyCollection<PriceZoneGeneralAdmissionPoolItemInput> poolItems) { ... }
 }
 ```
 
-### PriceLevelTarget (Value Object)
-
-```csharp
-namespace VenuePass.Modules.Ticketing.Domain.Offers;
-
-public sealed class PriceLevelTarget
-{
-    public IReadOnlyList<Guid> SeatIds { get; }
-    public Guid? PoolId { get; }
-    public bool IsEmpty => SeatIds.Count == 0 && PoolId is null;
-
-    private PriceLevelTarget(IReadOnlyList<Guid> seatIds, Guid? poolId)
-    {
-        SeatIds = seatIds;
-        PoolId = poolId;
-    }
-
-    public static PriceLevelTarget ForSeats(IReadOnlyList<Guid> seatIds)
-    {
-        if (seatIds.Count == 0)
-            throw new DomainRuleViolationException("Seat target must include at least one seat.");
-        return new PriceLevelTarget(seatIds, null);
-    }
-
-    public static PriceLevelTarget ForPool(Guid poolId)
-    {
-        return new PriceLevelTarget([], poolId);
-    }
-}
-```
+Key value objects and types in `PriceZone.cs`: `PriceZoneName`, `Currency`, `Amount`, `PriceZoneInventorySeatItem`, `PriceZoneGeneralAdmissionPoolItem`, `PriceZoneInventorySeatItemInput`, `PriceZoneGeneralAdmissionPoolItemInput`, `PriceZoneInput`.
 
 ### Endpoint Structure
 
-| Feature | Method | Route | Auth |
-| --------- | -------- | ------- | ------ |
-| CreateOffer | POST | `/events/{eventId}/offers` | EventManager |
-| ConfigurePricing | PUT | `/offers/{offerId}/price-levels` | EventManager |
-| ActivateOffer | POST | `/offers/{offerId}/activate` | EventManager |
-| GetOffer | GET | `/offers/{offerId}` | Authenticated |
-| GetOffers | GET | `/events/{eventId}/offers` | Authenticated |
+| Feature | Method | Route | Auth | Response |
+| --- | --- | --- | --- | --- |
+| CreateOffer | POST | `/events/{eventId}/offers` | EventManager | 201 |
+| ConfigurePricing | PUT | `/offers/{offerId}/price-zones` | EventManager | 204 |
+| ActivateOffer | POST | `/offers/{offerId}/activate` | EventManager | 204 |
+| GetOffer | GET | `/offers/{offerId}` | Authenticated | 200 |
+| GetOffers | GET | `/events/{eventId}/offers` | Authenticated | 200 |
 
 ### CreateOffer Handler — Inventory Lookup
 
@@ -218,53 +145,39 @@ var inventory = await db.Inventories
 if (inventory is null)
     return CreateOfferErrors.InventoryNotFound(command.EventId);
 
-var offer = Offer.Create(inventory.Id, command.Name, command.SaleStart, command.SaleEnd);
+var offer = Offer.Create(inventory.Id, new OfferName(command.Name),
+    new DateTimeRange(command.SaleStart, command.SaleEnd), new Currency(command.Currency));
 ```
 
 ### ConfigurePricing — Replace Strategy
 
-`SetPriceLevels` uses a replace-all strategy: the request sends the full list of price levels. This avoids complex add/remove/update individual operations for M03. The handler:
+`SetPriceZones` uses a replace-all strategy: the request sends the full desired set of price zones, which atomically replaces the current set. The handler:
 
-1. Loads the offer with existing price levels
-2. Validates the new price levels (targets exist in inventory)
-3. Calls `offer.SetPriceLevels(newLevels)`
-4. Saves (EF handles orphan deletion)
+1. Loads the offer (`PriceZones` auto-loaded via `OwnsMany`)
+2. Loads the inventory (`Seats` and `Pools` auto-loaded via `OwnsMany`)
+3. Calls `offer.SetPriceZones(inventory, inputs)`
+4. Saves — EF handles orphan deletion via change tracking on the owned collection
 
-### Target Validation
-
-The handler (not the domain) validates that targeted seat IDs and pool IDs exist in the offer's inventory:
-
-```csharp
-var inventorySeatIds = await db.InventorySeats
-    .Where(s => s.InventoryId == offer.InventoryId)
-    .Select(s => s.Id)
-    .ToHashSetAsync(ct);
-
-foreach (var target in command.PriceLevels.SelectMany(pl => pl.SeatIds))
-{
-    if (!inventorySeatIds.Contains(target))
-        return ConfigurePricingErrors.SeatNotInInventory(target);
-}
-```
+The domain validates: Draft status, no duplicate zone names (case-insensitive), each zone targets at least one item, all seat/pool IDs exist in the inventory, no cross-zone target conflicts.
 
 ## Vertical Slices
 
-- [ ] C1: Implement Offer aggregate with PriceLevel, PriceLevelTarget, and state lifecycle; add persistence configuration and migration; add unit tests for domain invariants
-- [ ] C2: Deliver CreateOffer endpoint, handler, and validator
-- [ ] C3: Deliver ConfigurePricing endpoint, handler, and validator (replace-all strategy with target validation)
-- [ ] C4: Deliver ActivateOffer endpoint and handler (state transition with precondition checks)
-- [ ] C5: Deliver GetOffer and GetOffers query endpoints
+- [x] C1: Implement Offer aggregate with PriceZone, PriceZoneInput, and status lifecycle; add persistence configuration and migration; add unit tests for domain invariants
+- [x] C2: Deliver CreateOffer endpoint, handler, and validator
+- [x] C3: Deliver ConfigurePricing endpoint, handler, and validator (replace-all strategy via SetPriceZones)
+- [x] C4: Deliver ActivateOffer endpoint and handler (status transition with precondition checks)
+- [x] C5: Deliver GetOffer and GetOffers query endpoints
 
 ## Risks and Assumptions
 
-- Replace-all pricing strategy simplifies M03 but may feel heavy for UIs that add one price level at a time; acceptable for now, individual add/remove can be added later
-- `PriceLevelTarget` stored as JSON column or junction table — EF Core owned entities with JSON serialization is simplest for M03; switch to junction table if query performance requires it
-- Same seat can appear in multiple offers' price levels — no conflict detection in M03. This is intentional: multiple offers targeting overlapping seats is valid (e.g., "Early Bird" and "Standard" for same section, only one active at a time). M04 reservation logic will enforce actual availability
-- `SaleStart`/`SaleEnd` are stored but not enforced in queries — they're informational in M03. Sale window enforcement (hiding non-active offers from buyers) comes with the purchase flow
-- EventManager role is sufficient for all mutations — no ownership check (any EventManager can modify any offer). Ownership enforcement deferred to when it matters commercially
+- Replace-all pricing strategy simplifies M03 but may feel heavy for UIs that add one price zone at a time; `ConfigurePriceZone` (per-zone upsert) remains available on the aggregate for incremental use in future slices
+- `PriceZoneInventorySeatItem` and `PriceZoneGeneralAdmissionPoolItem` are stored in separate junction tables; EF Core `OwnsMany` handles orphan deletion automatically on replace-all
+- Same seat can appear in multiple offers' price zones — no conflict detection in M03. Multiple offers targeting overlapping seats is valid (e.g., "Early Bird" and "Standard" for same section). M04 reservation logic will enforce actual availability
+- `SalesRange` is stored but not enforced in queries — informational in M03. Sale window enforcement comes with the purchase flow
+- EventManager role is sufficient for all mutations — no ownership check. Ownership enforcement deferred to when it matters commercially
 
 ## Definition of Done
 
-- [ ] Acceptance criteria met
-- [ ] Tests passing
-- [ ] Docs updated if behavior changed
+- [x] Acceptance criteria met
+- [x] Tests passing
+- [x] Docs updated if behavior changed
