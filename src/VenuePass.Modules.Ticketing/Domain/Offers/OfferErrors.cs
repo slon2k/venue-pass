@@ -43,4 +43,8 @@ public static class OfferErrors
     public static DomainError GeneralAdmissionPoolAlreadyAssignedToAnotherPriceZone(Guid poolId) => new(
         "Ticketing.Offer.GeneralAdmissionPoolAlreadyAssignedToAnotherPriceZone",
         $"General admission pool with ID '{poolId}' is already assigned to another price zone.");
+
+    public static DomainError DuplicatePriceZoneNames() => new(
+        "Ticketing.Offer.DuplicatePriceZoneNames",
+        "Price zone names must be unique within an offer.");
 }
