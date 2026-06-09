@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VenuePass.Modules.Ticketing.Infrastructure;
 
@@ -12,9 +13,11 @@ using VenuePass.Modules.Ticketing.Infrastructure;
 namespace VenuePass.Modules.Ticketing.Infrastructure.Migrations
 {
     [DbContext(typeof(TicketingDbContext))]
-    partial class TicketingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260609091949_RenamePriceLevelToPriceZoneTables")]
+    partial class RenamePriceLevelToPriceZoneTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -263,8 +266,6 @@ namespace VenuePass.Modules.Ticketing.Infrastructure.Migrations
 
                                     b2.HasKey("price_zone_id", "GeneralAdmissionPoolId");
 
-                                    b2.HasIndex("GeneralAdmissionPoolId");
-
                                     b2.ToTable("offer_price_zone_general_admission_pool_items", "ticketing");
 
                                     b2.WithOwner()
@@ -281,8 +282,6 @@ namespace VenuePass.Modules.Ticketing.Infrastructure.Migrations
                                         .HasColumnName("inventory_seat_id");
 
                                     b2.HasKey("price_zone_id", "InventorySeatId");
-
-                                    b2.HasIndex("InventorySeatId");
 
                                     b2.ToTable("offer_price_zone_inventory_seat_items", "ticketing");
 

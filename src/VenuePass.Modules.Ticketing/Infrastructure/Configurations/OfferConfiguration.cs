@@ -66,23 +66,23 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
                 .HasColumnName("sales_end");
         });
 
-        builder.OwnsMany(o => o.PriceZones, level =>
+        builder.OwnsMany(o => o.PriceZones, zone =>
         {
-            level.ToTable("offer_price_levels");
+            zone.ToTable("offer_price_zones");
 
-            level.HasKey(l => l.Id);
+            zone.HasKey(z => z.Id);
 
-            level.Property(l => l.Id)
+            zone.Property(z => z.Id)
                 .HasConversion(
                     id => id.Value,
                     value => new PriceZoneId(value))
                 .ValueGeneratedNever()
                 .HasColumnName("id");
 
-            level.WithOwner()
+            zone.WithOwner()
                 .HasForeignKey("offer_id");
 
-            level.Property(l => l.Name)
+            zone.Property(z => z.Name)
                 .HasConversion(
                     name => name.Value,
                     value => new PriceZoneName(value))
@@ -90,7 +90,7 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
                 .HasColumnName("name")
                 .IsRequired();
 
-            level.Property(l => l.Price)
+            zone.Property(z => z.Price)
                 .HasConversion(
                     amount => amount.Value,
                     value => new Amount(value))
@@ -98,19 +98,19 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
                 .HasPrecision(18, 2)
                 .IsRequired();
 
-            level.HasIndex("offer_id", nameof(PriceZone.Name))
+            zone.HasIndex("offer_id", nameof(PriceZone.Name))
                 .IsUnique()
-                .HasDatabaseName("ux_offer_price_levels_offer_id_name");
+                .HasDatabaseName("ux_offer_price_zones_offer_id_name");
 
-            level.OwnsMany(l => l.InventorySeatItems, seatItem =>
+            zone.OwnsMany(z => z.InventorySeatItems, seatItem =>
             {
-                seatItem.ToTable("offer_price_level_inventory_seat_items");
+                seatItem.ToTable("offer_price_zone_inventory_seat_items");
 
                 seatItem.WithOwner()
-                    .HasForeignKey("price_level_id");
+                    .HasForeignKey("price_zone_id");
 
                 seatItem.HasKey(
-                    "price_level_id",
+                    "price_zone_id",
                     nameof(PriceZoneInventorySeatItem.InventorySeatId));
 
                 seatItem.Property(i => i.InventorySeatId)
@@ -120,17 +120,19 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
                     .HasColumnName("inventory_seat_id")
                     .IsRequired();
 
+                seatItem.HasIndex(i => i.InventorySeatId);
+
             });
 
-            level.OwnsMany(l => l.GeneralAdmissionPoolItems, poolItem =>
+            zone.OwnsMany(z => z.GeneralAdmissionPoolItems, poolItem =>
             {
-                poolItem.ToTable("offer_price_level_general_admission_pool_items");
+                poolItem.ToTable("offer_price_zone_general_admission_pool_items");
 
                 poolItem.WithOwner()
-                    .HasForeignKey("price_level_id");
+                    .HasForeignKey("price_zone_id");
 
                 poolItem.HasKey(
-                    "price_level_id",
+                    "price_zone_id",
                     nameof(PriceZoneGeneralAdmissionPoolItem.GeneralAdmissionPoolId));
 
                 poolItem.Property(i => i.GeneralAdmissionPoolId)
@@ -140,12 +142,14 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
                     .HasColumnName("general_admission_pool_id")
                     .IsRequired();
 
+                poolItem.HasIndex(i => i.GeneralAdmissionPoolId);
+
             });
 
-            level.Navigation(l => l.InventorySeatItems)
+            zone.Navigation(z => z.InventorySeatItems)
                 .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-            level.Navigation(l => l.GeneralAdmissionPoolItems)
+            zone.Navigation(z => z.GeneralAdmissionPoolItems)
                 .UsePropertyAccessMode(PropertyAccessMode.Field);
         });
 
