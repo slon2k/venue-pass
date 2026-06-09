@@ -1,13 +1,14 @@
 using Microsoft.AspNetCore.Routing;
 
+using VenuePass.Modules.Ticketing.Features.CreateOffer;
+
 namespace VenuePass.Modules.Ticketing;
 
 public static class ModuleEndpointMappings
 {
     public static IEndpointRouteBuilder MapTicketingModule(this IEndpointRouteBuilder app)
     {
-        // Map endpoints for the Ticketing module here, e.g.:
-        // app.MapPost("/api/tickets", CreateTicketHandler.Handle).RequireAuthorization("EventManager");
+        app.MapCreateOffer();
 
         return app;
     }

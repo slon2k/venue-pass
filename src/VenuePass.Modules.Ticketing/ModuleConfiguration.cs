@@ -1,9 +1,12 @@
+using FluentValidation;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using VenuePass.BuildingBlocks.Messaging;
 using VenuePass.Modules.Events.Contracts.IntegrationEvents;
+using VenuePass.Modules.Ticketing.Features.CreateOffer;
 using VenuePass.Modules.Ticketing.Features.EventPublished;
 using VenuePass.Modules.Ticketing.Infrastructure;
 
@@ -21,6 +24,7 @@ public static class ModuleConfiguration
         services.AddDatabase(connectionString);
         services.AddSingleton(TimeProvider.System);
         services.RegisterHandlers();
+        services.AddValidatorsFromAssembly(typeof(ModuleConfiguration).Assembly);
 
         services.AddAuthorizationBuilder()
             .AddPolicy("EventAdmin", policy => policy.RequireRole("EventAdmin"))
@@ -46,6 +50,7 @@ public static class ModuleConfiguration
     private static IServiceCollection RegisterHandlers(this IServiceCollection services)
     {
         services.AddScoped<IIntegrationEventHandler<EventPublishedIntegrationEvent>, EventPublishedHandler>();
+        services.AddScoped<CreateOfferHandler>();
         return services;
     }
 }
