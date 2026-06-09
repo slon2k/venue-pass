@@ -25,8 +25,8 @@ public sealed class OfferValueObjectsTests
     [Fact]
     public void PriceLevelName_SameAs_IsCaseInsensitive()
     {
-        var left = new PriceLevelName("General");
-        var right = new PriceLevelName("general");
+        var left = new PriceZoneName("General");
+        var right = new PriceZoneName("general");
 
         Assert.True(left.SameAs(right));
     }
@@ -34,7 +34,7 @@ public sealed class OfferValueObjectsTests
     [Fact]
     public void PriceLevelName_WhenValueHasSurroundingWhitespace_TrimsValue()
     {
-        var name = new PriceLevelName("  VIP  ");
+        var name = new PriceZoneName("  VIP  ");
 
         Assert.Equal("VIP", name.Value);
     }
@@ -42,9 +42,9 @@ public sealed class OfferValueObjectsTests
     [Fact]
     public void PriceLevelName_WhenValueExceedsMaxLength_ThrowsArgumentException()
     {
-        var value = new string('a', PriceLevelName.MaxLength + 1);
+        var value = new string('a', PriceZoneName.MaxLength + 1);
 
-        Assert.Throws<ArgumentException>(() => _ = new PriceLevelName(value));
+        Assert.Throws<ArgumentException>(() => _ = new PriceZoneName(value));
     }
 
     [Fact]

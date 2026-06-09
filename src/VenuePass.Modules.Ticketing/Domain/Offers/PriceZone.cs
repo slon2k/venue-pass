@@ -5,26 +5,29 @@ using VenuePass.Modules.Ticketing.Domain.Inventories;
 
 namespace VenuePass.Modules.Ticketing.Domain.Offers;
 
-public sealed class PriceLevel : Entity<PriceLevelId>
+public sealed class PriceZone : Entity<PriceZoneId>
 {
-    private readonly List<PriceLevelInventorySeatItem> _inventorySeatItems = [];
-    private readonly List<PriceLevelGeneralAdmissionPoolItem> _generalAdmissionPoolItems = [];
+    private readonly List<PriceZoneInventorySeatItem> _inventorySeatItems = [];
+    private readonly List<PriceZoneGeneralAdmissionPoolItem> _generalAdmissionPoolItems = [];
 
-    public PriceLevelName Name { get; private set; } = null!;
+    public PriceZoneName Name { get; private set; } = null!;
 
-    public IReadOnlyList<PriceLevelInventorySeatItem> InventorySeatItems =>
+    public Amount Price { get; private set; }
+
+    public IReadOnlyList<PriceZoneInventorySeatItem> InventorySeatItems =>
         _inventorySeatItems.AsReadOnly();
 
-    public IReadOnlyList<PriceLevelGeneralAdmissionPoolItem> GeneralAdmissionPoolItems =>
+    public IReadOnlyList<PriceZoneGeneralAdmissionPoolItem> GeneralAdmissionPoolItems =>
         _generalAdmissionPoolItems.AsReadOnly();
 
-    private PriceLevel() { }
+    private PriceZone() { }
 
-    private PriceLevel(
-        PriceLevelId id,
-        PriceLevelName name,
-        IReadOnlyCollection<PriceLevelInventorySeatItem> inventorySeatItems,
-        IReadOnlyCollection<PriceLevelGeneralAdmissionPoolItem> generalAdmissionPoolItems)
+    private PriceZone(
+        PriceZoneId id,
+        PriceZoneName name,
+        Amount price,
+        IReadOnlyCollection<PriceZoneInventorySeatItem> inventorySeatItems,
+        IReadOnlyCollection<PriceZoneGeneralAdmissionPoolItem> generalAdmissionPoolItems)
         : base(id)
     {
         ArgumentNullException.ThrowIfNull(name);
@@ -48,19 +51,21 @@ public sealed class PriceLevel : Entity<PriceLevelId>
         if (inventorySeatItems.Count == 0 && generalAdmissionPoolItems.Count == 0)
         {
             throw new DomainRuleViolationException(
-                OfferErrors.PriceLevelMustHaveAtLeastOneItem());
+                OfferErrors.PriceZoneMustHaveAtLeastOneItem());
         }
 
         Name = name;
+        Price = price;
 
         _inventorySeatItems = [.. inventorySeatItems];
         _generalAdmissionPoolItems = [.. generalAdmissionPoolItems];
     }
 
-    internal static PriceLevel Create(
-        PriceLevelName name,
-        IReadOnlyCollection<PriceLevelInventorySeatItemInput> inventorySeatItems,
-        IReadOnlyCollection<PriceLevelGeneralAdmissionPoolItemInput> generalAdmissionPoolItems)
+    internal static PriceZone Create(
+        PriceZoneName name,
+        Amount price,
+        IReadOnlyCollection<PriceZoneInventorySeatItemInput> inventorySeatItems,
+        IReadOnlyCollection<PriceZoneGeneralAdmissionPoolItemInput> generalAdmissionPoolItems)
     {
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(inventorySeatItems);
@@ -83,7 +88,7 @@ public sealed class PriceLevel : Entity<PriceLevelId>
         if (inventorySeatItems.Count == 0 && generalAdmissionPoolItems.Count == 0)
         {
             throw new DomainRuleViolationException(
-                OfferErrors.PriceLevelMustHaveAtLeastOneItem());
+                OfferErrors.PriceZoneMustHaveAtLeastOneItem());
         }
 
         if (inventorySeatItems
@@ -91,7 +96,7 @@ public sealed class PriceLevel : Entity<PriceLevelId>
             .Any(group => group.Count() > 1))
         {
             throw new DomainRuleViolationException(
-                OfferErrors.PriceLevelCannotHaveDuplicateTargets());
+                OfferErrors.PriceZoneCannotHaveDuplicateTargets());
         }
 
         if (generalAdmissionPoolItems
@@ -99,23 +104,20 @@ public sealed class PriceLevel : Entity<PriceLevelId>
             .Any(group => group.Count() > 1))
         {
             throw new DomainRuleViolationException(
-                OfferErrors.PriceLevelCannotHaveDuplicateTargets());
+                OfferErrors.PriceZoneCannotHaveDuplicateTargets());
         }
 
         var seatItems = inventorySeatItems
-            .Select(item => PriceLevelInventorySeatItem.Create(
-                item.InventorySeatId,
-                item.Price))
+            .Select(item => PriceZoneInventorySeatItem.Create(item.InventorySeatId))
             .ToArray();
 
         var poolItems = generalAdmissionPoolItems
-            .Select(item => PriceLevelGeneralAdmissionPoolItem.Create(
-                item.GeneralAdmissionPoolId,
-                item.Price))
+            .Select(item => PriceZoneGeneralAdmissionPoolItem.Create(item.GeneralAdmissionPoolId))
             .ToArray();
 
-        return new PriceLevel(
-            id: PriceLevelId.Create(),
+        return new PriceZone(
+            id: PriceZoneId.Create(),
+            price: price,
             name: name,
             inventorySeatItems: seatItems,
             generalAdmissionPoolItems: poolItems);
@@ -126,20 +128,20 @@ public sealed class PriceLevel : Entity<PriceLevelId>
         _generalAdmissionPoolItems.Count > 0;
 }
 
-public readonly record struct PriceLevelId(Guid Value)
+public readonly record struct PriceZoneId(Guid Value)
 {
-    public static PriceLevelId Create() => new(Guid.CreateVersion7());
-    public static implicit operator Guid(PriceLevelId id) => id.Value;
+    public static PriceZoneId Create() => new(Guid.CreateVersion7());
+    public static implicit operator Guid(PriceZoneId id) => id.Value;
     public bool IsEmpty => Value == Guid.Empty;
     public override string ToString() => Value.ToString();
 }
 
-public sealed record PriceLevelName
+public sealed record PriceZoneName
 {
     public const int MaxLength = 100;
     public string Value { get; }
 
-    public PriceLevelName(string value)
+    public PriceZoneName(string value)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(value);
         value = value.Trim();
@@ -147,11 +149,11 @@ public sealed record PriceLevelName
         Value = value;
     }
 
-    public static implicit operator string(PriceLevelName name) => name.Value;
+    public static implicit operator string(PriceZoneName name) => name.Value;
 
-    public bool SameAs(PriceLevelName? other) => SameAs(this, other);
+    public bool SameAs(PriceZoneName? other) => SameAs(this, other);
 
-    public static bool SameAs(PriceLevelName? left, PriceLevelName? right) => (left, right) switch
+    public static bool SameAs(PriceZoneName? left, PriceZoneName? right) => (left, right) switch
     {
         (null, null) => true,
         (null, _) => false,
@@ -206,17 +208,13 @@ public readonly record struct Amount
     public override string ToString() => Value.ToString("F2", CultureInfo.InvariantCulture);
 }
 
-public sealed class PriceLevelInventorySeatItem
+public sealed class PriceZoneInventorySeatItem
 {
     public InventorySeatId InventorySeatId { get; private set; }
 
-    public Amount Price { get; private set; }
+    private PriceZoneInventorySeatItem() { }
 
-    private PriceLevelInventorySeatItem() { }
-
-    private PriceLevelInventorySeatItem(
-        InventorySeatId inventorySeatId,
-        Amount price)
+    private PriceZoneInventorySeatItem(InventorySeatId inventorySeatId)
     {
         if (inventorySeatId.IsEmpty)
         {
@@ -226,28 +224,18 @@ public sealed class PriceLevelInventorySeatItem
         }
 
         InventorySeatId = inventorySeatId;
-        Price = price;
     }
 
-    internal static PriceLevelInventorySeatItem Create(
-        InventorySeatId inventorySeatId,
-        Amount price)
-    {
-        return new PriceLevelInventorySeatItem(inventorySeatId, price);
-    }
+    internal static PriceZoneInventorySeatItem Create(InventorySeatId inventorySeatId) => new(inventorySeatId);
 }
 
-public sealed class PriceLevelGeneralAdmissionPoolItem
+public sealed class PriceZoneGeneralAdmissionPoolItem
 {
     public GeneralAdmissionPoolId GeneralAdmissionPoolId { get; private set; }
 
-    public Amount Price { get; private set; }
+    private PriceZoneGeneralAdmissionPoolItem() { }
 
-    private PriceLevelGeneralAdmissionPoolItem() { }
-
-    private PriceLevelGeneralAdmissionPoolItem(
-        GeneralAdmissionPoolId generalAdmissionPoolId,
-        Amount price)
+    private PriceZoneGeneralAdmissionPoolItem(GeneralAdmissionPoolId generalAdmissionPoolId)
     {
         if (generalAdmissionPoolId.IsEmpty)
         {
@@ -257,28 +245,16 @@ public sealed class PriceLevelGeneralAdmissionPoolItem
         }
 
         GeneralAdmissionPoolId = generalAdmissionPoolId;
-        Price = price;
     }
 
-    internal static PriceLevelGeneralAdmissionPoolItem Create(
-        GeneralAdmissionPoolId generalAdmissionPoolId,
-        Amount price)
-    {
-        return new PriceLevelGeneralAdmissionPoolItem(
-            generalAdmissionPoolId,
-            price);
-    }
+    internal static PriceZoneGeneralAdmissionPoolItem Create(GeneralAdmissionPoolId generalAdmissionPoolId) => new(generalAdmissionPoolId);
 }
 
-public sealed record PriceLevelInventorySeatItemInput
+public sealed record PriceZoneInventorySeatItemInput
 {
     public InventorySeatId InventorySeatId { get; }
 
-    public Amount Price { get; }
-
-    public PriceLevelInventorySeatItemInput(
-        InventorySeatId inventorySeatId,
-        Amount price)
+    public PriceZoneInventorySeatItemInput(InventorySeatId inventorySeatId)
     {
         if (inventorySeatId.IsEmpty)
         {
@@ -288,19 +264,14 @@ public sealed record PriceLevelInventorySeatItemInput
         }
 
         InventorySeatId = inventorySeatId;
-        Price = price;
     }
 }
 
-public sealed record PriceLevelGeneralAdmissionPoolItemInput
+public sealed record PriceZoneGeneralAdmissionPoolItemInput
 {
     public GeneralAdmissionPoolId GeneralAdmissionPoolId { get; }
 
-    public Amount Price { get; }
-
-    public PriceLevelGeneralAdmissionPoolItemInput(
-        GeneralAdmissionPoolId generalAdmissionPoolId,
-        Amount price)
+    public PriceZoneGeneralAdmissionPoolItemInput(GeneralAdmissionPoolId generalAdmissionPoolId)
     {
         if (generalAdmissionPoolId.IsEmpty)
         {
@@ -310,6 +281,5 @@ public sealed record PriceLevelGeneralAdmissionPoolItemInput
         }
 
         GeneralAdmissionPoolId = generalAdmissionPoolId;
-        Price = price;
     }
 }

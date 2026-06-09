@@ -66,7 +66,7 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
                 .HasColumnName("sales_end");
         });
 
-        builder.OwnsMany(o => o.PriceLevels, level =>
+        builder.OwnsMany(o => o.PriceZones, level =>
         {
             level.ToTable("offer_price_levels");
 
@@ -75,7 +75,7 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
             level.Property(l => l.Id)
                 .HasConversion(
                     id => id.Value,
-                    value => new PriceLevelId(value))
+                    value => new PriceZoneId(value))
                 .ValueGeneratedNever()
                 .HasColumnName("id");
 
@@ -85,12 +85,20 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
             level.Property(l => l.Name)
                 .HasConversion(
                     name => name.Value,
-                    value => new PriceLevelName(value))
-                .HasMaxLength(PriceLevelName.MaxLength)
+                    value => new PriceZoneName(value))
+                .HasMaxLength(PriceZoneName.MaxLength)
                 .HasColumnName("name")
                 .IsRequired();
 
-            level.HasIndex("offer_id", nameof(PriceLevel.Name))
+            level.Property(l => l.Price)
+                .HasConversion(
+                    amount => amount.Value,
+                    value => new Amount(value))
+                .HasColumnName("price")
+                .HasPrecision(18, 2)
+                .IsRequired();
+
+            level.HasIndex("offer_id", nameof(PriceZone.Name))
                 .IsUnique()
                 .HasDatabaseName("ux_offer_price_levels_offer_id_name");
 
@@ -103,7 +111,7 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
 
                 seatItem.HasKey(
                     "price_level_id",
-                    nameof(PriceLevelInventorySeatItem.InventorySeatId));
+                    nameof(PriceZoneInventorySeatItem.InventorySeatId));
 
                 seatItem.Property(i => i.InventorySeatId)
                     .HasConversion(
@@ -112,13 +120,6 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
                     .HasColumnName("inventory_seat_id")
                     .IsRequired();
 
-                seatItem.Property(i => i.Price)
-                    .HasConversion(
-                        amount => amount.Value,
-                        value => new Amount(value))
-                    .HasColumnName("price")
-                    .HasPrecision(18, 2)
-                    .IsRequired();
             });
 
             level.OwnsMany(l => l.GeneralAdmissionPoolItems, poolItem =>
@@ -130,7 +131,7 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
 
                 poolItem.HasKey(
                     "price_level_id",
-                    nameof(PriceLevelGeneralAdmissionPoolItem.GeneralAdmissionPoolId));
+                    nameof(PriceZoneGeneralAdmissionPoolItem.GeneralAdmissionPoolId));
 
                 poolItem.Property(i => i.GeneralAdmissionPoolId)
                     .HasConversion(
@@ -139,13 +140,6 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
                     .HasColumnName("general_admission_pool_id")
                     .IsRequired();
 
-                poolItem.Property(i => i.Price)
-                    .HasConversion(
-                        amount => amount.Value,
-                        value => new Amount(value))
-                    .HasColumnName("price")
-                    .HasPrecision(18, 2)
-                    .IsRequired();
             });
 
             level.Navigation(l => l.InventorySeatItems)
@@ -155,7 +149,7 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<Offer>
                 .UsePropertyAccessMode(PropertyAccessMode.Field);
         });
 
-        builder.Navigation(o => o.PriceLevels)
+        builder.Navigation(o => o.PriceZones)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
