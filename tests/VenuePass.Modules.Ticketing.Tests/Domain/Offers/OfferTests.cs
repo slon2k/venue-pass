@@ -1,6 +1,7 @@
 using VenuePass.BuildingBlocks.Domain;
 using VenuePass.Modules.Ticketing.Domain.Inventories;
 using VenuePass.Modules.Ticketing.Domain.Offers;
+using VenuePass.Modules.Ticketing.Domain.PublishedEvents;
 
 using Xunit;
 
@@ -8,6 +9,8 @@ namespace VenuePass.Modules.Ticketing.Tests.Domain.Offers;
 
 public sealed class OfferTests
 {
+    // ── Create ────────────────────────────────────────────────────────────────
+
     [Fact]
     public void Create_WhenInventoryIdIsEmpty_ThrowsArgumentException()
     {
@@ -19,39 +22,176 @@ public sealed class OfferTests
         Assert.Contains("InventoryId", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    // ── ConfigurePriceLevel ───────────────────────────────────────────────────
+
     [Fact]
     public void ConfigurePriceLevel_WhenDraft_AddsPriceLevel()
     {
-        var offer = CreateOffer();
+        var inventory = CreateInventory();
+        var offer = CreateOffer(inventory.Id);
 
-        offer.ConfigurePriceLevel(
-            new PriceLevelName("General"),
-            [new PriceLevelInventorySeatItemInput(new InventorySeatId(Guid.CreateVersion7()), new Amount(25m))],
+        offer.ConfigurePriceZone(
+            inventory,
+            new PriceZoneName("General"),
+            new Amount(25m),
+            [new PriceZoneInventorySeatItemInput(inventory.Seats[0].Id)],
             []);
 
-        var priceLevel = Assert.Single(offer.PriceLevels);
+        var priceLevel = Assert.Single(offer.PriceZones);
         Assert.Equal("General", priceLevel.Name.Value);
     }
 
     [Fact]
     public void ConfigurePriceLevel_WhenSameNameConfigured_ReplacesExistingCaseInsensitive()
     {
-        var offer = CreateOffer();
+        var inventory = CreateInventory();
+        var offer = CreateOffer(inventory.Id);
 
-        offer.ConfigurePriceLevel(
-            new PriceLevelName("General"),
-            [new PriceLevelInventorySeatItemInput(new InventorySeatId(Guid.CreateVersion7()), new Amount(25m))],
+        offer.ConfigurePriceZone(
+            inventory,
+            new PriceZoneName("General"),
+            new Amount(25m),
+            [new PriceZoneInventorySeatItemInput(inventory.Seats[0].Id)],
             []);
 
-        offer.ConfigurePriceLevel(
-            new PriceLevelName("general"),
-            [new PriceLevelInventorySeatItemInput(new InventorySeatId(Guid.CreateVersion7()), new Amount(35m))],
+        offer.ConfigurePriceZone(
+            inventory,
+            new PriceZoneName("general"),
+            new Amount(35m),
+            [new PriceZoneInventorySeatItemInput(inventory.Seats[1].Id)],
             []);
 
-        var priceLevel = Assert.Single(offer.PriceLevels);
+        var priceLevel = Assert.Single(offer.PriceZones);
         var item = Assert.Single(priceLevel.InventorySeatItems);
-        Assert.Equal(35m, item.Price.Value);
+        Assert.Equal(35m, priceLevel.Price.Value);
     }
+
+    [Fact]
+    public void ConfigurePriceLevel_WhenOfferIsNotDraft_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var offer = CreateOffer(inventory.Id);
+        offer.ConfigurePriceZone(
+            inventory,
+            new PriceZoneName("General"),
+            new Amount(25m),
+            [new PriceZoneInventorySeatItemInput(inventory.Seats[0].Id)],
+            []);
+        offer.Activate();
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            offer.ConfigurePriceZone(
+                inventory,
+                new PriceZoneName("VIP"),
+                new Amount(50m),
+                [new PriceZoneInventorySeatItemInput(inventory.Seats[0].Id)],
+                []));
+
+        Assert.Equal(OfferErrors.CanOnlySetPriceZonesInDraftStatus().Code, exception.Code);
+        Assert.Equal(OfferErrors.CanOnlySetPriceZonesInDraftStatus().Message, exception.Message);
+    }
+
+    [Fact]
+    public void ConfigurePriceLevel_WhenInventoryDoesNotBelongToOffer_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var otherInventory = CreateInventory();
+        var offer = CreateOffer(inventory.Id);
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            offer.ConfigurePriceZone(
+                otherInventory,
+                new PriceZoneName("General"),
+                new Amount(25m),
+                [new PriceZoneInventorySeatItemInput(otherInventory.Seats[0].Id)],
+                []));
+
+        Assert.Equal(OfferErrors.InventoryMismatch(otherInventory.Id.Value, inventory.Id.Value).Code, exception.Code);
+    }
+
+    [Fact]
+    public void ConfigurePriceLevel_WhenSeatNotInInventory_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var offer = CreateOffer(inventory.Id);
+        var unknownSeatId = new InventorySeatId(Guid.CreateVersion7());
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            offer.ConfigurePriceZone(
+                inventory,
+                new PriceZoneName("General"),
+                new Amount(25m),
+                [new PriceZoneInventorySeatItemInput(unknownSeatId)],
+                []));
+
+        Assert.Equal(OfferErrors.SeatNotInInventory(unknownSeatId).Code, exception.Code);
+        Assert.Equal(OfferErrors.SeatNotInInventory(unknownSeatId).Message, exception.Message);
+    }
+
+    [Fact]
+    public void ConfigurePriceLevel_WhenPoolNotInInventory_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var offer = CreateOffer(inventory.Id);
+        var unknownPoolId = new GeneralAdmissionPoolId(Guid.CreateVersion7());
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            offer.ConfigurePriceZone(
+                inventory,
+                new PriceZoneName("General"),
+                new Amount(25m),
+                [],
+                [new PriceZoneGeneralAdmissionPoolItemInput(unknownPoolId)]));
+
+        Assert.Equal(OfferErrors.GeneralAdmissionPoolNotInInventory(unknownPoolId).Code, exception.Code);
+        Assert.Equal(OfferErrors.GeneralAdmissionPoolNotInInventory(unknownPoolId).Message, exception.Message);
+    }
+
+    [Fact]
+    public void ConfigurePriceLevel_WhenInventorySeatTargetsDuplicate_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var offer = CreateOffer(inventory.Id);
+        var seatId = inventory.Seats[0].Id;
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            offer.ConfigurePriceZone(
+                inventory,
+                new PriceZoneName("General"),
+                new Amount(20m),
+                [
+                    new PriceZoneInventorySeatItemInput(seatId),
+                    new PriceZoneInventorySeatItemInput(seatId)
+                ],
+                []));
+
+        Assert.Equal(OfferErrors.PriceZoneCannotHaveDuplicateTargets().Code, exception.Code);
+        Assert.Equal(OfferErrors.PriceZoneCannotHaveDuplicateTargets().Message, exception.Message);
+    }
+
+    [Fact]
+    public void ConfigurePriceLevel_WhenGeneralAdmissionTargetsDuplicate_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var offer = CreateOffer(inventory.Id);
+        var poolId = inventory.Pools[0].Id;
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            offer.ConfigurePriceZone(
+                inventory,
+                new PriceZoneName("General"),
+                new Amount(20m),
+                [],
+                [
+                    new PriceZoneGeneralAdmissionPoolItemInput(poolId),
+                    new PriceZoneGeneralAdmissionPoolItemInput(poolId)
+                ]));
+
+        Assert.Equal(OfferErrors.PriceZoneCannotHaveDuplicateTargets().Code, exception.Code);
+        Assert.Equal(OfferErrors.PriceZoneCannotHaveDuplicateTargets().Message, exception.Message);
+    }
+
+    // ── Activate ──────────────────────────────────────────────────────────────
 
     [Fact]
     public void Activate_WhenNoPriceLevels_ThrowsDomainRuleViolation()
@@ -60,17 +200,20 @@ public sealed class OfferTests
 
         var exception = Assert.Throws<DomainRuleViolationException>(() => offer.Activate());
 
-        Assert.Equal(OfferErrors.OfferMustHaveAtLeastOnePriceLevelToActivate().Code, exception.Code);
-        Assert.Equal(OfferErrors.OfferMustHaveAtLeastOnePriceLevelToActivate().Message, exception.Message);
+        Assert.Equal(OfferErrors.OfferMustHaveAtLeastOnePriceZoneToActivate().Code, exception.Code);
+        Assert.Equal(OfferErrors.OfferMustHaveAtLeastOnePriceZoneToActivate().Message, exception.Message);
     }
 
     [Fact]
     public void Activate_WhenPriceLevelExists_SetsStatusToActive()
     {
-        var offer = CreateOffer();
-        offer.ConfigurePriceLevel(
-            new PriceLevelName("General"),
-            [new PriceLevelInventorySeatItemInput(new InventorySeatId(Guid.CreateVersion7()), new Amount(25m))],
+        var inventory = CreateInventory();
+        var offer = CreateOffer(inventory.Id);
+        offer.ConfigurePriceZone(
+            inventory,
+            new PriceZoneName("General"),
+            new Amount(25m),
+            [new PriceZoneInventorySeatItemInput(inventory.Seats[0].Id)],
             []);
 
         offer.Activate();
@@ -78,71 +221,30 @@ public sealed class OfferTests
         Assert.Equal(OfferStatus.Active, offer.Status);
     }
 
-    [Fact]
-    public void ConfigurePriceLevel_WhenOfferIsNotDraft_ThrowsDomainRuleViolation()
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private static Offer CreateOffer() =>
+        Offer.Create(new InventoryId(Guid.CreateVersion7()), new OfferName("Standard"), CreateSalesRange(), Currency.USD);
+
+    private static Offer CreateOffer(InventoryId inventoryId) =>
+        Offer.Create(inventoryId, new OfferName("Standard"), CreateSalesRange(), Currency.USD);
+
+    private static Inventory CreateInventory()
     {
-        var offer = CreateOffer();
-        offer.ConfigurePriceLevel(
-            new PriceLevelName("General"),
-            [new PriceLevelInventorySeatItemInput(new InventorySeatId(Guid.CreateVersion7()), new Amount(25m))],
-            []);
-        offer.Activate();
-
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
-            offer.ConfigurePriceLevel(
-                new PriceLevelName("VIP"),
-                [new PriceLevelInventorySeatItemInput(new InventorySeatId(Guid.CreateVersion7()), new Amount(50m))],
-                []));
-
-        Assert.Equal(OfferErrors.CanOnlySetPriceLevelsInDraftStatus().Code, exception.Code);
-        Assert.Equal(OfferErrors.CanOnlySetPriceLevelsInDraftStatus().Message, exception.Message);
-    }
-
-    [Fact]
-    public void ConfigurePriceLevel_WhenInventorySeatTargetsDuplicate_ThrowsDomainRuleViolation()
-    {
-        var offer = CreateOffer();
-        var seatId = new InventorySeatId(Guid.CreateVersion7());
-
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
-            offer.ConfigurePriceLevel(
-                new PriceLevelName("General"),
+        var manifest = new InventoryManifest(
+            sections:
+            [
+                new InventorySectionInput("Main",
                 [
-                    new PriceLevelInventorySeatItemInput(seatId, new Amount(20m)),
-                    new PriceLevelInventorySeatItemInput(seatId, new Amount(22m))
-                ],
-                []));
-
-        Assert.Equal(OfferErrors.PriceLevelCannotHaveDuplicateTargets().Code, exception.Code);
-        Assert.Equal(OfferErrors.PriceLevelCannotHaveDuplicateTargets().Message, exception.Message);
-    }
-
-    [Fact]
-    public void ConfigurePriceLevel_WhenGeneralAdmissionTargetsDuplicate_ThrowsDomainRuleViolation()
-    {
-        var offer = CreateOffer();
-        var poolId = new GeneralAdmissionPoolId(Guid.CreateVersion7());
-
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
-            offer.ConfigurePriceLevel(
-                new PriceLevelName("General"),
-                [],
-                [
-                    new PriceLevelGeneralAdmissionPoolItemInput(poolId, new Amount(20m)),
-                    new PriceLevelGeneralAdmissionPoolItemInput(poolId, new Amount(22m))
-                ]));
-
-        Assert.Equal(OfferErrors.PriceLevelCannotHaveDuplicateTargets().Code, exception.Code);
-        Assert.Equal(OfferErrors.PriceLevelCannotHaveDuplicateTargets().Message, exception.Message);
-    }
-
-    private static Offer CreateOffer()
-    {
-        return Offer.Create(
-            new InventoryId(Guid.CreateVersion7()),
-            new OfferName("Standard"),
-            CreateSalesRange(),
-            Currency.USD);
+                    new InventoryRowInput("A",
+                    [
+                        new InventorySeatInput(Guid.CreateVersion7(), "1"),
+                        new InventorySeatInput(Guid.CreateVersion7(), "2")
+                    ])
+                ])
+            ],
+            generalAdmissionAreas: [new InventoryGeneralAdmissionAreaInput(Guid.CreateVersion7(), "Floor", 100)]);
+        return Inventory.CreateFromManifest(PublishedEventReferenceId.Create(), manifest);
     }
 
     private static DateTimeRange CreateSalesRange()

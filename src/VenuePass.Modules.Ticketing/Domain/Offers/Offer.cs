@@ -6,7 +6,7 @@ namespace VenuePass.Modules.Ticketing.Domain.Offers;
 
 public sealed class Offer : AggregateRoot<OfferId>
 {
-    private readonly List<PriceLevel> _priceLevels = [];
+    private readonly List<PriceZone> _priceZones = [];
 
     public InventoryId InventoryId { get; private set; }
 
@@ -18,7 +18,7 @@ public sealed class Offer : AggregateRoot<OfferId>
 
     public DateTimeRange SalesRange { get; private set; }
 
-    public IReadOnlyList<PriceLevel> PriceLevels => _priceLevels.AsReadOnly();
+    public IReadOnlyList<PriceZone> PriceZones => _priceZones.AsReadOnly();
 
     private Offer() { }
 
@@ -50,28 +50,111 @@ public sealed class Offer : AggregateRoot<OfferId>
         );
     }
 
-    public void ConfigurePriceLevel(
-        PriceLevelName priceLevelName,
-        IEnumerable<PriceLevelInventorySeatItemInput> inventorySeatItems,
-        IEnumerable<PriceLevelGeneralAdmissionPoolItemInput> generalAdmissionPoolItems)
+    public void ConfigurePriceZone(
+        Inventory inventory,
+        PriceZoneName priceZoneName,
+        Amount price,
+        IEnumerable<PriceZoneInventorySeatItemInput> inventorySeatItems,
+        IEnumerable<PriceZoneGeneralAdmissionPoolItemInput> generalAdmissionPoolItems)
     {
-        ArgumentNullException.ThrowIfNull(priceLevelName);
+        ArgumentNullException.ThrowIfNull(inventory);
+        ArgumentNullException.ThrowIfNull(priceZoneName);
         ArgumentNullException.ThrowIfNull(inventorySeatItems);
         ArgumentNullException.ThrowIfNull(generalAdmissionPoolItems);
 
         EnsureDraft();
+        EnsureCorrectInventory(inventory);
 
         var seatItems = inventorySeatItems.ToArray();
         var poolItems = generalAdmissionPoolItems.ToArray();
 
-        var priceLevel = PriceLevel.Create(
-            priceLevelName,
-            seatItems,
-            poolItems);
+        var priceZone = PriceZone.Create(
+            name: priceZoneName,
+            price: price,
+            inventorySeatItems: seatItems,
+            generalAdmissionPoolItems: poolItems);
 
-        _priceLevels.RemoveAll(pl => pl.Name.SameAs(priceLevelName));
+        EnsureSeatsAndPoolsExistInInventory(inventory, priceZone);
+        EnsureTargetsAreNotAssignedToOtherPriceZones(priceZoneName, priceZone);
 
-        _priceLevels.Add(priceLevel);
+        _priceZones.RemoveAll(pz => pz.Name.SameAs(priceZoneName));
+        _priceZones.Add(priceZone);
+    }
+
+    private void EnsureTargetsAreNotAssignedToOtherPriceZones(PriceZoneName priceZoneName, PriceZone candidate)
+    {
+        var candidateSeatIds = candidate.InventorySeatItems
+            .Select(item => item.InventorySeatId)
+            .ToHashSet();
+
+        var candidatePoolIds = candidate.GeneralAdmissionPoolItems
+            .Select(item => item.GeneralAdmissionPoolId)
+            .ToHashSet();
+
+        foreach (var existingPriceZone in _priceZones)
+        {
+            if (existingPriceZone.Name.SameAs(priceZoneName))
+            {
+                continue;
+            }
+
+            foreach (var existingSeatItem in existingPriceZone.InventorySeatItems)
+            {
+                if (candidateSeatIds.Contains(existingSeatItem.InventorySeatId))
+                {
+                    throw new DomainRuleViolationException(
+                        OfferErrors.InventorySeatAlreadyAssignedToAnotherPriceZone(existingSeatItem.InventorySeatId));
+                }
+            }
+
+            foreach (var existingPoolItem in existingPriceZone.GeneralAdmissionPoolItems)
+            {
+                if (candidatePoolIds.Contains(existingPoolItem.GeneralAdmissionPoolId))
+                {
+                    throw new DomainRuleViolationException(
+                        OfferErrors.GeneralAdmissionPoolAlreadyAssignedToAnotherPriceZone(existingPoolItem.GeneralAdmissionPoolId));
+                }
+            }
+        }
+    }
+
+    private static void EnsureSeatsAndPoolsExistInInventory(
+        Inventory inventory,
+        PriceZone priceZone)
+    {
+        var seatIds = inventory.Seats
+            .Select(seat => seat.Id)
+            .ToHashSet();
+
+        var poolIds = inventory.Pools
+            .Select(pool => pool.Id)
+            .ToHashSet();
+
+        foreach (var item in priceZone.InventorySeatItems)
+        {
+            if (!seatIds.Contains(item.InventorySeatId))
+            {
+                throw new DomainRuleViolationException(
+                    OfferErrors.SeatNotInInventory(item.InventorySeatId));
+            }
+        }
+
+        foreach (var item in priceZone.GeneralAdmissionPoolItems)
+        {
+            if (!poolIds.Contains(item.GeneralAdmissionPoolId))
+            {
+                throw new DomainRuleViolationException(
+                    OfferErrors.GeneralAdmissionPoolNotInInventory(item.GeneralAdmissionPoolId));
+            }
+        }
+    }
+
+    private void EnsureCorrectInventory(Inventory inventory)
+    {
+        if (inventory.Id != InventoryId)
+        {
+            throw new DomainRuleViolationException(OfferErrors.InventoryMismatch(inventory.Id.Value, InventoryId.Value));
+        }
     }
 
     public void Activate()
@@ -81,16 +164,16 @@ public sealed class Offer : AggregateRoot<OfferId>
             throw new DomainRuleViolationException(OfferErrors.CanOnlyActivateOfferInDraftStatus());
         }
 
-        if (_priceLevels.Count == 0)
+        if (_priceZones.Count == 0)
         {
-            throw new DomainRuleViolationException(OfferErrors.OfferMustHaveAtLeastOnePriceLevelToActivate());
+            throw new DomainRuleViolationException(OfferErrors.OfferMustHaveAtLeastOnePriceZoneToActivate());
         }
 
-        foreach (var priceLevel in _priceLevels)
+        foreach (var priceZone in _priceZones)
         {
-            if (!priceLevel.HasItems)
+            if (!priceZone.HasItems)
             {
-                throw new DomainRuleViolationException(OfferErrors.PriceLevelMustHaveAtLeastOneItem());
+                throw new DomainRuleViolationException(OfferErrors.PriceZoneMustHaveAtLeastOneItem());
             }
         }
 
@@ -101,7 +184,7 @@ public sealed class Offer : AggregateRoot<OfferId>
     {
         if (Status != OfferStatus.Draft)
         {
-            throw new DomainRuleViolationException(OfferErrors.CanOnlySetPriceLevelsInDraftStatus());
+            throw new DomainRuleViolationException(OfferErrors.CanOnlySetPriceZonesInDraftStatus());
         }
     }
 }
