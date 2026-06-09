@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 using VenuePass.BuildingBlocks.Messaging;
 using VenuePass.Modules.Events.Contracts.IntegrationEvents;
+using VenuePass.Modules.Ticketing.Features.ActivateOffer;
+using VenuePass.Modules.Ticketing.Features.ConfigurePricing;
 using VenuePass.Modules.Ticketing.Features.CreateOffer;
 using VenuePass.Modules.Ticketing.Features.EventPublished;
 using VenuePass.Modules.Ticketing.Infrastructure;
@@ -51,6 +53,8 @@ public static class ModuleConfiguration
     {
         services.AddScoped<IIntegrationEventHandler<EventPublishedIntegrationEvent>, EventPublishedHandler>();
         services.AddScoped<CreateOfferHandler>();
+        services.AddScoped<ConfigurePricingHandler>();
+        services.AddScoped<ActivateOfferHandler>();
         return services;
     }
 }

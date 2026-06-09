@@ -191,6 +191,154 @@ public sealed class OfferTests
         Assert.Equal(OfferErrors.PriceZoneCannotHaveDuplicateTargets().Message, exception.Message);
     }
 
+    // ── SetPriceZones ─────────────────────────────────────────────────────────
+
+    [Fact]
+    public void SetPriceZones_WhenDraft_ReplacesPriceZones()
+    {
+        var inventory = CreateInventory();
+        var offer = CreateOffer(inventory.Id);
+
+        // Start with two zones
+        offer.ConfigurePriceZone(
+            inventory,
+            new PriceZoneName("VIP"),
+            new Amount(100m),
+            [new PriceZoneInventorySeatItemInput(inventory.Seats[0].Id)],
+            []);
+        offer.ConfigurePriceZone(
+            inventory,
+            new PriceZoneName("General"),
+            new Amount(25m),
+            [new PriceZoneInventorySeatItemInput(inventory.Seats[1].Id)],
+            []);
+
+        // Replace with one zone using a pool
+        offer.SetPriceZones(inventory,
+        [
+            new PriceZoneInput(
+                new PriceZoneName("Floor"),
+                new Amount(50m),
+                [],
+                [new PriceZoneGeneralAdmissionPoolItemInput(inventory.Pools[0].Id)])
+        ]);
+
+        var zone = Assert.Single(offer.PriceZones);
+        Assert.Equal("Floor", zone.Name.Value);
+    }
+
+    [Fact]
+    public void SetPriceZones_WhenOfferIsNotDraft_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var offer = CreateOffer(inventory.Id);
+        offer.ConfigurePriceZone(
+            inventory,
+            new PriceZoneName("General"),
+            new Amount(25m),
+            [new PriceZoneInventorySeatItemInput(inventory.Seats[0].Id)],
+            []);
+        offer.Activate();
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            offer.SetPriceZones(inventory,
+            [
+                new PriceZoneInput(
+                    new PriceZoneName("VIP"),
+                    new Amount(50m),
+                    [new PriceZoneInventorySeatItemInput(inventory.Seats[0].Id)],
+                    [])
+            ]));
+
+        Assert.Equal(OfferErrors.CanOnlySetPriceZonesInDraftStatus().Code, exception.Code);
+    }
+
+    [Fact]
+    public void SetPriceZones_WhenEmptyList_ClearsAllZones()
+    {
+        var inventory = CreateInventory();
+        var offer = CreateOffer(inventory.Id);
+        offer.ConfigurePriceZone(
+            inventory,
+            new PriceZoneName("General"),
+            new Amount(25m),
+            [new PriceZoneInventorySeatItemInput(inventory.Seats[0].Id)],
+            []);
+
+        offer.SetPriceZones(inventory, []);
+
+        Assert.Empty(offer.PriceZones);
+    }
+
+    [Fact]
+    public void SetPriceZones_WhenDuplicateZoneNames_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var offer = CreateOffer(inventory.Id);
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            offer.SetPriceZones(inventory,
+            [
+                new PriceZoneInput(
+                    new PriceZoneName("VIP"),
+                    new Amount(100m),
+                    [new PriceZoneInventorySeatItemInput(inventory.Seats[0].Id)],
+                    []),
+                new PriceZoneInput(
+                    new PriceZoneName("vip"),
+                    new Amount(50m),
+                    [new PriceZoneInventorySeatItemInput(inventory.Seats[1].Id)],
+                    [])
+            ]));
+
+        Assert.Equal(OfferErrors.DuplicatePriceZoneNames().Code, exception.Code);
+    }
+
+    [Fact]
+    public void SetPriceZones_WhenSameSeatInTwoZones_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var offer = CreateOffer(inventory.Id);
+        var sharedSeatId = inventory.Seats[0].Id;
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            offer.SetPriceZones(inventory,
+            [
+                new PriceZoneInput(
+                    new PriceZoneName("Zone A"),
+                    new Amount(100m),
+                    [new PriceZoneInventorySeatItemInput(sharedSeatId)],
+                    []),
+                new PriceZoneInput(
+                    new PriceZoneName("Zone B"),
+                    new Amount(50m),
+                    [new PriceZoneInventorySeatItemInput(sharedSeatId)],
+                    [])
+            ]));
+
+        Assert.Equal(OfferErrors.InventorySeatAlreadyAssignedToAnotherPriceZone(sharedSeatId).Code, exception.Code);
+    }
+
+    [Fact]
+    public void SetPriceZones_WhenSeatNotInInventory_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var offer = CreateOffer(inventory.Id);
+        var unknownSeatId = new InventorySeatId(Guid.CreateVersion7());
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            offer.SetPriceZones(inventory,
+            [
+                new PriceZoneInput(
+                    new PriceZoneName("VIP"),
+                    new Amount(100m),
+                    [new PriceZoneInventorySeatItemInput(unknownSeatId)],
+                    [])
+            ]));
+
+        Assert.Equal(OfferErrors.SeatNotInInventory(unknownSeatId).Code, exception.Code);
+    }
+
     // ── Activate ──────────────────────────────────────────────────────────────
 
     [Fact]

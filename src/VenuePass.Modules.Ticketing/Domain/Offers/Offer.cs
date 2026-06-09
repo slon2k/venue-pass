@@ -81,6 +81,57 @@ public sealed class Offer : AggregateRoot<OfferId>
         _priceZones.Add(priceZone);
     }
 
+    public void SetPriceZones(Inventory inventory, IReadOnlyList<PriceZoneInput> inputs)
+    {
+        ArgumentNullException.ThrowIfNull(inventory);
+        ArgumentNullException.ThrowIfNull(inputs);
+
+        EnsureDraft();
+        EnsureCorrectInventory(inventory);
+
+        // Reject duplicate zone names within the input
+        var duplicateNames = inputs
+            .GroupBy(i => i.Name.Value, StringComparer.OrdinalIgnoreCase)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToArray();
+
+        if (duplicateNames.Length > 0)
+            throw new DomainRuleViolationException(OfferErrors.DuplicatePriceZoneNames());
+
+        // Create all zones (PriceZone.Create validates each zone individually)
+        var newZones = inputs
+            .Select(i => PriceZone.Create(i.Name, i.Price, i.InventorySeatItems, i.GeneralAdmissionPoolItems))
+            .ToArray();
+
+        // Validate all zones against the inventory
+        foreach (var zone in newZones)
+            EnsureSeatsAndPoolsExistInInventory(inventory, zone);
+
+        // Check cross-zone conflicts within the new set
+        var allSeatIds = new HashSet<InventorySeatId>();
+        var allPoolIds = new HashSet<GeneralAdmissionPoolId>();
+
+        foreach (var zone in newZones)
+        {
+            foreach (var seatItem in zone.InventorySeatItems)
+            {
+                if (!allSeatIds.Add(seatItem.InventorySeatId))
+                    throw new DomainRuleViolationException(
+                        OfferErrors.InventorySeatAlreadyAssignedToAnotherPriceZone(seatItem.InventorySeatId));
+            }
+            foreach (var poolItem in zone.GeneralAdmissionPoolItems)
+            {
+                if (!allPoolIds.Add(poolItem.GeneralAdmissionPoolId))
+                    throw new DomainRuleViolationException(
+                        OfferErrors.GeneralAdmissionPoolAlreadyAssignedToAnotherPriceZone(poolItem.GeneralAdmissionPoolId));
+            }
+        }
+
+        _priceZones.Clear();
+        _priceZones.AddRange(newZones);
+    }
+
     private void EnsureTargetsAreNotAssignedToOtherPriceZones(PriceZoneName priceZoneName, PriceZone candidate)
     {
         var candidateSeatIds = candidate.InventorySeatItems

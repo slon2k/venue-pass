@@ -283,3 +283,9 @@ public sealed record PriceZoneGeneralAdmissionPoolItemInput
         GeneralAdmissionPoolId = generalAdmissionPoolId;
     }
 }
+
+public sealed record PriceZoneInput(
+    PriceZoneName Name,
+    Amount Price,
+    IReadOnlyCollection<PriceZoneInventorySeatItemInput> InventorySeatItems,
+    IReadOnlyCollection<PriceZoneGeneralAdmissionPoolItemInput> GeneralAdmissionPoolItems);
