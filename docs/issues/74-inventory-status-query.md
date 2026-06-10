@@ -114,7 +114,7 @@ This is a pure read query. Loading the full `Inventory` aggregate with all seats
 
 ## Vertical Slices
 
-- [ ] D1: Deliver GetInventoryStatus endpoint, handler, response DTOs, and integration test
+- [x] D1: Deliver GetInventoryStatus endpoint, handler, response DTOs, and integration test
 
 ## Risks and Assumptions
 
@@ -125,6 +125,69 @@ This is a pure read query. Loading the full `Inventory` aggregate with all seats
 
 ## Definition of Done
 
-- [ ] Acceptance criteria met
-- [ ] Tests passing
-- [ ] Docs updated if behavior changed
+- [x] Acceptance criteria met
+- [x] Tests passing
+- [x] Docs updated if behavior changed
+
+---
+
+## PR Description
+
+### feat: complete Capability C (Offers & Pricing) and D (Inventory Status)
+
+### Summary
+
+- Implements the full offer lifecycle: create, configure pricing, activate, and query offers for a published event's inventory
+- Adds `SetPriceZones` replace-all domain method with cross-zone conflict detection and inventory validation
+- Delivers the inventory status query endpoint, returning seat counts grouped by section and pool availability
+- Updates Capability C issue and M03 milestone docs to reflect scope adjustments made during implementation (PriceLevel → PriceZone rename, Currency lifted to Offer level, 204 response codes on mutations)
+
+### Changes
+
+**Domain**
+- `Offer.SetPriceZones(Inventory, IReadOnlyList<PriceZoneInput>)` — atomically replaces all price zones; validates Draft status, duplicate names, empty targets, inventory membership, and cross-zone conflicts
+- `PriceZoneInput` record added alongside existing input types in `PriceZone.cs`
+- `OfferErrors.DuplicatePriceZoneNames()` added
+
+**Endpoints — Capability C**
+
+| Method | Route | Auth | Response |
+|--------|-------|------|----------|
+| POST | `/events/{eventId}/offers` | EventManager | 201 |
+| PUT | `/offers/{offerId}/price-zones` | EventManager | 204 |
+| POST | `/offers/{offerId}/activate` | EventManager | 204 |
+| GET | `/offers/{offerId}` | Authenticated | 200 |
+| GET | `/events/{eventId}/offers` | Authenticated | 200 |
+
+**Endpoints — Capability D**
+
+| Method | Route | Auth | Response |
+|--------|-------|------|----------|
+| GET | `/events/{eventId}/inventory` | Authenticated | 200 |
+
+**Tests**
+- 6 `SetPriceZones` domain unit tests (replace, non-draft rejection, clear, duplicate names, cross-zone conflict, unknown seat)
+- 11 handler unit tests for `GetOffer` and `GetOffers` (SQLite in-memory — required because EF Core InMemory does not support `ComplexProperty` used by `Offer.SalesRange`)
+- 5 handler unit tests for `GetInventoryStatus` (section grouping, pool mapping, zero counts, total sum)
+
+**Infrastructure**
+- FluentValidation packages added to Ticketing module
+- SQLite added to Ticketing unit test project (for handler tests)
+- All handlers and endpoints registered in `ModuleConfiguration` and `ModuleEndpointMappings`
+
+**Docs**
+- `docs/issues/68-offers-and-pricing.md` — updated to PriceZone terminology, corrected response codes (204), all acceptance criteria and slices marked complete
+- `docs/milestones/milestone-03.md` — Capabilities A, B, C marked complete; C1/C3 descriptions updated; accepted decisions #6, #7, #12 corrected
+
+### Test plan
+
+- [ ] `dotnet build` passes at solution root
+- [ ] `dotnet test` — 210 tests pass (164 non-Docker); Events integration tests require Docker and are excluded from local runs
+- [ ] `POST /events/{eventId}/offers` with valid body returns 201 with offer ID
+- [ ] `PUT /offers/{offerId}/price-zones` with price zone list returns 204; second call with different list replaces zones
+- [ ] `PUT /offers/{offerId}/price-zones` on an Active offer returns 400
+- [ ] `POST /offers/{offerId}/activate` with no price zones returns 400; with zones returns 204
+- [ ] `GET /offers/{offerId}` returns offer with price zones and seat/pool IDs
+- [ ] `GET /events/{eventId}/offers` returns all offers for the event
+- [ ] `GET /events/{eventId}/inventory` returns section counts and pool availability
+- [ ] All mutation endpoints return 401/403 without valid EventManager token
