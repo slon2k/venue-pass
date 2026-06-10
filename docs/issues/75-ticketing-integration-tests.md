@@ -38,13 +38,13 @@ Validate the Ticketing module's end-to-end behavior in a real database-backed te
 
 - [ ] `POST /events/{eventId}/offers` with valid payload returns 201 and creates a Draft offer
 - [ ] `POST /events/{eventId}/offers` for non-published event returns 404
-- [ ] `PUT /offers/{offerId}/price-levels` with valid price levels returns 200 and persists levels
-- [ ] `PUT /offers/{offerId}/price-levels` targeting non-existent seat IDs returns 400
-- [ ] `PUT /offers/{offerId}/price-levels` on Active offer returns 400/409
-- [ ] `POST /offers/{offerId}/activate` with price levels configured returns 200 and state becomes Active
-- [ ] `POST /offers/{offerId}/activate` without price levels returns 400
-- [ ] `POST /offers/{offerId}/activate` on already-active offer returns 409
-- [ ] `GET /offers/{offerId}` returns offer with price levels and state
+- [ ] `PUT /offers/{offerId}/price-zones` with valid price zones returns 204 and persists zones
+- [ ] `PUT /offers/{offerId}/price-zones` targeting non-existent seat IDs returns 400
+- [ ] `PUT /offers/{offerId}/price-zones` on Active offer returns 400
+- [ ] `POST /offers/{offerId}/activate` with price zones configured returns 204 and status becomes Active
+- [ ] `POST /offers/{offerId}/activate` without price zones returns 400
+- [ ] `POST /offers/{offerId}/activate` on already-active offer returns 400
+- [ ] `GET /offers/{offerId}` returns offer with price zones and status
 - [ ] `GET /events/{eventId}/offers` returns list of offers for the event
 
 ### Inventory Status Tests
@@ -105,8 +105,6 @@ public async Task Sync_WhenEventPublished_CreatesInventoryInTicketing()
     Assert.NotNull(reference);
 
     var inventory = await ticketingDb.Inventories
-        .Include(i => i.Seats)
-        .Include(i => i.Pools)
         .FirstOrDefaultAsync(i => i.EventReferenceId == reference.Id);
 
     Assert.NotNull(inventory);
@@ -125,7 +123,7 @@ private async Task DispatchOutboxMessages()
 }
 ```
 
-Requires `InternalsVisibleTo` from Events module to the integration test project — already established in M02.
+Requires `InternalsVisibleTo` from Events module to the integration test project — already established in M02. E1 must also add `InternalsVisibleTo` pointing at the new `VenuePass.Modules.Ticketing.IntegrationTests` project to `VenuePass.Modules.Ticketing.csproj`.
 
 ### Seed Helpers
 
@@ -155,7 +153,7 @@ private async Task<Guid> CreateOfferForEvent(Guid eventId, string name = "Standa
 {
     var response = await Client.PostAsJsonAsync(
         $"/events/{eventId}/offers",
-        new { Name = name });
+        new { Name = name, Currency = "USD" });
     // extract and return offer ID
 }
 ```

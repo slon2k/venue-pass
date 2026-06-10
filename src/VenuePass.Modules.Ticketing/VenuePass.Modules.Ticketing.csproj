@@ -12,5 +12,6 @@
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="VenuePass.Modules.Ticketing.Tests" />
+    <InternalsVisibleTo Include="VenuePass.IntegrationTests" />
   </ItemGroup>
 </Project>
