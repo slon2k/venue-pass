@@ -17,5 +17,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\VenuePass.Api\VenuePass.Api.csproj" />
     <ProjectReference Include="..\..\src\VenuePass.Modules.Events\VenuePass.Modules.Events.csproj" />
+    <ProjectReference Include="..\..\src\VenuePass.Modules.Ticketing\VenuePass.Modules.Ticketing.csproj" />
   </ItemGroup>
 </Project>
