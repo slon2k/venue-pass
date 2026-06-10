@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace VenuePass.Modules.Events.IntegrationTests.Infrastructure;
+namespace VenuePass.IntegrationTests.Infrastructure;
 
 [CollectionDefinition(Name)]
 public sealed class EventsTestCollectionFixture : ICollectionFixture<EventsIntegrationTestFixture>

@@ -5,7 +5,7 @@ using VenuePass.Modules.Events.Infrastructure;
 using VenuePass.Modules.Ticketing.Infrastructure;
 using Xunit;
 
-namespace VenuePass.Modules.Events.IntegrationTests.Infrastructure;
+namespace VenuePass.IntegrationTests.Infrastructure;
 
 public sealed class EventsIntegrationTestFixture : IAsyncLifetime
 {

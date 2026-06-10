@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace VenuePass.Modules.Events.IntegrationTests.Infrastructure;
+namespace VenuePass.IntegrationTests.Infrastructure;
 
 public sealed class TestAuthHandler(
     IOptionsMonitor<AuthenticationSchemeOptions> options,

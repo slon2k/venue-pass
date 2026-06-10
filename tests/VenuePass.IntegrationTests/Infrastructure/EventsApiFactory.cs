@@ -7,7 +7,7 @@ using Microsoft.Extensions.Hosting;
 
 using VenuePass.Modules.Events.Infrastructure.Outbox;
 
-namespace VenuePass.Modules.Events.IntegrationTests.Infrastructure;
+namespace VenuePass.IntegrationTests.Infrastructure;
 
 public sealed class EventsApiFactory(
     string connectionString,

@@ -12,7 +12,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/VenuePass.ArchitectureTests/VenuePass.ArchitectureTests.csproj" />
     <Project Path="tests/VenuePass.BuildingBlocks.Tests/VenuePass.BuildingBlocks.Tests.csproj" />
-    <Project Path="tests/VenuePass.Modules.Events.IntegrationTests/VenuePass.Modules.Events.IntegrationTests.csproj" />
+    <Project Path="tests/VenuePass.IntegrationTests/VenuePass.IntegrationTests.csproj" />
     <Project Path="tests/VenuePass.Modules.Events.Tests/VenuePass.Modules.Events.Tests.csproj" />
     <Project Path="tests/VenuePass.Modules.Ticketing.Tests/VenuePass.Modules.Ticketing.Tests.csproj" />
   </Folder>
