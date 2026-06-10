@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Routing;
 using VenuePass.Modules.Ticketing.Features.ActivateOffer;
 using VenuePass.Modules.Ticketing.Features.ConfigurePricing;
 using VenuePass.Modules.Ticketing.Features.CreateOffer;
+using VenuePass.Modules.Ticketing.Features.GetInventoryStatus;
 using VenuePass.Modules.Ticketing.Features.GetOffer;
 using VenuePass.Modules.Ticketing.Features.GetOffers;
 
@@ -17,6 +18,7 @@ public static class ModuleEndpointMappings
         app.MapActivateOffer();
         app.MapGetOffer();
         app.MapGetOffers();
+        app.MapGetInventoryStatus();
 
         return app;
     }
