@@ -17,7 +17,7 @@ Reservation and checkout lifecycle is implemented: customers can reserve availab
 ### Capability A: Reservation domain and availability locking
 
 - [ ] A1: Implement `Reservation` aggregate with status lifecycle
-- [ ] A2: Add inventory reservation behavior for seats and GA pools
+- [ ] A2: Add inventory reservation behavior for seats and GA pools; update `GetInventoryStatus` seat-counting to respect `SeatAvailability` enum (available vs reserved vs sold)
 - [ ] A3: Resolve price from active `Offer + target -> PriceZone -> Price` using current single-axis pricing model
 - [ ] A4: Persist reservations and reservation items
 - [ ] A5: Add concurrency protection to prevent double booking/oversell
@@ -54,10 +54,16 @@ Reservation and checkout lifecycle is implemented: customers can reserve availab
 - [ ] E4: Checkout tests create order, mark inventory sold, and issue tickets
 - [ ] E5: Double-reservation/concurrency tests prevent oversell
 - [ ] E6: End-to-end test: publish event → inventory → offer → reservation → order → tickets
+- [ ] E7: Authorization enforcement tests across all new M04 Ticketing endpoints
 
 ## Functional Requirements Baseline (M04)
 
 These requirements define minimum business behavior for M04 and should be treated as implementation gates.
+
+### Endpoint Authorization Requirements
+
+- [ ] All reservation, checkout, and ticket endpoints require authentication (any authenticated role).
+- [ ] No EventManager restriction applies to customer-facing endpoints (`CreateReservation`, `GetReservation`, `CancelReservation`, `CheckoutReservation`, `GetOrder`, `GetTicketByCode`).
 
 ### Reservation Requirements
 
@@ -69,7 +75,8 @@ These requirements define minimum business behavior for M04 and should be treate
 - [ ] Reserved GA pool quantity must not exceed available count.
 - [ ] Reservation is atomic: if any requested target cannot be reserved, nothing is reserved.
 - [ ] Reservation stores a price snapshot from the resolved price zone.
-- [ ] Reservation receives an expiration timestamp.
+- [ ] Reservation currency is taken from the active Offer at reservation creation time.
+- [ ] Reservation receives an expiration timestamp set to `now + ReservationExpiryMinutes` (default 15 minutes, configurable via `Ticketing:ReservationExpiryMinutes`).
 - [ ] Reservation status lifecycle includes at minimum: `Reserved`, `Completed`, `Cancelled`, `Expired`.
 - [ ] Only `Reserved` reservations may transition state.
 - [ ] Valid transitions are only: `Reserved -> Completed`, `Reserved -> Cancelled`, `Reserved -> Expired`.
@@ -158,6 +165,9 @@ These requirements define minimum business behavior for M04 and should be treate
 24. Offer sale window is enforced only when creating a reservation. Checkout may complete an existing non-expired reservation even if the sale window has closed.
 25. Expiration is enforced by time checks in commands as well as by the background sweep. A `Reserved` reservation past `ExpiresAt` is treated as expired and cannot be checked out.
 26. Ticket codes are opaque, unique, and non-sequential; they must not encode sensitive/order data.
+27. Reservation expiration window defaults to 15 minutes and is configurable via `Ticketing:ReservationExpiryMinutes` in app configuration.
+28. All reservation, checkout, and ticket endpoints require authentication (any authenticated role). No EventManager restriction applies to customer-facing endpoints.
+29. `OrderStatus` contains only `Completed` for M04. `Cancelled` and `Refunded` are anticipated future states pending order-cancellation and refund scope. `Pending` is deferred until real async payment integration is introduced.
 
 ## Proposed Domain Model
 
@@ -248,9 +258,10 @@ For M04:
 
 Notes:
 
-- No pending/payment-failed states in M04.
+- No pending/payment-failed states in M04. Checkout represents a synchronous simulated payment — an order only exists after successful completion.
 - One reservation can produce at most one order.
-- Order currency comes from the reservation currency.
+- Order currency comes from the reservation currency (which was taken from the Offer).
+- `Cancelled` and `Refunded` are anticipated future states. `Pending` is deferred until real async payment integration is introduced.
 
 ---
 
