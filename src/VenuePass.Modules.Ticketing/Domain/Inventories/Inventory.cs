@@ -1,4 +1,5 @@
 using VenuePass.BuildingBlocks.Domain;
+using VenuePass.Modules.Ticketing.Domain.Common;
 using VenuePass.Modules.Ticketing.Domain.PublishedEvents;
 
 namespace VenuePass.Modules.Ticketing.Domain.Inventories;
@@ -81,6 +82,138 @@ public sealed class Inventory : AggregateRoot<InventoryId>
         }
 
         return inventory;
+    }
+
+    public void ReserveSeats(IReadOnlyList<InventorySeatId> seatIds)
+    {
+        ArgumentNullException.ThrowIfNull(seatIds);
+    
+        if (seatIds.Count == 0)
+        {
+            throw new ArgumentException("Seat ID list cannot be empty.", nameof(seatIds));
+        }
+
+        var inventorySeats = GetSeatsOrThrow(seatIds);
+
+        EnsureSeatsAvailable(inventorySeats);
+
+        foreach (var seat in inventorySeats)
+        {
+            seat.Reserve();
+        }
+    }
+
+    public void ReserveGeneralAdmissionPool(GeneralAdmissionPoolId poolId, Quantity quantity)
+    {
+        var pool = _pools.FirstOrDefault(p => p.Id == poolId) 
+            ?? throw new DomainRuleViolationException(
+                InventoryErrors.GeneralAdmissionPoolNotFound(poolId));
+
+        pool.Reserve(quantity);
+    }
+
+    public void ReleaseSeats(IReadOnlyList<InventorySeatId> seatIds)
+    {
+        ArgumentNullException.ThrowIfNull(seatIds);
+
+        if (seatIds.Count == 0)
+        {
+            throw new ArgumentException("Seat ID list cannot be empty.", nameof(seatIds));
+        }
+
+        var inventorySeats = GetSeatsOrThrow(seatIds);
+
+        EnsureSeatsReserved(inventorySeats);
+
+        foreach (var seat in inventorySeats)
+        {
+            seat.Release();
+        }
+    }
+
+    public void ReleaseGeneralAdmissionPool(GeneralAdmissionPoolId poolId, Quantity quantity)
+    {
+        var pool = _pools.FirstOrDefault(p => p.Id == poolId) 
+            ?? throw new DomainRuleViolationException(
+                InventoryErrors.GeneralAdmissionPoolNotFound(poolId));
+
+        pool.Release(quantity);
+    }
+
+    public void SellSeats(IReadOnlyList<InventorySeatId> seatIds)
+    {
+        ArgumentNullException.ThrowIfNull(seatIds);
+
+        if (seatIds.Count == 0)
+        {
+            throw new ArgumentException("Seat ID list cannot be empty.", nameof(seatIds));
+        }
+
+        var inventorySeats = GetSeatsOrThrow(seatIds);
+
+        EnsureSeatsReserved(inventorySeats);
+
+        foreach (var seat in inventorySeats)
+        {
+            seat.Sell();
+        }
+    }
+
+    public void SellGeneralAdmissionPool(GeneralAdmissionPoolId poolId, Quantity quantity)
+    {
+        var pool = _pools.FirstOrDefault(p => p.Id == poolId) 
+            ?? throw new DomainRuleViolationException(
+                InventoryErrors.GeneralAdmissionPoolNotFound(poolId));
+
+        pool.Sell(quantity);
+    }
+
+    private List<InventorySeat> GetSeatsOrThrow(IReadOnlyList<InventorySeatId> seatIds)
+    {
+        var seatSet = new HashSet<InventorySeatId>(seatIds);
+
+        if (seatSet.Count != seatIds.Count)
+        {
+            throw new ArgumentException(
+                "Seat ID list cannot contain duplicate items.",
+                nameof(seatIds));
+        }
+
+        var inventorySeats = _seats
+            .Where(seat => seatSet.Contains(seat.Id))
+            .ToList();
+
+        if (inventorySeats.Count != seatSet.Count)
+        {
+            throw new DomainRuleViolationException(
+                InventoryErrors.SomeSeatsNotFound(seatIds));
+        }
+
+        return inventorySeats;
+    }
+
+    private static void EnsureSeatsAvailable(List<InventorySeat> inventorySeats)
+    {
+        foreach (var seat in inventorySeats)
+        {
+            if (!seat.IsAvailable)
+            {
+                throw new DomainRuleViolationException(
+                    InventoryErrors.SeatNotAvailable(seat.Id));
+            }
+        }
+    }
+
+    private static void EnsureSeatsReserved(List<InventorySeat> inventorySeats)
+    {
+        foreach (var seat in inventorySeats)
+        {
+            if (!seat.IsReserved)
+            {
+                throw new DomainRuleViolationException(
+                    InventoryErrors.SeatNotReserved(seat.Id));
+            }
+        }
     }
 }
 
