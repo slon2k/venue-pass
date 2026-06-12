@@ -45,7 +45,15 @@ public static class ReservationErrors
         "Ticketing.Reservation.DuplicateGeneralAdmissionPoolInReservation",
         $"General admission pool with ID '{poolId.Value}' is already added to the reservation.");
 
-    public static DomainError ReservationMustHaveItems(ReservationId reservationId) => new(
+    public static DomainError ReservationMustHaveItems() => new(
         "Ticketing.Reservation.ReservationMustHaveItems",
-        $"Reservation with ID '{reservationId.Value}' must have at least one item to be completed.");
+        "Reservation must have at least one item to be completed.");
+    
+    public static DomainError DuplicateSeatsInReservation() => new(
+        "Ticketing.Reservation.DuplicateSeatsInReservation",
+        "Reservation contains duplicate seats.");
+
+    public static DomainError DuplicateGeneralAdmissionPoolsInReservation() => new(
+        "Ticketing.Reservation.DuplicateGeneralAdmissionPoolsInReservation",
+        "Reservation contains duplicate general admission pools.");
 }

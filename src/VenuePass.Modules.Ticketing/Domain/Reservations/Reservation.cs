@@ -25,18 +25,104 @@ public class Reservation : AggregateRoot<ReservationId>
 
     private Reservation() { }
 
-    private Reservation(ReservationId id, OfferId offerId, InventoryId inventoryId, DateTimeOffset expiresAt, Currency currency) : base(id)
+    private Reservation(
+        ReservationId id,
+        OfferId offerId,
+        InventoryId inventoryId,
+        IReadOnlyList<ReservationItem> items,
+        DateTimeOffset expiresAt,
+        Currency currency) : base(id)
     {
+        if (id.IsEmpty)
+        {
+            throw new ArgumentException("Reservation ID cannot be empty.", nameof(id));
+        }
+
+        if (offerId.IsEmpty)
+        {
+            throw new ArgumentException("Offer ID cannot be empty.", nameof(offerId));
+        }
+
+        if (inventoryId.IsEmpty)
+        {
+            throw new ArgumentException("Inventory ID cannot be empty.", nameof(inventoryId));
+        }
+
+        if (items.Count == 0)
+        {
+            throw new DomainRuleViolationException(
+                ReservationErrors.ReservationMustHaveItems());
+        }
+
         OfferId = offerId;
         InventoryId = inventoryId;
         ExpiresAt = expiresAt;
         Currency = currency;
+        _items.AddRange(items);
+        RecalculateTotal();
     }
 
-    public static Reservation Create(Offer offer, DateTimeOffset now, DateTimeOffset expiresAt)
+    public static Reservation Create(
+        Offer offer,
+        IEnumerable<ReservationItemInventorySeatInput> inventorySeats,
+        IEnumerable<ReservationItemGeneralAdmissionPoolInput> generalAdmissionPools,
+        DateTimeOffset now,
+        DateTimeOffset expiresAt)
     {
         ArgumentNullException.ThrowIfNull(offer);
 
+        var seatInputs = inventorySeats?.ToList()
+            ?? throw new ArgumentNullException(nameof(inventorySeats));
+
+        var poolInputs = generalAdmissionPools?.ToList()
+            ?? throw new ArgumentNullException(nameof(generalAdmissionPools));
+
+        if (seatInputs.Count == 0 && poolInputs.Count == 0)
+        {
+            throw new DomainRuleViolationException(
+                ReservationErrors.ReservationMustHaveItems());
+        }
+
+        EnsureOfferActiveAndOnSale(offer, now);
+        EnsureExpirationTimeInTheFuture(expiresAt, now);    
+        EnsureNoDuplicateSeats(seatInputs);
+        EnsureNoDuplicateGeneralAdmissionPools(poolInputs);
+
+        var items = new List<ReservationItem>();
+
+        foreach (var seatInput in seatInputs)
+        {
+            var reservationItem = ReservationItem.Create(offer, seatInput);
+            items.Add(reservationItem);
+        }
+
+        foreach (var poolInput in poolInputs)
+        {
+            var reservationItem = ReservationItem.Create(offer, poolInput);
+            items.Add(reservationItem);
+        }
+
+        return new Reservation(
+            id: ReservationId.Create(),
+            offerId: offer.Id,
+            inventoryId: offer.InventoryId,
+            expiresAt: expiresAt,
+            currency: offer.Currency,
+            items: items
+        );
+    }
+
+    private static void EnsureExpirationTimeInTheFuture(DateTimeOffset expiresAt, DateTimeOffset now)
+    {
+        if (expiresAt <= now)
+        {
+            throw new DomainRuleViolationException(
+                ReservationErrors.ExpirationTimeMustBeInTheFuture());
+        }
+    }
+
+    private static void EnsureOfferActiveAndOnSale(Offer offer, DateTimeOffset now)
+    {
         if (offer.Status != OfferStatus.Active)
         {
             throw new DomainRuleViolationException(
@@ -48,69 +134,6 @@ public class Reservation : AggregateRoot<ReservationId>
             throw new DomainRuleViolationException(
                 ReservationErrors.OfferNotOnSale());
         }
-
-        if (expiresAt <= now)
-        {
-            throw new DomainRuleViolationException(
-                ReservationErrors.ExpirationTimeMustBeInTheFuture());
-        }
-
-        return new Reservation(
-            id: ReservationId.Create(),
-            offerId: offer.Id,
-            inventoryId: offer.InventoryId,
-            expiresAt: expiresAt,
-            currency: offer.Currency
-        );
-    }
-
-    public void AddSeat(Offer offer, InventorySeatId inventorySeatId, DateTimeOffset now)
-    {
-        ArgumentNullException.ThrowIfNull(offer);
-
-        if (offer.Id != OfferId)
-        {
-            throw new ArgumentException(
-                "The provided offer does not match the reservation's offer.",
-                nameof(offer));
-        }
-
-        EnsureReservedStatus();
-        EnsureNotExpired(now);
-
-        if (_items.Any(item => item.InventorySeatId == inventorySeatId))
-        {
-            throw new DomainRuleViolationException(
-                ReservationErrors.DuplicateSeatInReservation(inventorySeatId));
-        }
- 
-        var reservationItem = ReservationItem.CreateForSeat(offer, inventorySeatId);
-        _items.Add(reservationItem);
-        RecalculateTotal();
-    }
-
-    public void AddGeneralAdmission(Offer offer, GeneralAdmissionPoolId poolId, Quantity quantity, DateTimeOffset now)
-    {
-        ArgumentNullException.ThrowIfNull(offer);
-
-        if (offer.Id != OfferId)
-        {
-            throw new ArgumentException(
-                "The provided offer does not match the reservation's offer.",
-                nameof(offer));
-        }
-
-        EnsureReservedStatus();
-        EnsureNotExpired(now);
-
-        if (_items.Any(item => item.GeneralAdmissionPoolId == poolId))
-        {
-            throw new DomainRuleViolationException(
-                ReservationErrors.DuplicateGeneralAdmissionPoolInReservation(poolId));
-        }
-        var reservationItem = ReservationItem.CreateForGeneralAdmission(offer, poolId, quantity);
-        _items.Add(reservationItem);
-        RecalculateTotal();
     }
 
     public void Cancel()
@@ -166,7 +189,27 @@ public class Reservation : AggregateRoot<ReservationId>
         if (_items.Count == 0)
         {
             throw new DomainRuleViolationException(
-                ReservationErrors.ReservationMustHaveItems(Id));
+                ReservationErrors.ReservationMustHaveItems());
+        }
+    }
+
+    private static void EnsureNoDuplicateSeats(IReadOnlyList<ReservationItemInventorySeatInput> inventorySeats)
+    {
+        var seatIds = inventorySeats.Select(i => i.InventorySeatId).ToList();
+        if (seatIds.Count != seatIds.Distinct().Count())
+        {
+            throw new DomainRuleViolationException(
+                ReservationErrors.DuplicateSeatsInReservation());
+        }
+    }
+
+    private static void EnsureNoDuplicateGeneralAdmissionPools(IReadOnlyList<ReservationItemGeneralAdmissionPoolInput> generalAdmissionPools)
+    {
+        var poolIds = generalAdmissionPools.Select(i => i.GeneralAdmissionPoolId).ToList();
+        if (poolIds.Count != poolIds.Distinct().Count())
+        {
+            throw new DomainRuleViolationException(
+                ReservationErrors.DuplicateGeneralAdmissionPoolsInReservation());
         }
     }
 }
@@ -179,137 +222,6 @@ public readonly record struct ReservationId(Guid Value)
     public override string ToString() => Value.ToString();
 }
 
-public class ReservationItem : Entity<ReservationItemId>
-{
-    public ReservationItemType Type { get; private set; }
-    public PriceZoneId PriceZoneId { get; private set; }
-    
-    public InventorySeatId? InventorySeatId { get; private set; }
-
-    public GeneralAdmissionPoolId? GeneralAdmissionPoolId { get; private set; }
-
-    public Amount UnitPrice { get; private set; }
-
-    public Quantity Quantity { get; private set; }
-
-    public Amount Total { get; private set; }
-
-    private ReservationItem() { }
-
-    private ReservationItem(ReservationItemId id, ReservationItemType type, PriceZoneId priceZoneId, InventorySeatId? inventorySeatId, GeneralAdmissionPoolId? generalAdmissionPoolId, Amount unitPrice, Quantity quantity) : base(id)
-    {
-        if (id.IsEmpty)
-        {
-            throw new ArgumentException("Reservation item ID cannot be empty.", nameof(id));
-        }
-
-        if (priceZoneId.IsEmpty)
-        {
-            throw new ArgumentException("Price zone ID cannot be empty.", nameof(priceZoneId));
-        }
-
-        if (type != ReservationItemType.Seat && type != ReservationItemType.GeneralAdmissionPool)
-        {
-            throw new ArgumentException("Invalid reservation item type.", nameof(type));
-        }
-
-        if (type == ReservationItemType.Seat)
-        {
-            if (inventorySeatId is null || inventorySeatId.Value.IsEmpty)
-            {
-                throw new ArgumentException("Inventory seat ID is required for seat reservation item.");
-            }
-
-            if (generalAdmissionPoolId is not null)
-            {
-                throw new ArgumentException("Seat reservation item cannot have a general admission pool ID.");
-            }
-
-            if (quantity.Value != 1)
-            {
-                throw new ArgumentException("Seat reservation item quantity must be 1.", nameof(quantity));
-            }
-        }
-
-        if (type == ReservationItemType.GeneralAdmissionPool)
-        {
-            if (generalAdmissionPoolId is null || generalAdmissionPoolId.Value.IsEmpty)
-            {
-                throw new ArgumentException("General admission pool ID is required for GA reservation item.");
-            }
-
-            if (inventorySeatId is not null)
-            {
-                throw new ArgumentException("GA reservation item cannot have an inventory seat ID.");
-            }
-        }
-
-        Type = type;
-        PriceZoneId = priceZoneId;
-        InventorySeatId = inventorySeatId;
-        GeneralAdmissionPoolId = generalAdmissionPoolId;
-        UnitPrice = unitPrice;
-        Quantity = quantity;
-        Total = new Amount(unitPrice.Value * quantity.Value);
-    }
-
-    internal static ReservationItem CreateForSeat(Offer offer, InventorySeatId inventorySeatId)
-    {
-        ArgumentNullException.ThrowIfNull(offer);
-
-        foreach (var priceZone in offer.PriceZones)
-        {
-            if (priceZone.InventorySeatItems.Any(i => i.InventorySeatId == inventorySeatId))
-            {
-                return new ReservationItem(
-                    id: ReservationItemId.Create(),
-                    type: ReservationItemType.Seat,
-                    priceZoneId: priceZone.Id,
-                    inventorySeatId: inventorySeatId,
-                    generalAdmissionPoolId: null,
-                    unitPrice:  priceZone.Price,
-                    quantity: new Quantity(1)
-                );
-            }
-        }
-
-        throw new DomainRuleViolationException(
-            ReservationErrors.SeatNotCoveredByOffer(inventorySeatId));
-    }
-
-    internal static ReservationItem CreateForGeneralAdmission(Offer offer, GeneralAdmissionPoolId generalAdmissionPoolId, Quantity quantity)
-    {
-        ArgumentNullException.ThrowIfNull(offer);
-
-        foreach (var priceZone in offer.PriceZones)
-        {
-            if (priceZone.GeneralAdmissionPoolItems.Any(i => i.GeneralAdmissionPoolId == generalAdmissionPoolId))
-            {
-                return new ReservationItem(
-                    id: ReservationItemId.Create(),
-                    type: ReservationItemType.GeneralAdmissionPool,
-                    priceZoneId: priceZone.Id,
-                    inventorySeatId: null,
-                    generalAdmissionPoolId: generalAdmissionPoolId,
-                    unitPrice: priceZone.Price,
-                    quantity: quantity
-                );
-            }
-         }
-
-        throw new DomainRuleViolationException(
-            ReservationErrors.GeneralAdmissionPoolNotCoveredByOffer(generalAdmissionPoolId));
-    }
-    
-}
-
-public readonly record struct ReservationItemId(Guid Value)
-{
-    public static ReservationItemId Create() => new(Guid.CreateVersion7());
-    public static implicit operator Guid(ReservationItemId id) => id.Value;
-    public bool IsEmpty => Value == Guid.Empty;
-    public override string ToString() => Value.ToString();
-}
 
 public enum ReservationStatus
 {
@@ -317,10 +229,4 @@ public enum ReservationStatus
     Cancelled = 2,
     Expired = 3,
     Completed = 4
-}
-
-public enum ReservationItemType
-{
-    Seat = 1,
-    GeneralAdmissionPool = 2
 }
