@@ -7,6 +7,246 @@ using Xunit;
 
 namespace VenuePass.Modules.Ticketing.Tests.Domain.Inventories;
 
+public sealed class InventoryAggregateReservationTests
+{
+    private static Inventory CreateInventory()
+    {
+        var manifest = new InventoryManifest(
+            sections:
+            [
+                new InventorySectionInput("Main",
+                [
+                    new InventoryRowInput("A",
+                    [
+                        new InventorySeatInput(Guid.CreateVersion7(), "1"),
+                        new InventorySeatInput(Guid.CreateVersion7(), "2"),
+                        new InventorySeatInput(Guid.CreateVersion7(), "3")
+                    ])
+                ])
+            ],
+            generalAdmissionAreas:
+            [
+                new InventoryGeneralAdmissionAreaInput(Guid.CreateVersion7(), "Floor", 100)
+            ]);
+
+        return Inventory.CreateFromManifest(PublishedEventReferenceId.Create(), manifest);
+    }
+
+    // ── ReserveSeats ──────────────────────────────────────────────────────────
+
+    [Fact]
+    public void ReserveSeats_WhenSingleSeatAvailable_TransitionsToReserved()
+    {
+        var inventory = CreateInventory();
+        var seatId = inventory.Seats[0].Id;
+
+        inventory.ReserveSeats([seatId]);
+
+        Assert.Equal(SeatAvailability.Reserved, inventory.Seats[0].Availability);
+    }
+
+    [Fact]
+    public void ReserveSeats_WhenMultipleSeatsAvailable_TransitionsAllToReserved()
+    {
+        var inventory = CreateInventory();
+        var seatIds = inventory.Seats.Select(s => s.Id).Take(2).ToList();
+
+        inventory.ReserveSeats(seatIds);
+
+        foreach (var id in seatIds)
+        {
+            Assert.Equal(SeatAvailability.Reserved, inventory.Seats.Single(s => s.Id == id).Availability);
+        }
+    }
+
+    [Fact]
+    public void ReserveSeats_WhenSeatAlreadyReserved_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var seatId = inventory.Seats[0].Id;
+        inventory.ReserveSeats([seatId]);
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            inventory.ReserveSeats([seatId]));
+
+        Assert.Equal(InventoryErrors.SeatNotAvailable(seatId).Code, exception.Code);
+    }
+
+    [Fact]
+    public void ReserveSeats_WhenSeatSold_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var seatId = inventory.Seats[0].Id;
+        inventory.ReserveSeats([seatId]);
+        inventory.SellSeats([seatId]);
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            inventory.ReserveSeats([seatId]));
+
+        Assert.Equal(InventoryErrors.SeatNotAvailable(seatId).Code, exception.Code);
+    }
+
+    [Fact]
+    public void ReserveSeats_WhenSeatNotFound_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var unknownSeatId = new InventorySeatId(Guid.CreateVersion7());
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            inventory.ReserveSeats([unknownSeatId]));
+
+        Assert.Equal(InventoryErrors.SomeSeatsNotFound([unknownSeatId]).Code, exception.Code);
+    }
+
+    [Fact]
+    public void ReserveSeats_WhenListIsEmpty_ThrowsArgumentException()
+    {
+        var inventory = CreateInventory();
+
+        Assert.Throws<ArgumentException>(() => inventory.ReserveSeats([]));
+    }
+
+    [Fact]
+    public void ReserveSeats_WhenListContainsDuplicates_ThrowsArgumentException()
+    {
+        var inventory = CreateInventory();
+        var seatId = inventory.Seats[0].Id;
+
+        Assert.Throws<ArgumentException>(() => inventory.ReserveSeats([seatId, seatId]));
+    }
+
+    // ── ReleaseSeats ──────────────────────────────────────────────────────────
+
+    [Fact]
+    public void ReleaseSeats_WhenReserved_TransitionsToAvailable()
+    {
+        var inventory = CreateInventory();
+        var seatId = inventory.Seats[0].Id;
+        inventory.ReserveSeats([seatId]);
+
+        inventory.ReleaseSeats([seatId]);
+
+        Assert.Equal(SeatAvailability.Available, inventory.Seats[0].Availability);
+    }
+
+    [Fact]
+    public void ReleaseSeats_WhenSeatNotReserved_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var seatId = inventory.Seats[0].Id;
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            inventory.ReleaseSeats([seatId]));
+
+        Assert.Equal(InventoryErrors.SeatNotReserved(seatId).Code, exception.Code);
+    }
+
+    [Fact]
+    public void ReleaseSeats_WhenSeatSold_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var seatId = inventory.Seats[0].Id;
+        inventory.ReserveSeats([seatId]);
+        inventory.SellSeats([seatId]);
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            inventory.ReleaseSeats([seatId]));
+
+        Assert.Equal(InventoryErrors.SeatNotReserved(seatId).Code, exception.Code);
+    }
+
+    // ── SellSeats ─────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void SellSeats_WhenReserved_TransitionsToSold()
+    {
+        var inventory = CreateInventory();
+        var seatId = inventory.Seats[0].Id;
+        inventory.ReserveSeats([seatId]);
+
+        inventory.SellSeats([seatId]);
+
+        Assert.Equal(SeatAvailability.Sold, inventory.Seats[0].Availability);
+    }
+
+    [Fact]
+    public void SellSeats_WhenSeatNotReserved_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var seatId = inventory.Seats[0].Id;
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            inventory.SellSeats([seatId]));
+
+        Assert.Equal(InventoryErrors.SeatNotReserved(seatId).Code, exception.Code);
+    }
+
+    // ── ReserveGeneralAdmissionPool ───────────────────────────────────────────
+
+    [Fact]
+    public void ReserveGeneralAdmissionPool_WhenQuantityAvailable_DecreasesAvailableCount()
+    {
+        var inventory = CreateInventory();
+        var poolId = inventory.Pools[0].Id;
+
+        inventory.ReserveGeneralAdmissionPool(poolId, new Quantity(30));
+
+        Assert.Equal(70, inventory.Pools[0].AvailableCount);
+        Assert.Equal(30, inventory.Pools[0].ReservedCount);
+    }
+
+    [Fact]
+    public void ReserveGeneralAdmissionPool_WhenQuantityExceedsAvailable_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var poolId = inventory.Pools[0].Id;
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            inventory.ReserveGeneralAdmissionPool(poolId, new Quantity(101)));
+
+        Assert.Equal(InventoryErrors.NotEnoughGeneralAdmissionPoolCapacity(poolId, 101, 100).Code, exception.Code);
+    }
+
+    [Fact]
+    public void ReserveGeneralAdmissionPool_WhenPoolNotFound_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var unknownPoolId = new GeneralAdmissionPoolId(Guid.CreateVersion7());
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            inventory.ReserveGeneralAdmissionPool(unknownPoolId, new Quantity(1)));
+
+        Assert.Equal(InventoryErrors.GeneralAdmissionPoolNotFound(unknownPoolId).Code, exception.Code);
+    }
+
+    // ── ReleaseGeneralAdmissionPool ───────────────────────────────────────────
+
+    [Fact]
+    public void ReleaseGeneralAdmissionPool_WhenReservedQuantityExists_RestoresAvailableCount()
+    {
+        var inventory = CreateInventory();
+        var poolId = inventory.Pools[0].Id;
+        inventory.ReserveGeneralAdmissionPool(poolId, new Quantity(40));
+
+        inventory.ReleaseGeneralAdmissionPool(poolId, new Quantity(40));
+
+        Assert.Equal(100, inventory.Pools[0].AvailableCount);
+        Assert.Equal(0, inventory.Pools[0].ReservedCount);
+    }
+
+    [Fact]
+    public void ReleaseGeneralAdmissionPool_WhenPoolNotFound_ThrowsDomainRuleViolation()
+    {
+        var inventory = CreateInventory();
+        var unknownPoolId = new GeneralAdmissionPoolId(Guid.CreateVersion7());
+
+        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+            inventory.ReleaseGeneralAdmissionPool(unknownPoolId, new Quantity(1)));
+
+        Assert.Equal(InventoryErrors.GeneralAdmissionPoolNotFound(unknownPoolId).Code, exception.Code);
+    }
+}
+
 public sealed class InventorySeatReservationTests
 {
     [Fact]
