@@ -1,4 +1,5 @@
 using VenuePass.BuildingBlocks.Domain;
+using VenuePass.Modules.Ticketing.Domain.Common;
 using VenuePass.Modules.Ticketing.Domain.Inventories;
 using VenuePass.Modules.Ticketing.Domain.Offers;
 using VenuePass.Modules.Ticketing.Domain.PublishedEvents;
