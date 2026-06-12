@@ -43,6 +43,40 @@ public sealed class InventorySeat : Entity<InventorySeatId>
             SeatAvailability.Available
         );
     }
+
+    internal void Reserve()
+    {
+        if (Availability != SeatAvailability.Available)
+        {
+            throw new DomainRuleViolationException(InventoryErrors.SeatNotAvailable(Id));
+        }
+
+        Availability = SeatAvailability.Reserved;
+    }
+
+    internal void Release()
+    {
+        if (Availability != SeatAvailability.Reserved)
+        {
+            throw new DomainRuleViolationException(InventoryErrors.SeatNotReserved(Id));
+        }
+
+        Availability = SeatAvailability.Available;
+    }
+
+    internal void Sell()
+    {
+        if (Availability != SeatAvailability.Reserved)
+        {
+            throw new DomainRuleViolationException(InventoryErrors.SeatNotReserved(Id));
+        }
+
+        Availability = SeatAvailability.Sold;
+    }
+
+    public bool IsAvailable => Availability == SeatAvailability.Available;
+
+    public bool IsReserved => Availability == SeatAvailability.Reserved;
 }
 
 public readonly record struct InventorySeatId(Guid Value)

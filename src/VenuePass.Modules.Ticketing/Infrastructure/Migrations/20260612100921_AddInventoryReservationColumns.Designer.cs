@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VenuePass.Modules.Ticketing.Infrastructure;
 
@@ -12,9 +13,11 @@ using VenuePass.Modules.Ticketing.Infrastructure;
 namespace VenuePass.Modules.Ticketing.Infrastructure.Migrations
 {
     [DbContext(typeof(TicketingDbContext))]
-    partial class TicketingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260612100921_AddInventoryReservationColumns")]
+    partial class AddInventoryReservationColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -115,57 +118,6 @@ namespace VenuePass.Modules.Ticketing.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("published_event_references", "ticketing");
-                });
-
-            modelBuilder.Entity("VenuePass.Modules.Ticketing.Domain.Reservations.Reservation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("id");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("nchar(3)")
-                        .HasColumnName("currency")
-                        .IsFixedLength();
-
-                    b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("datetimeoffset")
-                        .HasColumnName("expires_at");
-
-                    b.Property<Guid>("InventoryId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("inventory_id");
-
-                    b.Property<Guid>("OfferId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("offer_id");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion")
-                        .HasColumnName("row_version");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)")
-                        .HasColumnName("status");
-
-                    b.Property<decimal>("Total")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("total");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InventoryId");
-
-                    b.HasIndex("OfferId");
-
-                    b.ToTable("reservations", "ticketing");
                 });
 
             modelBuilder.Entity("VenuePass.Modules.Ticketing.Domain.Inventories.Inventory", b =>
@@ -363,74 +315,6 @@ namespace VenuePass.Modules.Ticketing.Infrastructure.Migrations
                         });
 
                     b.Navigation("PriceZones");
-                });
-
-            modelBuilder.Entity("VenuePass.Modules.Ticketing.Domain.Reservations.Reservation", b =>
-                {
-                    b.HasOne("VenuePass.Modules.Ticketing.Domain.Inventories.Inventory", null)
-                        .WithMany()
-                        .HasForeignKey("InventoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("VenuePass.Modules.Ticketing.Domain.Offers.Offer", null)
-                        .WithMany()
-                        .HasForeignKey("OfferId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.OwnsMany("VenuePass.Modules.Ticketing.Domain.Reservations.ReservationItem", "Items", b1 =>
-                        {
-                            b1.Property<Guid>("Id")
-                                .HasColumnType("uniqueidentifier")
-                                .HasColumnName("id");
-
-                            b1.Property<Guid?>("GeneralAdmissionPoolId")
-                                .HasColumnType("uniqueidentifier")
-                                .HasColumnName("general_admission_pool_id");
-
-                            b1.Property<Guid?>("InventorySeatId")
-                                .HasColumnType("uniqueidentifier")
-                                .HasColumnName("inventory_seat_id");
-
-                            b1.Property<Guid>("PriceZoneId")
-                                .HasColumnType("uniqueidentifier")
-                                .HasColumnName("price_zone_id");
-
-                            b1.Property<int>("Quantity")
-                                .HasColumnType("int")
-                                .HasColumnName("quantity");
-
-                            b1.Property<decimal>("Total")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("decimal(18,2)")
-                                .HasColumnName("total");
-
-                            b1.Property<string>("Type")
-                                .IsRequired()
-                                .HasMaxLength(32)
-                                .HasColumnType("nvarchar(32)")
-                                .HasColumnName("type");
-
-                            b1.Property<decimal>("UnitPrice")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("decimal(18,2)")
-                                .HasColumnName("unit_price");
-
-                            b1.Property<Guid>("reservation_id")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.HasKey("Id");
-
-                            b1.HasIndex("reservation_id");
-
-                            b1.ToTable("reservation_items", "ticketing");
-
-                            b1.WithOwner()
-                                .HasForeignKey("reservation_id");
-                        });
-
-                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

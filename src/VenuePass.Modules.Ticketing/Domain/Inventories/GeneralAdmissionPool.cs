@@ -2,6 +2,7 @@ using System.Globalization;
 
 using VenuePass.BuildingBlocks.Domain;
 using VenuePass.BuildingBlocks.Extensions;
+using VenuePass.Modules.Ticketing.Domain.Common;
 
 namespace VenuePass.Modules.Ticketing.Domain.Inventories;
 
@@ -10,7 +11,12 @@ public sealed class GeneralAdmissionPool : Entity<GeneralAdmissionPoolId>
     public Guid SourceAreaId { get; private set; }
     public GeneralAdmissionPoolName Name { get; private set; } = null!;
     public GeneralAdmissionPoolCapacity Capacity { get; private set; } = null!;
-    public int AvailableCount { get; private set; }
+
+    public int ReservedCount { get; private set; }
+
+    public int SoldCount { get; private set; }
+
+    public int AvailableCount => Capacity.Value - ReservedCount - SoldCount;
 
     private GeneralAdmissionPool() { }
 
@@ -18,14 +24,14 @@ public sealed class GeneralAdmissionPool : Entity<GeneralAdmissionPoolId>
         GeneralAdmissionPoolId id,
         Guid sourceAreaId,
         GeneralAdmissionPoolName name,
-        GeneralAdmissionPoolCapacity capacity,
-        int availableCount)
+        GeneralAdmissionPoolCapacity capacity)
         : base(id)
     {
         SourceAreaId = sourceAreaId;
         Name = name;
         Capacity = capacity;
-        AvailableCount = availableCount;
+        ReservedCount = 0;
+        SoldCount = 0;
     }
 
     public static GeneralAdmissionPool Create(
@@ -37,9 +43,60 @@ public sealed class GeneralAdmissionPool : Entity<GeneralAdmissionPoolId>
             id: GeneralAdmissionPoolId.Create(),
             sourceAreaId: sourceAreaId,
             name: new GeneralAdmissionPoolName(name),
-            capacity: new GeneralAdmissionPoolCapacity(capacity),
-            availableCount: capacity
+            capacity: new GeneralAdmissionPoolCapacity(capacity)
         );
+    }
+
+    internal void Reserve(Quantity quantity)
+    {
+        if (quantity.Value <= 0)
+        {
+            throw new ArgumentException("Quantity must be greater than zero.", nameof(quantity));
+        }
+
+        if (quantity.Value > AvailableCount)
+        {
+            throw new DomainRuleViolationException(
+                InventoryErrors.NotEnoughGeneralAdmissionPoolCapacity(Id, quantity.Value, AvailableCount));
+        }
+
+        ReservedCount += quantity.Value;
+    }
+
+    internal void Release(Quantity quantity)
+    {
+        if (quantity.Value <= 0)
+        {
+            throw new ArgumentException("Quantity must be greater than zero.", nameof(quantity));
+        }
+
+        if (quantity.Value > ReservedCount)
+        {
+            throw new DomainRuleViolationException(
+                InventoryErrors.NotEnoughReservedGeneralAdmissionPoolQuantity(
+                    Id,
+                    quantity.Value,
+                    ReservedCount));
+        }
+
+        ReservedCount -= quantity.Value;
+    }
+
+    internal void Sell(Quantity quantity)
+    {
+        if (quantity.Value <= 0)
+        {
+            throw new ArgumentException("Quantity must be greater than zero.", nameof(quantity));
+        }
+
+        if (quantity.Value > ReservedCount)
+        {
+            throw new DomainRuleViolationException(
+                InventoryErrors.NotEnoughGeneralAdmissionPoolCapacity(Id, quantity.Value, ReservedCount));
+        }
+
+        SoldCount += quantity.Value;
+        ReservedCount -= quantity.Value;
     }
 }
 

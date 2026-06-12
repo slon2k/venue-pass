@@ -83,6 +83,10 @@ internal sealed class InventoryConfiguration : IEntityTypeConfiguration<Inventor
                 .HasConversion<string>()
                 .HasColumnName("availability")
                 .IsRequired();
+
+            s.Property<byte[]>("RowVersion")
+                .IsRowVersion()
+                .HasColumnName("row_version");
         });
 
         builder.OwnsMany(i => i.Pools, p =>
@@ -120,9 +124,19 @@ internal sealed class InventoryConfiguration : IEntityTypeConfiguration<Inventor
                 .HasColumnName("capacity")
                 .IsRequired();
 
-            p.Property(p => p.AvailableCount)
-                .HasColumnName("available_count")
+            p.Property(p => p.ReservedCount)
+                .HasColumnName("reserved_count")
                 .IsRequired();
+
+            p.Property(p => p.SoldCount)
+                .HasColumnName("sold_count")
+                .IsRequired();
+
+            p.Ignore(p => p.AvailableCount);
+
+            p.Property<byte[]>("RowVersion")
+                .IsRowVersion()
+                .HasColumnName("row_version");
         });
 
         builder.Navigation(i => i.Seats)
