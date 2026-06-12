@@ -4,6 +4,7 @@ using VenuePass.BuildingBlocks.Domain;
 using VenuePass.Modules.Ticketing.Domain.Inventories;
 using VenuePass.Modules.Ticketing.Domain.Offers;
 using VenuePass.Modules.Ticketing.Domain.PublishedEvents;
+using VenuePass.Modules.Ticketing.Domain.Reservations;
 
 namespace VenuePass.Modules.Ticketing.Infrastructure;
 
@@ -14,6 +15,7 @@ public sealed class TicketingDbContext(DbContextOptions<TicketingDbContext> opti
     public DbSet<PublishedEventReference> PublishedEventReferences => Set<PublishedEventReference>();
     public DbSet<Inventory> Inventories => Set<Inventory>();
     public DbSet<Offer> Offers => Set<Offer>();
+    public DbSet<Reservation> Reservations => Set<Reservation>();
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
