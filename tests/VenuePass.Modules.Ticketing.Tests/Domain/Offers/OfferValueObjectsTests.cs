@@ -1,3 +1,4 @@
+using VenuePass.Modules.Ticketing.Domain.Common;
 using VenuePass.Modules.Ticketing.Domain.Offers;
 
 using Xunit;
