@@ -120,9 +120,15 @@ internal sealed class InventoryConfiguration : IEntityTypeConfiguration<Inventor
                 .HasColumnName("capacity")
                 .IsRequired();
 
-            p.Property(p => p.AvailableCount)
-                .HasColumnName("available_count")
+            p.Property(p => p.ReservedCount)
+                .HasColumnName("reserved_count")
                 .IsRequired();
+
+            p.Property(p => p.SoldCount)
+                .HasColumnName("sold_count")
+                .IsRequired();
+
+            p.Ignore(p => p.AvailableCount);
         });
 
         builder.Navigation(i => i.Seats)
