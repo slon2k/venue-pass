@@ -228,12 +228,12 @@ public sealed class ReservationTests
     // ── Create (offer validation) ─────────────────────────────────────────────
 
     [Fact]
-    public void Create_WhenOfferIsNotActive_ThrowsDomainRuleViolation()
+    public void Create_WhenOfferIsNotActive_ThrowsDomainConflict()
     {
         var inventory = CreateInventory();
         var offer = CreateDraftOffer(inventory); // not activated
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+        var exception = Assert.Throws<DomainConflictException>(() =>
             Reservation.Create(
                 offer,
                 [new ReservationItemInventorySeatInput(inventory.Seats[0].Id)],
@@ -365,23 +365,23 @@ public sealed class ReservationTests
     }
 
     [Fact]
-    public void Cancel_WhenAlreadyCancelled_ThrowsDomainRuleViolation()
+    public void Cancel_WhenAlreadyCancelled_ThrowsDomainConflict()
     {
         var reservation = CreateReservation();
         reservation.Cancel();
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() => reservation.Cancel());
+        var exception = Assert.Throws<DomainConflictException>(() => reservation.Cancel());
 
         Assert.Equal(ReservationErrors.ReservationIsNotInReservedStatus(reservation.Id).Code, exception.Code);
     }
 
     [Fact]
-    public void Cancel_WhenCompleted_ThrowsDomainRuleViolation()
+    public void Cancel_WhenCompleted_ThrowsDomainConflict()
     {
         var reservation = CreateReservation();
         reservation.Complete(Now);
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() => reservation.Cancel());
+        var exception = Assert.Throws<DomainConflictException>(() => reservation.Cancel());
 
         Assert.Equal(ReservationErrors.ReservationIsNotInReservedStatus(reservation.Id).Code, exception.Code);
     }
@@ -400,24 +400,24 @@ public sealed class ReservationTests
     }
 
     [Fact]
-    public void Expire_WhenReservationHasNotExpiredYet_ThrowsDomainRuleViolation()
+    public void Expire_WhenReservationHasNotExpiredYet_ThrowsDomainConflict()
     {
         var reservation = CreateReservation();
         var beforeExpiry = ExpiresAt.AddSeconds(-1);
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() => reservation.Expire(beforeExpiry));
+        var exception = Assert.Throws<DomainConflictException>(() => reservation.Expire(beforeExpiry));
 
         Assert.Equal(ReservationErrors.ReservationNotExpiredYet(reservation.Id).Code, exception.Code);
     }
 
     [Fact]
-    public void Expire_WhenAlreadyCancelled_ThrowsDomainRuleViolation()
+    public void Expire_WhenAlreadyCancelled_ThrowsDomainConflict()
     {
         var reservation = CreateReservation();
         reservation.Cancel();
         var afterExpiry = ExpiresAt.AddSeconds(1);
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() => reservation.Expire(afterExpiry));
+        var exception = Assert.Throws<DomainConflictException>(() => reservation.Expire(afterExpiry));
 
         Assert.Equal(ReservationErrors.ReservationIsNotInReservedStatus(reservation.Id).Code, exception.Code);
     }
@@ -436,23 +436,23 @@ public sealed class ReservationTests
     }
 
     [Fact]
-    public void Complete_WhenReservationHasExpired_ThrowsDomainRuleViolation()
+    public void Complete_WhenReservationHasExpired_ThrowsDomainConflict()
     {
         var reservation = CreateReservation();
         var afterExpiry = ExpiresAt.AddSeconds(1);
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() => reservation.Complete(afterExpiry));
+        var exception = Assert.Throws<DomainConflictException>(() => reservation.Complete(afterExpiry));
 
         Assert.Equal(ReservationErrors.ReservationAlreadyExpired(reservation.Id).Code, exception.Code);
     }
 
     [Fact]
-    public void Complete_WhenCancelled_ThrowsDomainRuleViolation()
+    public void Complete_WhenCancelled_ThrowsDomainConflict()
     {
         var reservation = CreateReservation();
         reservation.Cancel();
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() => reservation.Complete(Now));
+        var exception = Assert.Throws<DomainConflictException>(() => reservation.Complete(Now));
 
         Assert.Equal(ReservationErrors.ReservationIsNotInReservedStatus(reservation.Id).Code, exception.Code);
     }

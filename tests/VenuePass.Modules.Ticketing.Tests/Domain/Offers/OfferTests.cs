@@ -68,7 +68,7 @@ public sealed class OfferTests
     }
 
     [Fact]
-    public void ConfigurePriceLevel_WhenOfferIsNotDraft_ThrowsDomainRuleViolation()
+    public void ConfigurePriceLevel_WhenOfferIsNotDraft_ThrowsDomainConflict()
     {
         var inventory = CreateInventory();
         var offer = CreateOffer(inventory.Id);
@@ -80,7 +80,7 @@ public sealed class OfferTests
             []);
         offer.Activate();
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+        var exception = Assert.Throws<DomainConflictException>(() =>
             offer.ConfigurePriceZone(
                 inventory,
                 new PriceZoneName("VIP"),
@@ -229,7 +229,7 @@ public sealed class OfferTests
     }
 
     [Fact]
-    public void SetPriceZones_WhenOfferIsNotDraft_ThrowsDomainRuleViolation()
+    public void SetPriceZones_WhenOfferIsNotDraft_ThrowsDomainConflict()
     {
         var inventory = CreateInventory();
         var offer = CreateOffer(inventory.Id);
@@ -241,7 +241,7 @@ public sealed class OfferTests
             []);
         offer.Activate();
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+        var exception = Assert.Throws<DomainConflictException>(() =>
             offer.SetPriceZones(inventory,
             [
                 new PriceZoneInput(

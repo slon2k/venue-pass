@@ -213,7 +213,7 @@ public sealed class Offer : AggregateRoot<OfferId>
     {
         if (Status != OfferStatus.Draft)
         {
-            throw new DomainRuleViolationException(OfferErrors.CanOnlyActivateOfferInDraftStatus());
+            throw new DomainConflictException(OfferErrors.CanOnlyActivateOfferInDraftStatus());
         }
 
         if (_priceZones.Count == 0)
@@ -236,7 +236,7 @@ public sealed class Offer : AggregateRoot<OfferId>
     {
         if (Status != OfferStatus.Draft)
         {
-            throw new DomainRuleViolationException(OfferErrors.CanOnlySetPriceZonesInDraftStatus());
+            throw new DomainConflictException(OfferErrors.CanOnlySetPriceZonesInDraftStatus());
         }
     }
 }

@@ -60,27 +60,27 @@ public sealed class InventoryAggregateReservationTests
     }
 
     [Fact]
-    public void ReserveSeats_WhenSeatAlreadyReserved_ThrowsDomainRuleViolation()
+    public void ReserveSeats_WhenSeatAlreadyReserved_ThrowsDomainConflict()
     {
         var inventory = CreateInventory();
         var seatId = inventory.Seats[0].Id;
         inventory.ReserveSeats([seatId]);
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+        var exception = Assert.Throws<DomainConflictException>(() =>
             inventory.ReserveSeats([seatId]));
 
         Assert.Equal(InventoryErrors.SeatNotAvailable(seatId).Code, exception.Code);
     }
 
     [Fact]
-    public void ReserveSeats_WhenSeatSold_ThrowsDomainRuleViolation()
+    public void ReserveSeats_WhenSeatSold_ThrowsDomainConflict()
     {
         var inventory = CreateInventory();
         var seatId = inventory.Seats[0].Id;
         inventory.ReserveSeats([seatId]);
         inventory.SellSeats([seatId]);
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+        var exception = Assert.Throws<DomainConflictException>(() =>
             inventory.ReserveSeats([seatId]));
 
         Assert.Equal(InventoryErrors.SeatNotAvailable(seatId).Code, exception.Code);
@@ -130,26 +130,26 @@ public sealed class InventoryAggregateReservationTests
     }
 
     [Fact]
-    public void ReleaseSeats_WhenSeatNotReserved_ThrowsDomainRuleViolation()
+    public void ReleaseSeats_WhenSeatNotReserved_ThrowsDomainConflict()
     {
         var inventory = CreateInventory();
         var seatId = inventory.Seats[0].Id;
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+        var exception = Assert.Throws<DomainConflictException>(() =>
             inventory.ReleaseSeats([seatId]));
 
         Assert.Equal(InventoryErrors.SeatNotReserved(seatId).Code, exception.Code);
     }
 
     [Fact]
-    public void ReleaseSeats_WhenSeatSold_ThrowsDomainRuleViolation()
+    public void ReleaseSeats_WhenSeatSold_ThrowsDomainConflict()
     {
         var inventory = CreateInventory();
         var seatId = inventory.Seats[0].Id;
         inventory.ReserveSeats([seatId]);
         inventory.SellSeats([seatId]);
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+        var exception = Assert.Throws<DomainConflictException>(() =>
             inventory.ReleaseSeats([seatId]));
 
         Assert.Equal(InventoryErrors.SeatNotReserved(seatId).Code, exception.Code);
@@ -170,12 +170,12 @@ public sealed class InventoryAggregateReservationTests
     }
 
     [Fact]
-    public void SellSeats_WhenSeatNotReserved_ThrowsDomainRuleViolation()
+    public void SellSeats_WhenSeatNotReserved_ThrowsDomainConflict()
     {
         var inventory = CreateInventory();
         var seatId = inventory.Seats[0].Id;
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+        var exception = Assert.Throws<DomainConflictException>(() =>
             inventory.SellSeats([seatId]));
 
         Assert.Equal(InventoryErrors.SeatNotReserved(seatId).Code, exception.Code);
@@ -196,12 +196,12 @@ public sealed class InventoryAggregateReservationTests
     }
 
     [Fact]
-    public void ReserveGeneralAdmissionPool_WhenQuantityExceedsAvailable_ThrowsDomainRuleViolation()
+    public void ReserveGeneralAdmissionPool_WhenQuantityExceedsAvailable_ThrowsDomainConflict()
     {
         var inventory = CreateInventory();
         var poolId = inventory.Pools[0].Id;
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+        var exception = Assert.Throws<DomainConflictException>(() =>
             inventory.ReserveGeneralAdmissionPool(poolId, new Quantity(101)));
 
         Assert.Equal(InventoryErrors.NotEnoughGeneralAdmissionPoolCapacity(poolId, 101, 100).Code, exception.Code);
@@ -261,24 +261,24 @@ public sealed class InventorySeatReservationTests
     }
 
     [Fact]
-    public void Reserve_WhenAlreadyReserved_ThrowsDomainRuleViolation()
+    public void Reserve_WhenAlreadyReserved_ThrowsDomainConflict()
     {
         var seat = InventorySeat.Create(Guid.CreateVersion7(), "Main", "A", "1");
         seat.Reserve();
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() => seat.Reserve());
+        var exception = Assert.Throws<DomainConflictException>(() => seat.Reserve());
 
         Assert.Equal(InventoryErrors.SeatNotAvailable(seat.Id).Code, exception.Code);
     }
 
     [Fact]
-    public void Reserve_WhenAlreadySold_ThrowsDomainRuleViolation()
+    public void Reserve_WhenAlreadySold_ThrowsDomainConflict()
     {
         var seat = InventorySeat.Create(Guid.CreateVersion7(), "Main", "A", "1");
         seat.Reserve();
         seat.Sell();
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() => seat.Reserve());
+        var exception = Assert.Throws<DomainConflictException>(() => seat.Reserve());
 
         Assert.Equal(InventoryErrors.SeatNotAvailable(seat.Id).Code, exception.Code);
     }
@@ -295,23 +295,23 @@ public sealed class InventorySeatReservationTests
     }
 
     [Fact]
-    public void Release_WhenNotReserved_ThrowsDomainRuleViolation()
+    public void Release_WhenNotReserved_ThrowsDomainConflict()
     {
         var seat = InventorySeat.Create(Guid.CreateVersion7(), "Main", "A", "1");
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() => seat.Release());
+        var exception = Assert.Throws<DomainConflictException>(() => seat.Release());
 
         Assert.Equal(InventoryErrors.SeatNotReserved(seat.Id).Code, exception.Code);
     }
 
     [Fact]
-    public void Release_WhenSold_ThrowsDomainRuleViolation()
+    public void Release_WhenSold_ThrowsDomainConflict()
     {
         var seat = InventorySeat.Create(Guid.CreateVersion7(), "Main", "A", "1");
         seat.Reserve();
         seat.Sell();
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() => seat.Release());
+        var exception = Assert.Throws<DomainConflictException>(() => seat.Release());
 
         Assert.Equal(InventoryErrors.SeatNotReserved(seat.Id).Code, exception.Code);
     }
@@ -328,23 +328,23 @@ public sealed class InventorySeatReservationTests
     }
 
     [Fact]
-    public void Sell_WhenNotReserved_ThrowsDomainRuleViolation()
+    public void Sell_WhenNotReserved_ThrowsDomainConflict()
     {
         var seat = InventorySeat.Create(Guid.CreateVersion7(), "Main", "A", "1");
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() => seat.Sell());
+        var exception = Assert.Throws<DomainConflictException>(() => seat.Sell());
 
         Assert.Equal(InventoryErrors.SeatNotReserved(seat.Id).Code, exception.Code);
     }
 
     [Fact]
-    public void Sell_WhenAlreadySold_ThrowsDomainRuleViolation()
+    public void Sell_WhenAlreadySold_ThrowsDomainConflict()
     {
         var seat = InventorySeat.Create(Guid.CreateVersion7(), "Main", "A", "1");
         seat.Reserve();
         seat.Sell();
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() => seat.Sell());
+        var exception = Assert.Throws<DomainConflictException>(() => seat.Sell());
 
         Assert.Equal(InventoryErrors.SeatNotReserved(seat.Id).Code, exception.Code);
     }
@@ -404,11 +404,11 @@ public sealed class GeneralAdmissionPoolReservationTests
     }
 
     [Fact]
-    public void Reserve_WhenQuantityExceedsAvailable_ThrowsDomainRuleViolation()
+    public void Reserve_WhenQuantityExceedsAvailable_ThrowsDomainConflict()
     {
         var pool = GeneralAdmissionPool.Create(Guid.CreateVersion7(), "Floor", 100);
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+        var exception = Assert.Throws<DomainConflictException>(() =>
             pool.Reserve(new Quantity(101)));
 
         Assert.Equal(InventoryErrors.NotEnoughGeneralAdmissionPoolCapacity(pool.Id, 101, 100).Code, exception.Code);
@@ -452,23 +452,23 @@ public sealed class GeneralAdmissionPoolReservationTests
     }
 
     [Fact]
-    public void Release_WhenQuantityExceedsReserved_ThrowsDomainRuleViolation()
+    public void Release_WhenQuantityExceedsReserved_ThrowsDomainConflict()
     {
         var pool = GeneralAdmissionPool.Create(Guid.CreateVersion7(), "Floor", 100);
         pool.Reserve(new Quantity(20));
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+        var exception = Assert.Throws<DomainConflictException>(() =>
             pool.Release(new Quantity(30)));
 
         Assert.Equal(InventoryErrors.NotEnoughReservedGeneralAdmissionPoolQuantity(pool.Id, 30, 20).Code, exception.Code);
     }
 
     [Fact]
-    public void Release_WhenNoReservationsExist_ThrowsDomainRuleViolation()
+    public void Release_WhenNoReservationsExist_ThrowsDomainConflict()
     {
         var pool = GeneralAdmissionPool.Create(Guid.CreateVersion7(), "Floor", 100);
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+        var exception = Assert.Throws<DomainConflictException>(() =>
             pool.Release(new Quantity(1)));
 
         Assert.Equal(InventoryErrors.NotEnoughReservedGeneralAdmissionPoolQuantity(pool.Id, 1, 0).Code, exception.Code);
@@ -488,12 +488,12 @@ public sealed class GeneralAdmissionPoolReservationTests
     }
 
     [Fact]
-    public void Sell_WhenQuantityExceedsReserved_ThrowsDomainRuleViolation()
+    public void Sell_WhenQuantityExceedsReserved_ThrowsDomainConflict()
     {
         var pool = GeneralAdmissionPool.Create(Guid.CreateVersion7(), "Floor", 100);
         pool.Reserve(new Quantity(30));
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+        var exception = Assert.Throws<DomainConflictException>(() =>
             pool.Sell(new Quantity(40)));
 
         // Sell uses NotEnoughGeneralAdmissionPoolCapacity for consistency
@@ -501,11 +501,11 @@ public sealed class GeneralAdmissionPoolReservationTests
     }
 
     [Fact]
-    public void Sell_WhenNoReservationsExist_ThrowsDomainRuleViolation()
+    public void Sell_WhenNoReservationsExist_ThrowsDomainConflict()
     {
         var pool = GeneralAdmissionPool.Create(Guid.CreateVersion7(), "Floor", 100);
 
-        var exception = Assert.Throws<DomainRuleViolationException>(() =>
+        var exception = Assert.Throws<DomainConflictException>(() =>
             pool.Sell(new Quantity(5)));
 
         Assert.Equal(InventoryErrors.NotEnoughGeneralAdmissionPoolCapacity(pool.Id, 5, 0).Code, exception.Code);

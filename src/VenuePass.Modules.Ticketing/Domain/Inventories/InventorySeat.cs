@@ -48,7 +48,7 @@ public sealed class InventorySeat : Entity<InventorySeatId>
     {
         if (Availability != SeatAvailability.Available)
         {
-            throw new DomainRuleViolationException(InventoryErrors.SeatNotAvailable(Id));
+            throw new DomainConflictException(InventoryErrors.SeatNotAvailable(Id));
         }
 
         Availability = SeatAvailability.Reserved;
@@ -58,7 +58,7 @@ public sealed class InventorySeat : Entity<InventorySeatId>
     {
         if (Availability != SeatAvailability.Reserved)
         {
-            throw new DomainRuleViolationException(InventoryErrors.SeatNotReserved(Id));
+            throw new DomainConflictException(InventoryErrors.SeatNotReserved(Id));
         }
 
         Availability = SeatAvailability.Available;
@@ -68,7 +68,7 @@ public sealed class InventorySeat : Entity<InventorySeatId>
     {
         if (Availability != SeatAvailability.Reserved)
         {
-            throw new DomainRuleViolationException(InventoryErrors.SeatNotReserved(Id));
+            throw new DomainConflictException(InventoryErrors.SeatNotReserved(Id));
         }
 
         Availability = SeatAvailability.Sold;

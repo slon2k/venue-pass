@@ -64,7 +64,7 @@ public sealed class ActivateOfferTests
     }
 
     [Fact]
-    public async Task ActivateOffer_WhenAlreadyActive_Returns400()
+    public async Task ActivateOffer_WhenAlreadyActive_Returns409()
     {
         Guid eventId = await TicketingSeedHelpers.PublishEventAndSyncInventoryAsync(_fixture, _managerClient);
         Guid offerId = await TicketingSeedHelpers.CreateOfferAsync(_managerClient, eventId);
@@ -81,7 +81,7 @@ public sealed class ActivateOfferTests
         // Second activation attempt on an already-active offer.
         HttpResponseMessage secondActivate = await _managerClient.PostAsync($"/offers/{offerId}/activate", null);
 
-        Assert.Equal(HttpStatusCode.BadRequest, secondActivate.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, secondActivate.StatusCode);
     }
 
     [Fact]

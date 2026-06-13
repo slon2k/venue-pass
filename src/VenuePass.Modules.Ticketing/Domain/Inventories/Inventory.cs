@@ -198,7 +198,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>
         {
             if (!seat.IsAvailable)
             {
-                throw new DomainRuleViolationException(
+                throw new DomainConflictException(
                     InventoryErrors.SeatNotAvailable(seat.Id));
             }
         }
@@ -210,7 +210,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>
         {
             if (!seat.IsReserved)
             {
-                throw new DomainRuleViolationException(
+                throw new DomainConflictException(
                     InventoryErrors.SeatNotReserved(seat.Id));
             }
         }

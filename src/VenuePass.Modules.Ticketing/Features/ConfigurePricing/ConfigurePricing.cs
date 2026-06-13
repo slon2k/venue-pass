@@ -61,14 +61,13 @@ public sealed class ConfigurePricingHandler(
         {
             offer.SetPriceZones(inventory, inputs);
         }
-        catch (DomainRuleViolationException ex)
+        catch (DomainException ex)
         {
             logger.LogInformation(ex, "Domain validation rejected price zone configuration.");
-            return ConfigurePricingErrors.InvalidData(ex.Message);
+            return Error.FromDomainException(ex);
         }
         catch (ArgumentException ex)
         {
-            logger.LogInformation(ex, "Value object validation rejected price zone configuration.");
             return ConfigurePricingErrors.InvalidData(ex.Message);
         }
 

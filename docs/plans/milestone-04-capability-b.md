@@ -427,8 +427,10 @@ The plan is deliberately scoped to Capability B only. Capability C (checkout/ord
 
 #### [MODIFY] `src/VenuePass.Api/appsettings.Development.json`
 
-- **Purpose**: Add default development configuration for `Ticketing:ReservationExpiryMinutes`.
-- **Changes**: Add a `"Ticketing"` section with `"ReservationExpiryMinutes": 15`.
+- **Purpose**: Add default development visibility for ticketing expiration settings.
+- **Changes**: Add a `"Ticketing"` section with:
+  - `"ReservationExpiryMinutes": 15`
+  - `"ExpirationSweepInterval": "00:01:00"`
 - **Note**: `appsettings.json` (production defaults) should not contain environment-specific values; the `TicketingOptions` default of 15 minutes already provides the production default without needing an entry in `appsettings.json`.
 
 ---
@@ -583,7 +585,7 @@ GetReservationItemResult: (same fields as CreateReservationItemResult)
 - Offer not found → 404
 - Offer not active / not on sale → 409 (Conflict)
 - Seat not covered by offer price zone → 400 (domain rule: `InvalidData`)
-- Seat not available → 409 (Conflict mapped from `DomainRuleViolationException` → `InvalidData` which maps to 400; alternatively if we want cleaner semantics, detect `InventoryErrors.SeatNotAvailable` code and map to Conflict — see Open Questions #1)
+- Seat not available → 409 (Conflict; availability/state/contention failures map to conflict)
 - GA pool quantity > available → 409
 - Duplicate seats or pools in request → 400
 - Concurrency conflict on inventory row → 409
@@ -723,7 +725,8 @@ A bulk UPDATE would bypass domain logic (`Reservation.Expire`) and inventory rel
 appsettings.Development.json:
 {
   "Ticketing": {
-    "ReservationExpiryMinutes": 15
+    "ReservationExpiryMinutes": 15,
+    "ExpirationSweepInterval": "00:01:00"
   }
 }
 ```
@@ -843,7 +846,7 @@ None required. `Microsoft.Extensions.Options` is already transitively available 
 | # | Risk | Severity | Likelihood | Mitigation |
 |---|---|---|---|---|
 | 1 | **Inventory not loaded with full owned collections**: `Inventory` owns `Seats` and `Pools` via `OwnsMany`. If loaded without `Include(i => i.Seats).Include(i => i.Pools)`, the collection is empty and `ReserveSeats`/`ReleaseSeats` silently do nothing or throw a "seat not found" error rather than a concurrency error. | High | Medium | All handlers that mutate inventory must explicitly `Include` both owned collections. Add a test that verifies seat availability changes after reservation. |
-| 2 | **Seat-not-available error maps as 400 instead of 409**: `Inventory.ReserveSeats` throws `DomainRuleViolationException` with code `InventoryErrors.SeatNotAvailable`. The handler catches `DomainRuleViolationException` and maps it via `InvalidData` → 400. This may be confusing for clients: a seat being unavailable is a conflict (someone else has it), not a validation error. | Medium | High | See Open Questions #1. Decide whether to detect the specific error code and map to `Error.Conflict` instead of `InvalidData`. |
+| 2 | **Conflict mapping drift in handlers**: Availability/state/contention failures (for example seat not available) are expected to map to `Error.Conflict` (HTTP 409). New handlers could accidentally flatten these to validation (`400`) if mappings are not kept explicit. | Medium | High | Keep mapping centralized with `DomainConflictException` -> `Error.Conflict` and cover with integration tests asserting `409` for seat/pool contention. |
 | 3 | **Background sweep consumes excess concurrency errors on busy events**: If 1000 reservations expire simultaneously, the sweep fires 1000 `ExpireReservationHandler` calls serially. Under heavy load this could be slow. | Low | Low | Acceptable for M04 per decision #23 (no advanced retry/backoff). Note in docs. |
 | 4 | **Reservation item `OwnsMany` lazy-loading gap**: EF Core's `AsNoTracking` with `OwnsMany` should load owned items automatically in a single query, but this behaviour depends on the query shape. Verify that `GetReservationHandler` returns items without requiring an explicit `Include`. | Medium | Low | Add an assertion in `GetReservationTests` that the Items collection is populated on the response. |
 | 5 | **Test clock control for expiry**: Tests for `ExpireReservation` must set `ExpiresAt` to the past. The direct-EF-update approach (set `ExpiresAt` via `ExecuteUpdateAsync`) bypasses the domain aggregate and concurrency token, which is acceptable in test setup code. | Low | Medium | Use `ExecuteUpdateAsync` specifically to avoid domain object updates in setup. Document this approach in the test file. |
@@ -870,18 +873,18 @@ None required. `Microsoft.Extensions.Options` is already transitively available 
 
 - Capability A must be merged (all domain types, EF configs, migrations, and `DbSet<Reservation>` are required). This is already confirmed as complete.
 - The `docs/plans` directory must exist (created by this plan; no action needed before implementation).
-- No infrastructure changes needed (no new environment variables beyond the optional `Ticketing:ReservationExpiryMinutes`).
+- No infrastructure changes needed (no new environment variables; development config exposes `Ticketing:ReservationExpiryMinutes` and `Ticketing:ExpirationSweepInterval`).
 
 ---
 
-## Open Questions
+## Open Questions — Resolved
 
-- [ ] **OQ1**: Should `Inventory.ReserveSeats` throwing `SeatNotAvailable` map to `Error.Conflict` (HTTP 409) or to `InvalidData` / `Error.Validation` (HTTP 400)? The current `DomainRuleViolationException` catch in handlers maps everything to `InvalidData` which produces 400. A seat being taken by someone else is semantically a conflict. Decision affects both `CreateReservation` and how other handlers deal with domain state errors. Recommendation: detect the specific error code (`InventoryErrors.SeatNotAvailable.Code`) in the handler and return `Error.Conflict` instead.
+- [x] **OQ1**: Availability/state/contention errors map to `Error.Conflict` / HTTP 409 using `DomainConflictException`.
 
-- [ ] **OQ2**: Should the `ExpireReservation` command be exposed as an internal HTTP endpoint (e.g. accessible only from tests or admin tools via a protected route) to simplify testing? Currently the plan calls the handler directly from tests via the DI container. The direct-DI approach is consistent with how the team tests handlers elsewhere (see `GetInventoryStatusHandlerTests.cs`) and does not require exposing an endpoint. Confirm this approach is acceptable.
+- [x] **OQ2**: `ExpireReservation` remains an internal command/handler only. No HTTP endpoint is exposed in M04. Tests invoke the command path directly through DI.
 
-- [ ] **OQ3**: The `CreateReservation` request uses a top-level `POST /reservations` route rather than `POST /offers/{offerId}/reservations`. Confirm the preferred URL convention. The current plan uses top-level because the offer ID is semantically an input, not a parent resource scope — but both are defensible.
+- [x] **OQ3**: Use top-level reservation routes: `POST /reservations`, `GET /reservations/{id}`, `DELETE /reservations/{id}`. `offerId` remains in the create request body.
 
-- [ ] **OQ4**: `TicketingOptions.ExpirationSweepInterval` defaults to 60 seconds. Should this be surfaced in `appsettings.Development.json` for visibility, or left as a code default? Adding it to the config file documents it but also adds a config file change that could be confusing if not noted in the PR description.
+- [x] **OQ4**: Surface `Ticketing:ReservationExpiryMinutes` and `Ticketing:ExpirationSweepInterval` in `appsettings.Development.json` for visibility, while keeping code defaults and options validation.
 
-- [ ] **OQ5**: The `BackgroundService` sweep calls `ExpireReservationHandler` once per candidate ID serially. For correctness in M04 this is fine, but under high concurrency (many expired reservations) this could slow the sweep. Confirm serial processing is acceptable for M04, with a note that parallelisation is a future concern.
+- [x] **OQ5**: Serial expiration sweep processing is acceptable for M04. Parallelization/bulk processing is deferred; bounded batch processing is allowed.

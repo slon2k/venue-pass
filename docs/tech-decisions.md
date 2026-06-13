@@ -297,6 +297,43 @@ app.MapPost("/events/venues", async (
 
 ---
 
+## TD-11: Domain Error Semantics — Validation vs Conflict
+
+**Context:** Domain operations now enforce richer lifecycle and availability rules. We need one consistent rule for translating domain failures to API responses.
+
+**Choice:**
+
+- `DomainRuleViolationException` represents invalid command/input/business-rule data and maps to `400 Bad Request`
+- `DomainConflictException` represents valid intent blocked by current resource state/capacity/lifecycle and maps to `409 Conflict`
+
+**Applied examples:**
+
+- `Event.Publish` when event is not in `Draft` -> conflict
+- `Offer.Activate` when offer is not in `Draft` -> conflict
+- `Offer.SetPriceZones` when offer is not in `Draft` -> conflict
+- `Reservation` transitions (`Cancel`, `Expire`, `Complete`) when current status/date does not allow transition -> conflict
+- `Inventory` reserve/release/sell when seat/pool availability state cannot satisfy the operation -> conflict
+
+**Current border cases intentionally kept as validation:**
+
+- publish with past event date
+- publish without manifest
+- content/shape violations (duplicate items, unknown targets, empty lists, malformed values)
+
+**Rationale:**
+
+- Gives clients stable retry behavior (`409` usually means state changed; refresh/retry flow)
+- Keeps `400` focused on request correctness
+- Aligns domain intent with REST semantics without overloading validation errors
+
+**Tradeoffs accepted:**
+
+- Some cases are debatable and require explicit policy decisions
+- Existing handlers must avoid flattening all domain errors to validation
+- A few edge cases remain validation by design until revisited
+
+---
+
 ## Decision Index
 
 | ID | Topic | Choice |
@@ -311,3 +348,4 @@ app.MapPost("/events/venues", async (
 | TD-08 | Testing | Architecture tests + per-module unit/integration tests |
 | TD-09 | CI/CD | Progressive maturity: baseline CI → integration CI → optional release automation |
 | TD-10 | Cross-Module Synchronization | Notify and Fetch |
+| TD-11 | Domain Error Semantics | `DomainRuleViolationException` -> `400`, `DomainConflictException` -> `409` |

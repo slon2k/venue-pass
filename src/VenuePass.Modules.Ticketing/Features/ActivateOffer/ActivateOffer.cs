@@ -23,10 +23,10 @@ public sealed class ActivateOfferHandler(
         {
             offer.Activate();
         }
-        catch (DomainRuleViolationException ex)
+        catch (DomainException ex)
         {
             logger.LogInformation(ex, "Domain rule rejected offer activation.");
-            return ActivateOfferErrors.InvalidData(ex.Message);
+            return Error.FromDomainException(ex);
         }
 
         await db.SaveChangesAsync(ct);
