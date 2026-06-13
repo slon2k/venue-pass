@@ -79,7 +79,7 @@ public sealed class Event : AggregateRoot<EventId>
     {
         if (State != EventState.Draft)
         {
-            throw new DomainRuleViolationException(EventErrors.EventMustBeInDraftStateToPublish());
+            throw new DomainConflictException(EventErrors.EventMustBeInDraftStateToPublish());
         }
 
         if (ManifestId == default)

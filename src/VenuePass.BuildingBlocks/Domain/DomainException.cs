@@ -21,3 +21,11 @@ public abstract class DomainException : Exception
 public sealed class DomainRuleViolationException(DomainError error) : DomainException(error)
 {
 }
+
+public sealed class DomainConflictException(DomainError error) : DomainException(error)
+{
+}
+
+public sealed class DomainNotFoundException(DomainError error) : DomainException(error)
+{
+}

@@ -84,14 +84,13 @@ public sealed class CreateEventHandler(
                 command.AssignedManagerId,
                 timeProvider);
         }
-        catch (DomainRuleViolationException ex)
+        catch (DomainException ex)
         {
-            logger.LogInformation(ex, "Domain validation rejected event creation.");
-            return CreateEventErrors.InvalidData(ex.Message);
+            logger.LogInformation(ex, "Domain exception occurred while creating event.");
+            return Error.FromDomainException(ex);
         }
         catch (ArgumentException ex)
         {
-            logger.LogInformation(ex, "Value object validation rejected event creation.");
             return CreateEventErrors.InvalidData(ex.Message);
         }
 

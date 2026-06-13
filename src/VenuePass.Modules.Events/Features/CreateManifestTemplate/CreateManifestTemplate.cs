@@ -43,14 +43,13 @@ public sealed class CreateManifestTemplateHandler(
         {
             template = ToEntity(command, venueId);
         }
-        catch (DomainRuleViolationException ex)
+        catch (DomainException ex)
         {
-            logger.LogInformation(ex, "Domain validation rejected manifest template creation.");
-            return CreateManifestTemplateErrors.InvalidData(ex.Message);
+            logger.LogInformation(ex, "Domain exception occurred while creating manifest template.");
+            return Error.FromDomainException(ex);
         }
         catch (ArgumentException ex)
         {
-            logger.LogInformation(ex, "Value object validation rejected manifest template creation.");
             return CreateManifestTemplateErrors.InvalidData(ex.Message);
         }
         
