@@ -9,11 +9,13 @@ using VenuePass.Modules.Events.Contracts.IntegrationEvents;
 using VenuePass.Modules.Ticketing.Features.ActivateOffer;
 using VenuePass.Modules.Ticketing.Features.ConfigurePricing;
 using VenuePass.Modules.Ticketing.Features.CreateOffer;
+using VenuePass.Modules.Ticketing.Features.CreateReservation;
 using VenuePass.Modules.Ticketing.Features.EventPublished;
 using VenuePass.Modules.Ticketing.Features.GetInventoryStatus;
 using VenuePass.Modules.Ticketing.Features.GetOffer;
 using VenuePass.Modules.Ticketing.Features.GetOffers;
 using VenuePass.Modules.Ticketing.Infrastructure;
+using VenuePass.Modules.Ticketing.Options;
 
 namespace VenuePass.Modules.Ticketing;
 
@@ -26,6 +28,7 @@ public static class ModuleConfiguration
         string connectionString = configuration.GetConnectionString("Database")
             ?? throw new InvalidOperationException("Connection string 'Database' is missing.");
 
+        services.Configure<TicketingOptions>(configuration.GetSection(TicketingOptions.SectionName));
         services.AddDatabase(connectionString);
         services.AddSingleton(TimeProvider.System);
         services.RegisterHandlers();
@@ -61,6 +64,7 @@ public static class ModuleConfiguration
         services.AddScoped<GetOfferHandler>();
         services.AddScoped<GetOffersHandler>();
         services.AddScoped<GetInventoryStatusHandler>();
+        services.AddScoped<CreateReservationHandler>();
         return services;
     }
 }
