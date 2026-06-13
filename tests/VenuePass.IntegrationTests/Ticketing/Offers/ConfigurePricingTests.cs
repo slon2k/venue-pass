@@ -76,7 +76,7 @@ public sealed class ConfigurePricingTests
     }
 
     [Fact]
-    public async Task ConfigurePricing_WhenOfferIsActive_Returns400()
+    public async Task ConfigurePricing_WhenOfferIsActive_Returns409()
     {
         Guid eventId = await TicketingSeedHelpers.PublishEventAndSyncInventoryAsync(_fixture, _managerClient);
         Guid offerId = await TicketingSeedHelpers.CreateOfferAsync(_managerClient, eventId);
@@ -102,7 +102,7 @@ public sealed class ConfigurePricingTests
 
         HttpResponseMessage response = await _managerClient.PutAsJsonAsync($"/offers/{offerId}/price-zones", request);
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
 
     [Fact]

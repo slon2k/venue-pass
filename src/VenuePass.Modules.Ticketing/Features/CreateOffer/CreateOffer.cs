@@ -58,14 +58,13 @@ public sealed class CreateOfferHandler(
                 new DateTimeRange(command.SaleStart, command.SaleEnd),
                 new Currency(command.Currency));
         }
-        catch (DomainRuleViolationException ex)
+        catch (DomainException ex)
         {
-            logger.LogInformation(ex, "Domain validation rejected offer creation.");
-            return CreateOfferErrors.InvalidData(ex.Message);
+            logger.LogInformation(ex, "Domain rule rejected offer creation.");
+            return Error.FromDomainException(ex);
         }
         catch (ArgumentException ex)
         {
-            logger.LogInformation(ex, "Value object validation rejected offer creation.");
             return CreateOfferErrors.InvalidData(ex.Message);
         }
 

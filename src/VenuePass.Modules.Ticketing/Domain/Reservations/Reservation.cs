@@ -125,7 +125,7 @@ public class Reservation : AggregateRoot<ReservationId>
     {
         if (offer.Status != OfferStatus.Active)
         {
-            throw new DomainRuleViolationException(
+            throw new DomainConflictException(
                 ReservationErrors.OfferMustBeActiveToCreateReservation());
         }
 
@@ -147,7 +147,7 @@ public class Reservation : AggregateRoot<ReservationId>
         EnsureReservedStatus();
         if (ExpiresAt > now)
         {
-            throw new DomainRuleViolationException(
+            throw new DomainConflictException(
                 ReservationErrors.ReservationNotExpiredYet(Id));
         }
         Status = ReservationStatus.Expired;
@@ -170,7 +170,7 @@ public class Reservation : AggregateRoot<ReservationId>
     {
         if (Status != ReservationStatus.Reserved)
         {
-            throw new DomainRuleViolationException(
+            throw new DomainConflictException(
                 ReservationErrors.ReservationIsNotInReservedStatus(Id));
         }
     }
@@ -179,7 +179,7 @@ public class Reservation : AggregateRoot<ReservationId>
     {
         if (ExpiresAt <= now)
         {
-            throw new DomainRuleViolationException(
+            throw new DomainConflictException(
                 ReservationErrors.ReservationAlreadyExpired(Id));
         }
     }

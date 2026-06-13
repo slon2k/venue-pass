@@ -144,14 +144,14 @@ public sealed class EventTests
     }
 
     [Fact]
-    public void Publish_WhenAlreadyPublished_ThrowsDomainRuleViolationException()
+    public void Publish_WhenAlreadyPublished_ThrowsDomainConflictException()
     {
         var ev = CreateDraftEvent();
         ev.Publish(At(FixedNow));
 
         void Act() => ev.Publish(At(FixedNow));
 
-        var exception = Assert.Throws<DomainRuleViolationException>(Act);
+        var exception = Assert.Throws<DomainConflictException>(Act);
         Assert.Equal("Events.Event.MustBeInDraftStateToPublish", exception.Code);
     }
 

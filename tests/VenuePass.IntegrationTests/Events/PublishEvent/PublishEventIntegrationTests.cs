@@ -145,7 +145,7 @@ public sealed class PublishEventEndpointIntegrationTests
     }
 
     [Fact]
-    public async Task Publish_WhenEventDateInPast_ReturnsConflictAndStateUnchanged()
+    public async Task Publish_WhenEventDateInPast_ReturnsBadRequestAndStateUnchanged()
     {
         var managerId = Guid.NewGuid().ToString();
         using var managerClient = _fixture.CreateEventManagerClient(managerId);
@@ -167,7 +167,7 @@ public sealed class PublishEventEndpointIntegrationTests
 
         HttpResponseMessage response = await managerClient.PostAsync($"/events/{setup.EventId}/publish", null);
 
-        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
         using IServiceScope scope = _fixture.Factory.Services.CreateScope();
         EventsDbContext db = scope.ServiceProvider.GetRequiredService<EventsDbContext>();

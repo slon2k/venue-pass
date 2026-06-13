@@ -50,9 +50,9 @@ public sealed class PublishEventHandler(
         {
             @event.Publish(timeProvider);
         }
-        catch (DomainRuleViolationException ex)
+        catch (DomainException ex)
         {
-            return Result.Failure(Error.Conflict(ex.Code, ex.Message));
+            return Result.Failure(Error.FromDomainException(ex));
         }
 
         manifest.Freeze();

@@ -56,7 +56,7 @@ public sealed class GeneralAdmissionPool : Entity<GeneralAdmissionPoolId>
 
         if (quantity.Value > AvailableCount)
         {
-            throw new DomainRuleViolationException(
+            throw new DomainConflictException(
                 InventoryErrors.NotEnoughGeneralAdmissionPoolCapacity(Id, quantity.Value, AvailableCount));
         }
 
@@ -72,7 +72,7 @@ public sealed class GeneralAdmissionPool : Entity<GeneralAdmissionPoolId>
 
         if (quantity.Value > ReservedCount)
         {
-            throw new DomainRuleViolationException(
+            throw new DomainConflictException(
                 InventoryErrors.NotEnoughReservedGeneralAdmissionPoolQuantity(
                     Id,
                     quantity.Value,
@@ -91,7 +91,7 @@ public sealed class GeneralAdmissionPool : Entity<GeneralAdmissionPoolId>
 
         if (quantity.Value > ReservedCount)
         {
-            throw new DomainRuleViolationException(
+            throw new DomainConflictException(
                 InventoryErrors.NotEnoughGeneralAdmissionPoolCapacity(Id, quantity.Value, ReservedCount));
         }
 

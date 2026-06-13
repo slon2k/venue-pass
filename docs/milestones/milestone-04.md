@@ -76,7 +76,7 @@ These requirements define minimum business behavior for M04 and should be treate
 - [ ] Reservation is atomic: if any requested target cannot be reserved, nothing is reserved.
 - [ ] Reservation stores a price snapshot from the resolved price zone.
 - [ ] Reservation currency is taken from the active Offer at reservation creation time.
-- [ ] Reservation receives an expiration timestamp set to `now + ReservationExpiryMinutes` (default 15 minutes, configurable via `Ticketing:ReservationExpiryMinutes`).
+- [ ] Reservation receives an expiration timestamp set to `now + ReservationExpiryMinutes` (default 15 minutes, configurable via `Ticketing:ReservationExpiryMinutes`; sweep cadence visibility is provided via `Ticketing:ExpirationSweepInterval` in development config).
 - [ ] Reservation status lifecycle includes at minimum: `Reserved`, `Completed`, `Cancelled`, `Expired`.
 - [ ] Only `Reserved` reservations may transition state.
 - [ ] Valid transitions are only: `Reserved -> Completed`, `Reserved -> Cancelled`, `Reserved -> Expired`.
@@ -119,6 +119,7 @@ These requirements define minimum business behavior for M04 and should be treate
 ### API Contract Requirements
 
 - [ ] `CreateReservation` request includes: offer ID, seat IDs, GA pool selections with quantity.
+- [ ] Reservation route shape is top-level: `POST /reservations`, `GET /reservations/{id}`, `DELETE /reservations/{id}`; `offerId` stays in create request body.
 - [ ] `CreateReservation` response includes: reservation ID, status, expiration time, items, prices, and total.
 - [ ] `GetReservation` response includes: status, expiration time, items, prices, and total.
 - [ ] `CancelReservation` cancels only reserved reservations.
@@ -160,14 +161,17 @@ These requirements define minimum business behavior for M04 and should be treate
     - Terminal states: `Completed`, `Cancelled`, `Expired`.
     - Invalid transitions are rejected (for example: `Completed` cannot be cancelled or expired; `Cancelled`/`Expired` cannot be checked out).
     - In checkout vs expiration/cancellation races, the first committed transition wins; later conflicting attempts return a conflict/state error.
-22. Error mapping uses conflict semantics consistently for state/contention scenarios (for example unavailable inventory, invalid transition state, and race losers).
-23. Background sweep complexity is intentionally limited in M04: no advanced retry/backoff strategy beyond basic logging and next run.
-24. Offer sale window is enforced only when creating a reservation. Checkout may complete an existing non-expired reservation even if the sale window has closed.
-25. Expiration is enforced by time checks in commands as well as by the background sweep. A `Reserved` reservation past `ExpiresAt` is treated as expired and cannot be checked out.
-26. Ticket codes are opaque, unique, and non-sequential; they must not encode sensitive/order data.
-27. Reservation expiration window defaults to 15 minutes and is configurable via `Ticketing:ReservationExpiryMinutes` in app configuration.
+22. Error mapping uses conflict semantics consistently for state/contention scenarios (for example unavailable inventory, invalid transition state, and race losers). Availability/state/contention failures are represented with `DomainConflictException` and map to HTTP 409.
+23. `ExpireReservation` remains an internal command/handler path in M04. No public HTTP endpoint is exposed for explicit expiration.
+24. Background sweep complexity is intentionally limited in M04: no advanced retry/backoff strategy beyond basic logging and next run.
+25. Serial expiration sweep processing is acceptable for M04. Parallelization/bulk processing is deferred; bounded batch processing is allowed.
+26. Reservation expiration window defaults to 15 minutes and is configurable via `Ticketing:ReservationExpiryMinutes` in app configuration.
+27. `Ticketing:ExpirationSweepInterval` is surfaced in `appsettings.Development.json` for visibility, while code defaults and options validation remain in place.
 28. All reservation, checkout, and ticket endpoints require authentication (any authenticated role). No EventManager restriction applies to customer-facing endpoints.
 29. `OrderStatus` contains only `Completed` for M04. `Cancelled` and `Refunded` are anticipated future states pending order-cancellation and refund scope. `Pending` is deferred until real async payment integration is introduced.
+30. Offer sale window is enforced only when creating a reservation. Checkout may complete an existing non-expired reservation even if the sale window has closed.
+31. Expiration is enforced by time checks in commands as well as by the background sweep. A `Reserved` reservation past `ExpiresAt` is treated as expired and cannot be checked out.
+32. Ticket codes are opaque, unique, and non-sequential; they must not encode sensitive/order data.
 
 ## Proposed Domain Model
 
