@@ -27,7 +27,7 @@ The plan is deliberately scoped to Capability B only. Capability C (checkout/ord
 | **Result / error** | `Result<T>` railway type; `Error.NotFound`, `Error.Conflict`, `Error.Concurrency`; `ValidationError`; `ToProblem` extension maps to HTTP status |
 | **Concurrency errors** | `Error.Concurrency(...)` maps to HTTP 409 via `ErrorHttpMappingExtensions` |
 | **Validation** | FluentValidation `AbstractValidator<TCommand>` registered by assembly scan; handler runs `validator.ValidateAsync` first |
-| **Domain exceptions** | Handlers catch `DomainRuleViolationException` and return the appropriate error; `ArgumentException` is also caught for value object guards |
+| **Domain exceptions** | Handlers map `DomainConflictException` to `Error.Conflict` (HTTP 409), `DomainRuleViolationException` to validation errors (HTTP 400), and also catch `ArgumentException` for value object guards |
 | **Auth** | `RequireAuthorization("EventManager")` for manager-only endpoints; `RequireAuthorization()` (any authenticated role) for customer endpoints |
 | **Background service** | `IHostedService` / `BackgroundService` pattern; tests replace all `IHostedService` with `TestNoopHostedService` by calling `services.RemoveAll<IHostedService>()` |
 | **Configuration** | Read via `IConfiguration` in `ModuleConfiguration.AddTicketingModule`; `TimeProvider.System` already registered as singleton |
