@@ -12,6 +12,7 @@ using VenuePass.Modules.Ticketing.Features.ConfigurePricing;
 using VenuePass.Modules.Ticketing.Features.CreateOffer;
 using VenuePass.Modules.Ticketing.Features.CreateReservation;
 using VenuePass.Modules.Ticketing.Features.EventPublished;
+using VenuePass.Modules.Ticketing.Features.ExpireReservation;
 using VenuePass.Modules.Ticketing.Features.GetInventoryStatus;
 using VenuePass.Modules.Ticketing.Features.GetOffer;
 using VenuePass.Modules.Ticketing.Features.GetOffers;
@@ -34,6 +35,7 @@ public static class ModuleConfiguration
         services.AddDatabase(connectionString);
         services.AddSingleton(TimeProvider.System);
         services.RegisterHandlers();
+        services.AddHostedService<ReservationExpirationWorker>();
         services.AddValidatorsFromAssembly(typeof(ModuleConfiguration).Assembly);
 
         services.AddAuthorizationBuilder()
@@ -69,6 +71,7 @@ public static class ModuleConfiguration
         services.AddScoped<CreateReservationHandler>();
         services.AddScoped<GetReservationHandler>();
         services.AddScoped<CancelReservationHandler>();
+        services.AddScoped<ExpireReservationHandler>();
 
         return services;
     }

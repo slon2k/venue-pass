@@ -8,26 +8,22 @@ using VenuePass.Modules.Ticketing.Domain.Inventories;
 using VenuePass.Modules.Ticketing.Domain.Reservations;
 using VenuePass.Modules.Ticketing.Infrastructure;
 
-namespace VenuePass.Modules.Ticketing.Features.CancelReservation;
+namespace VenuePass.Modules.Ticketing.Features.ExpireReservation;
 
-public sealed record CancelReservationCommand(Guid ReservationId);
+public sealed record ExpireReservationCommand(Guid ReservationId);
 
-public sealed class CancelReservationHandler(
+public sealed class ExpireReservationHandler(
     TicketingDbContext db,
-    ILogger<CancelReservationHandler> logger)
+    TimeProvider timeProvider,
+    ILogger<ExpireReservationHandler> logger)
 {
-    public async Task<Result> Handle(
-        CancelReservationCommand command,
-        CancellationToken ct)
+    public async Task<Result> Handle(ExpireReservationCommand command, CancellationToken ct)
     {
-        var reservationId = new ReservationId(command.ReservationId);
-
-        var reservation = await db.Reservations
-            .FirstOrDefaultAsync(r => r.Id == reservationId, ct);
+        Reservation? reservation = await db.Reservations.FirstOrDefaultAsync(r => r.Id == new ReservationId(command.ReservationId), ct);
 
         if (reservation is null)
         {
-            return CancelReservationErrors.ReservationNotFound(command.ReservationId);
+            return ExpireReservationErrors.ReservationNotFound(command.ReservationId);
         }
 
        var inventory = await db.Inventories
@@ -41,12 +37,12 @@ public sealed class CancelReservationHandler(
                 "Inventory with ID {InventoryId} referenced by reservation with ID {ReservationId} was not found.",
                 reservation.InventoryId, reservation.Id);
             
-            return CancelReservationErrors.InventoryNotFound(reservation.InventoryId.Value);
-        }
+            return ExpireReservationErrors.InventoryNotFound(reservation.InventoryId.Value);
+        }        
 
         try
         {
-            reservation.Cancel();
+            reservation.Expire(timeProvider.GetUtcNow());
 
             var seatsToRelease = GetSeatReservations(reservation.Items);
             var poolsToRelease = GetPoolReservations(reservation.Items);
@@ -59,19 +55,19 @@ public sealed class CancelReservationHandler(
             foreach (var (poolId, quantity) in poolsToRelease)
             {
                 inventory.ReleaseGeneralAdmissionPool(poolId, quantity);
-            }   
+            }  
 
             await db.SaveChangesAsync(ct);
         }
         catch (DomainException ex)
         {
-            logger.LogInformation(ex, "Domain rule rejected reservation cancellation.");
+            logger.LogInformation(ex, "Domain rule rejected reservation expiration.");
             return Error.FromDomainException(ex);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (DbUpdateConcurrencyException ex)
         {
-            logger.LogInformation("Concurrency conflict occurred while cancelling reservation with ID {ReservationId}.", command.ReservationId);
-            return CancelReservationErrors.ConcurrencyConflict();
+            logger.LogInformation(ex, "Concurrency conflict occurred while expiring reservation.");
+            return ExpireReservationErrors.ConcurrencyConflict(reservation.Id.Value);
         }
 
         return Result.Success();
