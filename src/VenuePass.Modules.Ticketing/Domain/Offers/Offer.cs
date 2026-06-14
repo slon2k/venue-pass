@@ -21,6 +21,10 @@ public sealed class Offer : AggregateRoot<OfferId>
 
     public IReadOnlyList<PriceZone> PriceZones => _priceZones.AsReadOnly();
 
+    public bool IsActive => Status == OfferStatus.Active;
+
+    public bool IsOnSale(DateTimeOffset dateTime) => IsActive && SalesRange.Contains(dateTime);
+
     private Offer() { }
 
     private Offer(OfferId id, InventoryId inventoryId, OfferName name, DateTimeRange salesRange, Currency currency) : base(id)
