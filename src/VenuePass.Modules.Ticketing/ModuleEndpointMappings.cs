@@ -7,6 +7,7 @@ using VenuePass.Modules.Ticketing.Features.GetInventoryStatus;
 using VenuePass.Modules.Ticketing.Features.GetOffer;
 using VenuePass.Modules.Ticketing.Features.GetOffers;
 using VenuePass.Modules.Ticketing.Features.CreateReservation;
+using VenuePass.Modules.Ticketing.Features.GetReservation;
 
 namespace VenuePass.Modules.Ticketing;
 
@@ -21,6 +22,7 @@ public static class ModuleEndpointMappings
         app.MapGetOffers();
         app.MapGetInventoryStatus();
         app.MapCreateReservation();
+        app.MapGetReservation();
 
         return app;
     }
