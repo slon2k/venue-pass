@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using VenuePass.BuildingBlocks.Messaging;
 using VenuePass.Modules.Events.Contracts.IntegrationEvents;
 using VenuePass.Modules.Ticketing.Features.ActivateOffer;
+using VenuePass.Modules.Ticketing.Features.CancelReservation;
 using VenuePass.Modules.Ticketing.Features.ConfigurePricing;
 using VenuePass.Modules.Ticketing.Features.CreateOffer;
 using VenuePass.Modules.Ticketing.Features.CreateReservation;
@@ -67,6 +68,7 @@ public static class ModuleConfiguration
         services.AddScoped<GetInventoryStatusHandler>();
         services.AddScoped<CreateReservationHandler>();
         services.AddScoped<GetReservationHandler>();
+        services.AddScoped<CancelReservationHandler>();
 
         return services;
     }
