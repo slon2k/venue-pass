@@ -14,6 +14,7 @@ using VenuePass.Modules.Ticketing.Features.EventPublished;
 using VenuePass.Modules.Ticketing.Features.GetInventoryStatus;
 using VenuePass.Modules.Ticketing.Features.GetOffer;
 using VenuePass.Modules.Ticketing.Features.GetOffers;
+using VenuePass.Modules.Ticketing.Features.GetReservation;
 using VenuePass.Modules.Ticketing.Infrastructure;
 using VenuePass.Modules.Ticketing.Options;
 
@@ -65,6 +66,8 @@ public static class ModuleConfiguration
         services.AddScoped<GetOffersHandler>();
         services.AddScoped<GetInventoryStatusHandler>();
         services.AddScoped<CreateReservationHandler>();
+        services.AddScoped<GetReservationHandler>();
+
         return services;
     }
 }
