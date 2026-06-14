@@ -1,5 +1,3 @@
-using System.Data;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -29,6 +27,8 @@ public sealed class ExpireReservationHandler(
         }
 
        var inventory = await db.Inventories
+            .Include(i => i.Seats)
+            .Include(i => i.Pools)
             .FirstOrDefaultAsync(i => i.Id == reservation.InventoryId, ct);
 
         if (inventory is null)
@@ -64,7 +64,7 @@ public sealed class ExpireReservationHandler(
             logger.LogInformation(ex, "Domain rule rejected reservation expiration.");
             return Error.FromDomainException(ex);
         }
-        catch (DBConcurrencyException ex)
+        catch (DbUpdateConcurrencyException ex)
         {
             logger.LogInformation(ex, "Concurrency conflict occurred while expiring reservation.");
             return ExpireReservationErrors.ConcurrencyConflict(reservation.Id.Value);

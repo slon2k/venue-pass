@@ -8,6 +8,8 @@ public class TicketingOptions
 
     public int ExpirationSweepIntervalSeconds { get; set; } = 60;
 
+    public int BatchSize { get; set; } = 20;
+
     public TimeSpan ReservationExpiry => TimeSpan.FromMinutes(ReservationExpiryMinutes);
 
     public TimeSpan ExpirationSweepInterval => TimeSpan.FromSeconds(ExpirationSweepIntervalSeconds);

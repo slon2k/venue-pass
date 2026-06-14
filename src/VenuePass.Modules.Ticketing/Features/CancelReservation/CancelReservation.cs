@@ -31,6 +31,8 @@ public sealed class CancelReservationHandler(
         }
 
        var inventory = await db.Inventories
+            .Include(i => i.Seats)
+            .Include(i => i.Pools)
             .FirstOrDefaultAsync(i => i.Id == reservation.InventoryId, ct);
 
         if (inventory is null)

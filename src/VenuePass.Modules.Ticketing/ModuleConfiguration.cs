@@ -35,6 +35,7 @@ public static class ModuleConfiguration
         services.AddDatabase(connectionString);
         services.AddSingleton(TimeProvider.System);
         services.RegisterHandlers();
+        services.AddHostedService<ReservationExpirationWorker>();
         services.AddValidatorsFromAssembly(typeof(ModuleConfiguration).Assembly);
 
         services.AddAuthorizationBuilder()
