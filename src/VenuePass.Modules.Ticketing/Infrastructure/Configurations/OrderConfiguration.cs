@@ -98,6 +98,10 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasColumnName("status")
             .IsRequired();
 
+        builder.Property(o => o.CreatedAt)
+            .HasColumnName("created_at")
+            .IsRequired();
+
         builder.OwnsMany(o => o.Items, item =>
         {
             item.ToTable("order_items");

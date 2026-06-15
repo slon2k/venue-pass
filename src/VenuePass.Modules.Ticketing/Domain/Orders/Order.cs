@@ -26,6 +26,8 @@ public class Order : AggregateRoot<OrderId>
 
     public OrderStatus Status { get; private set; } = OrderStatus.Completed;
 
+    public DateTimeOffset CreatedAt { get; private set; }
+
     public IReadOnlyList<OrderItem> Items => _items.AsReadOnly();
 
     private Order() { }
@@ -38,6 +40,7 @@ public class Order : AggregateRoot<OrderId>
         string buyerName,
         string buyerEmail,
         Currency currency,
+        DateTimeOffset createdAt,
         IReadOnlyList<OrderItem> items) : base(id)
     {
         if (id.IsEmpty)
@@ -64,21 +67,29 @@ public class Order : AggregateRoot<OrderId>
         BuyerName = buyerName;
         BuyerEmail = buyerEmail;
         Currency = currency;
+        Status = OrderStatus.Completed;
+        CreatedAt = createdAt;
         _items.AddRange(items);
         Total = new Amount(_items.Sum(i => i.Total.Value));
     }
 
-    public static Order CreateFromReservation(Reservation reservation, string buyerName, string buyerEmail)
+    public static Order CreateFromReservation(Reservation reservation, string buyerName, string buyerEmail, DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(reservation);
         ArgumentException.ThrowIfNullOrWhiteSpace(buyerName, nameof(buyerName));
         ArgumentException.ThrowIfNullOrWhiteSpace(buyerEmail, nameof(buyerEmail));
 
+        if (!reservation.IsActive(now))
+        {
+            throw new DomainRuleViolationException(
+                OrderErrors.ReservationNotActive(reservation.Id));
+        }
+
         var items = reservation.Items
             .Select(OrderItem.CreateFromReservationItem)
             .ToList();
-
-        return new Order(
+        
+        var order = new Order(
             id: OrderId.Create(),
             reservationId: reservation.Id,
             offerId: reservation.OfferId,
@@ -86,7 +97,12 @@ public class Order : AggregateRoot<OrderId>
             buyerName: buyerName,
             buyerEmail: buyerEmail,
             currency: reservation.Currency,
+            createdAt: now,
             items: items);
+
+        order.AddDomainEvent(new OrderCreatedDomainEvent(order.Id, reservation.Id));
+
+        return order;
     }
 }
 

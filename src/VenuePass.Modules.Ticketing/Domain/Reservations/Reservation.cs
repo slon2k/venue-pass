@@ -23,6 +23,10 @@ public class Reservation : AggregateRoot<ReservationId>
 
     public IReadOnlyList<ReservationItem> Items => _items.AsReadOnly();
 
+    public bool IsExpired(DateTimeOffset now) => ExpiresAt <= now;
+
+    public bool IsActive(DateTimeOffset now) => Status == ReservationStatus.Reserved && !IsExpired(now);
+
     private Reservation() { }
 
     private Reservation(

@@ -17,6 +17,7 @@ public static class GetOrderEndpoint
         decimal Total,
         string BuyerName,
         string BuyerEmail,
+        DateTimeOffset CreatedAt,
         IReadOnlyList<GetOrderItemResponse> Items);
 
     public sealed record GetOrderItemResponse(
@@ -61,6 +62,7 @@ public static class GetOrderEndpoint
             Total: result.Total,
             BuyerName: result.BuyerName,
             BuyerEmail: result.BuyerEmail,
+            CreatedAt: result.CreatedAt,
             Items: [.. result.Items.Select(i => new GetOrderItemResponse(
                 OrderItemId: i.OrderItemId,
                 Type: i.Type,

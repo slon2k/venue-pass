@@ -16,6 +16,7 @@ public sealed record GetOrderResult(
     decimal Total,
     string BuyerName,
     string BuyerEmail,
+    DateTimeOffset CreatedAt,
     IReadOnlyList<GetOrderItemResult> Items);
 
 public sealed record GetOrderItemResult(
@@ -51,6 +52,7 @@ public sealed class GetOrderHandler(TicketingDbContext db)
             Total: order.Total.Value,
             BuyerName: order.BuyerName,
             BuyerEmail: order.BuyerEmail,
+            CreatedAt: order.CreatedAt,
             Items: [.. order.Items.Select(i => new GetOrderItemResult(
                 OrderItemId: i.Id.Value,
                 Type: i.Type.ToString(),

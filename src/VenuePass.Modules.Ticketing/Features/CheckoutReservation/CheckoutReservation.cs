@@ -108,15 +108,20 @@ public sealed class CheckoutReservationHandler(
         {
             var now = timeProvider.GetUtcNow();
 
-            reservation.Complete(now);
+            order = Order.CreateFromReservation(reservation, command.BuyerName, command.BuyerEmail, now);
 
-            order = Order.CreateFromReservation(reservation, command.BuyerName, command.BuyerEmail);
+            reservation.Complete(now);
 
             var seatIds = GetSeatIds(reservation.Items);
 
             if (seatIds.Count > 0)
             {
                 inventory.SellSeats(seatIds);
+            }
+
+            foreach (var (poolId, quantity) in GetGeneralAdmissionPools(reservation.Items))
+            {
+                inventory.SellGeneralAdmissionPool(poolId, quantity);
             }
 
             db.Orders.Add(order);
@@ -140,6 +145,10 @@ public sealed class CheckoutReservationHandler(
 
     private static IReadOnlyList<InventorySeatId> GetSeatIds(IReadOnlyList<ReservationItem> items) =>
         [.. items.Where(i => i.InventorySeatId.HasValue).Select(i => i.InventorySeatId!.Value)];
+
+    private static IReadOnlyList<(GeneralAdmissionPoolId, Quantity)> GetGeneralAdmissionPools(IReadOnlyList<ReservationItem> items) =>
+        [.. items.Where(i => i.GeneralAdmissionPoolId.HasValue)
+            .Select(i => (i.GeneralAdmissionPoolId!.Value, i.Quantity))];
 
     private static CheckoutReservationResult ToResult(Order order, bool isNewOrder) =>
         new(
