@@ -107,6 +107,28 @@ public sealed class TicketingAuthorizationTests
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    [Fact]
+    public async Task CheckoutReservation_WhenUnauthenticated_Returns401()
+    {
+        HttpClient unauthenticated = _fixture.Client;
+
+        HttpResponseMessage response = await unauthenticated.PostAsJsonAsync(
+            $"/reservations/{Guid.NewGuid()}/checkout",
+            new CheckoutReservationRequest("Buyer", "buyer@example.com"));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetOrder_WhenUnauthenticated_Returns401()
+    {
+        HttpClient unauthenticated = _fixture.Client;
+
+        HttpResponseMessage response = await unauthenticated.GetAsync($"/orders/{Guid.NewGuid()}");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
@@ -144,4 +166,6 @@ public sealed class TicketingAuthorizationTests
         decimal Price,
         IReadOnlyList<Guid> SeatIds,
         IReadOnlyList<Guid> PoolIds);
+
+    private sealed record CheckoutReservationRequest(string BuyerName, string BuyerEmail);
 }

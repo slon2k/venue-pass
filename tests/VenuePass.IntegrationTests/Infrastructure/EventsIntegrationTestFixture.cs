@@ -50,6 +50,14 @@ public sealed class EventsIntegrationTestFixture : IAsyncLifetime
         return client;
     }
 
+    /// <summary>Creates an authenticated client with no specific role (customer / any-role endpoints).</summary>
+    public HttpClient CreateAuthenticatedCustomerClient(string? userId = null)
+    {
+        var client = Factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.SubHeader, userId ?? Guid.NewGuid().ToString());
+        return client;
+    }
+
     public async Task InitializeAsync()
     {
         string connectionString;

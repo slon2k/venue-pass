@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using VenuePass.BuildingBlocks.Domain;
 using VenuePass.Modules.Ticketing.Domain.Inventories;
 using VenuePass.Modules.Ticketing.Domain.Offers;
+using VenuePass.Modules.Ticketing.Domain.Orders;
 using VenuePass.Modules.Ticketing.Domain.PublishedEvents;
 using VenuePass.Modules.Ticketing.Domain.Reservations;
 
@@ -16,6 +17,7 @@ public sealed class TicketingDbContext(DbContextOptions<TicketingDbContext> opti
     public DbSet<Inventory> Inventories => Set<Inventory>();
     public DbSet<Offer> Offers => Set<Offer>();
     public DbSet<Reservation> Reservations => Set<Reservation>();
+    public DbSet<Order> Orders => Set<Order>();
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

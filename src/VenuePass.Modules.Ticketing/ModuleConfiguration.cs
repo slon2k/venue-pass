@@ -8,6 +8,7 @@ using VenuePass.BuildingBlocks.Messaging;
 using VenuePass.Modules.Events.Contracts.IntegrationEvents;
 using VenuePass.Modules.Ticketing.Features.ActivateOffer;
 using VenuePass.Modules.Ticketing.Features.CancelReservation;
+using VenuePass.Modules.Ticketing.Features.CheckoutReservation;
 using VenuePass.Modules.Ticketing.Features.ConfigurePricing;
 using VenuePass.Modules.Ticketing.Features.CreateOffer;
 using VenuePass.Modules.Ticketing.Features.CreateReservation;
@@ -16,6 +17,7 @@ using VenuePass.Modules.Ticketing.Features.ExpireReservation;
 using VenuePass.Modules.Ticketing.Features.GetInventoryStatus;
 using VenuePass.Modules.Ticketing.Features.GetOffer;
 using VenuePass.Modules.Ticketing.Features.GetOffers;
+using VenuePass.Modules.Ticketing.Features.GetOrder;
 using VenuePass.Modules.Ticketing.Features.GetReservation;
 using VenuePass.Modules.Ticketing.Infrastructure;
 using VenuePass.Modules.Ticketing.Options;
@@ -72,6 +74,8 @@ public static class ModuleConfiguration
         services.AddScoped<GetReservationHandler>();
         services.AddScoped<CancelReservationHandler>();
         services.AddScoped<ExpireReservationHandler>();
+        services.AddScoped<CheckoutReservationHandler>();
+        services.AddScoped<GetOrderHandler>();
 
         return services;
     }
