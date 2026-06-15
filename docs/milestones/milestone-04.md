@@ -6,9 +6,9 @@ Reservation and checkout lifecycle is implemented: customers can reserve availab
 
 ## In Scope
 
-- [ ] Capability A: Reservation domain and availability locking
-- [ ] Capability B: Reservation API and expiration flow
-- [ ] Capability C: Checkout/order creation
+- [x] Capability A: Reservation domain and availability locking
+- [x] Capability B: Reservation API and expiration flow
+- [x] Capability C: Checkout/order creation
 - [ ] Capability D: Ticket issuance and ticket retrieval
 - [ ] Capability E: Integration and concurrency tests
 
@@ -16,27 +16,27 @@ Reservation and checkout lifecycle is implemented: customers can reserve availab
 
 ### Capability A: Reservation domain and availability locking
 
-- [ ] A1: Implement `Reservation` aggregate with status lifecycle
-- [ ] A2: Add inventory reservation behavior for seats and GA pools; update `GetInventoryStatus` seat-counting to respect `SeatAvailability` enum (available vs reserved vs sold)
-- [ ] A3: Resolve price from active `Offer + target -> PriceZone -> Price` using current single-axis pricing model
-- [ ] A4: Persist reservations and reservation items
-- [ ] A5: Add concurrency protection to prevent double booking/oversell
+- [x] A1: Implement `Reservation` aggregate with status lifecycle
+- [x] A2: Add inventory reservation behavior for seats and GA pools; update `GetInventoryStatus` seat-counting to respect `SeatAvailability` enum (available vs reserved vs sold)
+- [x] A3: Resolve price from active `Offer + target -> PriceZone -> Price` using current single-axis pricing model
+- [x] A4: Persist reservations and reservation items
+- [x] A5: Add concurrency protection to prevent double booking/oversell
 
 ### Capability B: Reservation API and expiration flow
 
-- [ ] B1: Deliver `CreateReservation` endpoint and handler
-- [ ] B2: Deliver `GetReservation` endpoint and handler
-- [ ] B3: Deliver `CancelReservation` endpoint and handler
-- [ ] B4: Deliver reservation expiration command/handler path and background sweep worker
-- [ ] B5: Ensure cancelled/expired reservations release inventory
+- [x] B1: Deliver `CreateReservation` endpoint and handler
+- [x] B2: Deliver `GetReservation` endpoint and handler
+- [x] B3: Deliver `CancelReservation` endpoint and handler
+- [x] B4: Deliver reservation expiration command/handler path and background sweep worker
+- [x] B5: Ensure cancelled/expired reservations release inventory
 
 ### Capability C: Checkout/order creation
 
-- [ ] C1: Implement `Order` aggregate
-- [ ] C2: Deliver `CheckoutReservation` endpoint and handler
-- [ ] C3: Persist order and order items with price snapshots
-- [ ] C4: Mark reserved inventory as sold after successful checkout
-- [ ] C5: Ensure one reservation can produce at most one order
+- [x] C1: Implement `Order` aggregate
+- [x] C2: Deliver `CheckoutReservation` endpoint and handler
+- [x] C3: Persist order and order items with price snapshots
+- [x] C4: Mark reserved inventory as sold after successful checkout
+- [x] C5: Ensure one reservation can produce at most one order
 
 ### Capability D: Ticket issuance and ticket retrieval
 
@@ -62,42 +62,42 @@ These requirements define minimum business behavior for M04 and should be treate
 
 ### Endpoint Authorization Requirements
 
-- [ ] All reservation, checkout, and ticket endpoints require authentication (any authenticated role).
-- [ ] No EventManager restriction applies to customer-facing endpoints (`CreateReservation`, `GetReservation`, `CancelReservation`, `CheckoutReservation`, `GetOrder`, `GetTicketByCode`).
+- [x] All reservation, checkout, and ticket endpoints require authentication (any authenticated role).
+- [x] No EventManager restriction applies to customer-facing endpoints (`CreateReservation`, `GetReservation`, `CancelReservation`, `CheckoutReservation`, `GetOrder`, `GetTicketByCode`).
 
 ### Reservation Requirements
 
-- [ ] A reservation can be created only against an active offer.
-- [ ] Offer sale window is enforced at reservation time.
-- [ ] Reservation targets must belong to the offer’s inventory.
-- [ ] Reservation targets must be covered by a configured price zone.
-- [ ] Reserved seats must currently be available.
-- [ ] Reserved GA pool quantity must not exceed available count.
-- [ ] Reservation is atomic: if any requested target cannot be reserved, nothing is reserved.
-- [ ] Reservation stores a price snapshot from the resolved price zone.
-- [ ] Reservation currency is taken from the active Offer at reservation creation time.
-- [ ] Reservation receives an expiration timestamp set to `now + ReservationExpiryMinutes` (default 15 minutes, configurable via `Ticketing:ReservationExpiryMinutes`; sweep cadence visibility is provided via `Ticketing:ExpirationSweepInterval` in development config).
-- [ ] Reservation status lifecycle includes at minimum: `Reserved`, `Completed`, `Cancelled`, `Expired`.
-- [ ] Only `Reserved` reservations may transition state.
-- [ ] Valid transitions are only: `Reserved -> Completed`, `Reserved -> Cancelled`, `Reserved -> Expired`.
-- [ ] `Completed`, `Cancelled`, and `Expired` are terminal states.
-- [ ] Reserved reservations reduce available inventory.
-- [ ] Cancelled or expired reservations release inventory.
-- [ ] Completed reservations do not release inventory.
-- [ ] `CreateReservation` rejects duplicate seat IDs and duplicate GA pool selections in the same request.
+- [x] A reservation can be created only against an active offer.
+- [x] Offer sale window is enforced at reservation time.
+- [x] Reservation targets must belong to the offer’s inventory.
+- [x] Reservation targets must be covered by a configured price zone.
+- [x] Reserved seats must currently be available.
+- [x] Reserved GA pool quantity must not exceed available count.
+- [x] Reservation is atomic: if any requested target cannot be reserved, nothing is reserved.
+- [x] Reservation stores a price snapshot from the resolved price zone.
+- [x] Reservation currency is taken from the active Offer at reservation creation time.
+- [x] Reservation receives an expiration timestamp set to `now + ReservationExpiryMinutes` (default 15 minutes, configurable via `Ticketing:ReservationExpiryMinutes`; sweep cadence visibility is provided via `Ticketing:ExpirationSweepInterval` in development config).
+- [x] Reservation status lifecycle includes at minimum: `Reserved`, `Completed`, `Cancelled`, `Expired`.
+- [x] Only `Reserved` reservations may transition state.
+- [x] Valid transitions are only: `Reserved -> Completed`, `Reserved -> Cancelled`, `Reserved -> Expired`.
+- [x] `Completed`, `Cancelled`, and `Expired` are terminal states.
+- [x] Reserved reservations reduce available inventory.
+- [x] Cancelled or expired reservations release inventory.
+- [x] Completed reservations do not release inventory.
+- [x] `CreateReservation` rejects duplicate seat IDs and duplicate GA pool selections in the same request.
 
 ### Checkout / Order Requirements
 
-- [ ] A reserved, non-expired reservation can be checked out.
-- [ ] Checkout creates exactly one order for the reservation.
-- [ ] Checkout is idempotent enough to prevent duplicate orders/tickets for the same reservation.
-- [ ] `CheckoutReservation` on an already completed reservation returns the existing order/tickets if an order exists.
-- [ ] `CheckoutReservation` rejects cancelled or expired reservations.
-- [ ] Order total is calculated from reservation price snapshots.
-- [ ] No external payment provider is integrated in M04; checkout represents a successful simulated payment.
-- [ ] After checkout, reservation becomes `Completed`.
-- [ ] After checkout, reserved seats become sold.
-- [ ] After checkout, reserved GA quantity remains consumed from pool availability.
+- [x] A reserved, non-expired reservation can be checked out.
+- [x] Checkout creates exactly one order for the reservation.
+- [x] Checkout is idempotent enough to prevent duplicate orders/tickets for the same reservation.
+- [x] `CheckoutReservation` on an already completed reservation returns the existing order/tickets if an order exists.
+- [x] `CheckoutReservation` rejects cancelled or expired reservations.
+- [x] Order total is calculated from reservation price snapshots.
+- [x] No external payment provider is integrated in M04; checkout represents a successful simulated payment.
+- [x] After checkout, reservation becomes `Completed`.
+- [x] After checkout, reserved seats become sold.
+- [x] After checkout, reserved GA quantity remains consumed from pool availability.
 
 ### Ticket Issuance Requirements
 
@@ -111,19 +111,19 @@ These requirements define minimum business behavior for M04 and should be treate
 
 ### Inventory Status Requirements
 
-- [ ] Inventory status reflects reserved reservations and completed purchases.
-- [ ] Available seat count excludes reserved and sold seats.
-- [ ] Available GA pool count excludes reserved and sold quantity.
-- [ ] Cancelled/expired reservations restore availability.
+- [x] Inventory status reflects reserved reservations and completed purchases.
+- [x] Available seat count excludes reserved and sold seats.
+- [x] Available GA pool count excludes reserved and sold quantity.
+- [x] Cancelled/expired reservations restore availability.
 
 ### API Contract Requirements
 
-- [ ] `CreateReservation` request includes: offer ID, seat IDs, GA pool selections with quantity.
-- [ ] Reservation route shape is top-level: `POST /reservations`, `GET /reservations/{id}`, `DELETE /reservations/{id}`; `offerId` stays in create request body.
-- [ ] `CreateReservation` response includes: reservation ID, status, expiration time, items, prices, and total.
-- [ ] `GetReservation` response includes: status, expiration time, items, prices, and total.
-- [ ] `CancelReservation` cancels only reserved reservations.
-- [ ] `CheckoutReservation` request includes: reservation ID and buyer/contact details.
+- [x] `CreateReservation` request includes: offer ID, seat IDs, GA pool selections with quantity.
+- [x] Reservation route shape is top-level: `POST /reservations`, `GET /reservations/{id}`, `DELETE /reservations/{id}`; `offerId` stays in create request body.
+- [x] `CreateReservation` response includes: reservation ID, status, expiration time, items, prices, and total.
+- [x] `GetReservation` response includes: status, expiration time, items, prices, and total.
+- [x] `CancelReservation` cancels only reserved reservations.
+- [x] `CheckoutReservation` request includes: reservation ID and buyer/contact details.
 - [ ] `CheckoutReservation` response includes: order ID, order total, and issued tickets.
 - [ ] `GetOrder` response includes: order status, items, total, and tickets.
 - [ ] `GetTicketByCode` endpoint is `GET /tickets/{ticketCode}` and requires authentication.
