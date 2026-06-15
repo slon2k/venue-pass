@@ -126,6 +126,57 @@ internal static class TicketingSeedHelpers
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 
+    /// <summary>POST /reservations — returns reservationId.</summary>
+    public static async Task<Guid> CreateReservationAsync(
+        HttpClient client,
+        Guid offerId,
+        IReadOnlyList<Guid>? seatIds = null,
+        IReadOnlyList<GaPoolSelectionItem>? gaPoolSelections = null)
+    {
+        var request = new CreateReservationRequest(
+            OfferId: offerId,
+            SeatIds: seatIds ?? [],
+            GaPoolSelections: gaPoolSelections?.Select(s => new GaPoolSelectionRequestItem(s.PoolId, s.Quantity)).ToList() ?? []);
+
+        HttpResponseMessage response = await client.PostAsJsonAsync("/reservations", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        CreateReservationResponse? body = await response.Content.ReadFromJsonAsync<CreateReservationResponse>();
+        Assert.NotNull(body);
+
+        return body!.ReservationId;
+    }
+
+    /// <summary>POST /reservations/{id}/checkout — returns orderId. Asserts 201 Created.</summary>
+    public static async Task<Guid> CheckoutReservationAsync(
+        HttpClient client,
+        Guid reservationId,
+        string buyerName = "Test Buyer",
+        string buyerEmail = "buyer@example.com")
+    {
+        var request = new CheckoutReservationRequest(BuyerName: buyerName, BuyerEmail: buyerEmail);
+
+        HttpResponseMessage response = await client.PostAsJsonAsync($"/reservations/{reservationId}/checkout", request);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        CheckoutReservationResponse? body = await response.Content.ReadFromJsonAsync<CheckoutReservationResponse>();
+        Assert.NotNull(body);
+
+        return body!.OrderId;
+    }
+
+    /// <summary>GET /orders/{orderId} — returns the response body. Asserts 200 OK.</summary>
+    public static async Task<GetOrderSeedResponse> GetOrderAsync(HttpClient client, Guid orderId)
+    {
+        HttpResponseMessage response = await client.GetAsync($"/orders/{orderId}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        GetOrderSeedResponse? body = await response.Content.ReadFromJsonAsync<GetOrderSeedResponse>();
+        Assert.NotNull(body);
+
+        return body!;
+    }
+
     // -------------------------------------------------------------------------
     // Internal helpers for setting up the test event (venue, template, event)
     // -------------------------------------------------------------------------
@@ -282,6 +333,19 @@ internal static class TicketingSeedHelpers
         decimal Price,
         IReadOnlyList<Guid> SeatIds,
         IReadOnlyList<Guid> PoolIds);
+
+    private sealed record CreateReservationRequest(
+        Guid OfferId,
+        IReadOnlyList<Guid> SeatIds,
+        IReadOnlyList<GaPoolSelectionRequestItem> GaPoolSelections);
+
+    private sealed record GaPoolSelectionRequestItem(Guid PoolId, int Quantity);
+
+    private sealed record CreateReservationResponse(Guid ReservationId);
+
+    private sealed record CheckoutReservationRequest(string BuyerName, string BuyerEmail);
+
+    private sealed record CheckoutReservationResponse(Guid OrderId);
 }
 
 /// <summary>Input record for <see cref="TicketingSeedHelpers.ConfigurePriceZonesAsync"/>.</summary>
@@ -290,3 +354,27 @@ internal sealed record PriceZoneItem(
     decimal Price,
     IReadOnlyList<Guid> SeatIds,
     IReadOnlyList<Guid> PoolIds);
+
+/// <summary>Input record for <see cref="TicketingSeedHelpers.CreateReservationAsync"/>.</summary>
+internal sealed record GaPoolSelectionItem(Guid PoolId, int Quantity);
+
+/// <summary>Response returned by <see cref="TicketingSeedHelpers.GetOrderAsync"/>.</summary>
+internal sealed record GetOrderSeedResponse(
+    Guid OrderId,
+    Guid ReservationId,
+    string Status,
+    string Currency,
+    decimal Total,
+    string BuyerName,
+    string BuyerEmail,
+    IReadOnlyList<GetOrderItemSeedResponse> Items);
+
+internal sealed record GetOrderItemSeedResponse(
+    Guid OrderItemId,
+    string Type,
+    Guid? InventorySeatId,
+    Guid? GeneralAdmissionPoolId,
+    Guid PriceZoneId,
+    int Quantity,
+    decimal UnitPrice,
+    decimal Total);
