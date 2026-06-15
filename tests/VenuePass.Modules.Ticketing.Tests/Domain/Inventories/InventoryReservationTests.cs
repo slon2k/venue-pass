@@ -496,8 +496,7 @@ public sealed class GeneralAdmissionPoolReservationTests
         var exception = Assert.Throws<DomainConflictException>(() =>
             pool.Sell(new Quantity(40)));
 
-        // Sell uses NotEnoughGeneralAdmissionPoolCapacity for consistency
-        Assert.Equal(InventoryErrors.NotEnoughGeneralAdmissionPoolCapacity(pool.Id, 40, 30).Code, exception.Code);
+        Assert.Equal(InventoryErrors.NotEnoughReservedGeneralAdmissionPoolQuantity(pool.Id, 40, 30).Code, exception.Code);
     }
 
     [Fact]
@@ -508,7 +507,7 @@ public sealed class GeneralAdmissionPoolReservationTests
         var exception = Assert.Throws<DomainConflictException>(() =>
             pool.Sell(new Quantity(5)));
 
-        Assert.Equal(InventoryErrors.NotEnoughGeneralAdmissionPoolCapacity(pool.Id, 5, 0).Code, exception.Code);
+        Assert.Equal(InventoryErrors.NotEnoughReservedGeneralAdmissionPoolQuantity(pool.Id, 5, 0).Code, exception.Code);
     }
 
     [Fact]

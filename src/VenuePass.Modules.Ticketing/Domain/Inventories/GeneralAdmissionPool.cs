@@ -92,7 +92,7 @@ public sealed class GeneralAdmissionPool : Entity<GeneralAdmissionPoolId>
         if (quantity.Value > ReservedCount)
         {
             throw new DomainConflictException(
-                InventoryErrors.NotEnoughGeneralAdmissionPoolCapacity(Id, quantity.Value, ReservedCount));
+                InventoryErrors.NotEnoughReservedGeneralAdmissionPoolQuantity(Id, quantity.Value, ReservedCount));
         }
 
         SoldCount += quantity.Value;
