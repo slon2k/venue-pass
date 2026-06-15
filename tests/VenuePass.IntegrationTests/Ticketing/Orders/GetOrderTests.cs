@@ -3,10 +3,6 @@ using System.Net;
 using VenuePass.IntegrationTests.Infrastructure;
 using VenuePass.IntegrationTests.Ticketing.Fixtures;
 
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using VenuePass.Modules.Ticketing.Infrastructure;
-
 using Xunit;
 
 namespace VenuePass.IntegrationTests.Ticketing.Orders;
@@ -58,6 +54,7 @@ public sealed class GetOrderTests
         Assert.Equal(75m, order.Items[0].UnitPrice);
         Assert.Equal(75m, order.Items[0].Total);
         Assert.Equal(75m, order.Total);
+        Assert.True(order.CreatedAt > DateTimeOffset.MinValue);
     }
 
     [Fact]
@@ -106,25 +103,6 @@ public sealed class GetOrderTests
     // Private helpers
     // -------------------------------------------------------------------------
 
-    private async Task<(List<Guid> SeatIds, List<Guid> PoolIds)> GetInventoryIdsAsync(Guid eventId)
-    {
-        await using var scope = _fixture.Factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
-
-        var reference = await db.PublishedEventReferences
-            .AsNoTracking()
-            .FirstOrDefaultAsync(r => r.EventId == eventId);
-
-        Assert.NotNull(reference);
-
-        var inventory = await db.Inventories
-            .AsNoTracking()
-            .FirstOrDefaultAsync(i => i.EventReferenceId == reference!.Id);
-
-        Assert.NotNull(inventory);
-
-        return (
-            inventory!.Seats.Select(s => s.Id.Value).ToList(),
-            inventory.Pools.Select(p => p.Id.Value).ToList());
-    }
+    private Task<(List<Guid> SeatIds, List<Guid> PoolIds)> GetInventoryIdsAsync(Guid eventId) =>
+        TicketingSeedHelpers.GetInventoryIdsAsync(_fixture, eventId);
 }

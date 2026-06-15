@@ -177,6 +177,30 @@ internal static class TicketingSeedHelpers
         return body!;
     }
 
+    /// <summary>Loads seat and pool IDs for an event's inventory directly from the database.</summary>
+    public static async Task<(List<Guid> SeatIds, List<Guid> PoolIds)> GetInventoryIdsAsync(
+        EventsIntegrationTestFixture fixture, Guid eventId)
+    {
+        await using var scope = fixture.Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+
+        var reference = await db.PublishedEventReferences
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.EventId == eventId);
+
+        Assert.NotNull(reference);
+
+        var inventory = await db.Inventories
+            .AsNoTracking()
+            .FirstOrDefaultAsync(i => i.EventReferenceId == reference!.Id);
+
+        Assert.NotNull(inventory);
+
+        return (
+            inventory!.Seats.Select(s => s.Id.Value).ToList(),
+            inventory.Pools.Select(p => p.Id.Value).ToList());
+    }
+
     // -------------------------------------------------------------------------
     // Internal helpers for setting up the test event (venue, template, event)
     // -------------------------------------------------------------------------
@@ -367,6 +391,7 @@ internal sealed record GetOrderSeedResponse(
     decimal Total,
     string BuyerName,
     string BuyerEmail,
+    DateTimeOffset CreatedAt,
     IReadOnlyList<GetOrderItemSeedResponse> Items);
 
 internal sealed record GetOrderItemSeedResponse(

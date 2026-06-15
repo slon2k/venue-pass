@@ -81,7 +81,7 @@ public class Order : AggregateRoot<OrderId>
 
         if (!reservation.IsActive(now))
         {
-            throw new DomainRuleViolationException(
+            throw new DomainConflictException(
                 OrderErrors.ReservationNotActive(reservation.Id));
         }
 

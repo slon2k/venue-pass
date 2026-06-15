@@ -166,6 +166,36 @@ public sealed class CheckoutReservationTests
         Assert.Equal(295, after!.Pools[0].AvailableCount);
     }
 
+    [Fact]
+    public async Task Checkout_GaPoolReservation_PoolSoldCountIncrementedAfterCheckout()
+    {
+        Guid eventId = await TicketingSeedHelpers.PublishEventAndSyncInventoryAsync(_fixture, _managerClient);
+        (List<Guid> seatIds, List<Guid> poolIds) = await GetInventoryIdsAsync(eventId);
+
+        Guid offerId = await SetupOfferAsync(eventId, seatIds, poolIds, price: 20m);
+
+        Guid reservationId = await TicketingSeedHelpers.CreateReservationAsync(
+            _customerClient,
+            offerId,
+            gaPoolSelections: [new GaPoolSelectionItem(poolIds[0], 7)]);
+
+        await TicketingSeedHelpers.CheckoutReservationAsync(_customerClient, reservationId);
+
+        await using var scope = _fixture.Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+
+        var reference = await db.PublishedEventReferences
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.EventId == eventId);
+
+        var inventory = await db.Inventories
+            .AsNoTracking()
+            .FirstOrDefaultAsync(i => i.EventReferenceId == reference!.Id);
+
+        var pool = inventory!.Pools.Single(p => p.Id.Value == poolIds[0]);
+        Assert.Equal(7, pool.SoldCount);
+    }
+
     // -------------------------------------------------------------------------
     // Idempotency
     // -------------------------------------------------------------------------
@@ -310,27 +340,8 @@ public sealed class CheckoutReservationTests
         return offerId;
     }
 
-    private async Task<(List<Guid> SeatIds, List<Guid> PoolIds)> GetInventoryIdsAsync(Guid eventId)
-    {
-        await using var scope = _fixture.Factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
-
-        var reference = await db.PublishedEventReferences
-            .AsNoTracking()
-            .FirstOrDefaultAsync(r => r.EventId == eventId);
-
-        Assert.NotNull(reference);
-
-        var inventory = await db.Inventories
-            .AsNoTracking()
-            .FirstOrDefaultAsync(i => i.EventReferenceId == reference!.Id);
-
-        Assert.NotNull(inventory);
-
-        return (
-            inventory!.Seats.Select(s => s.Id.Value).ToList(),
-            inventory.Pools.Select(p => p.Id.Value).ToList());
-    }
+    private Task<(List<Guid> SeatIds, List<Guid> PoolIds)> GetInventoryIdsAsync(Guid eventId) =>
+        TicketingSeedHelpers.GetInventoryIdsAsync(_fixture, eventId);
 
     private async Task SetReservationStatusAsync(Guid reservationId, ReservationStatus status)
     {
