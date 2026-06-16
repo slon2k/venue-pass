@@ -1,11 +1,12 @@
 using VenuePass.BuildingBlocks.Domain;
-using VenuePass.BuildingBlocks.Extensions;
 using VenuePass.Modules.Ticketing.Domain.Orders;
 
 namespace VenuePass.Modules.Ticketing.Domain.Tickets;
 
 public class TicketIssuer(ITicketCodeGenerator ticketCodeGenerator)
 {
+    private const int MaxUniqueGenerationAttemptsMultiplier = 10;
+
     private readonly ITicketCodeGenerator _ticketCodeGenerator = ticketCodeGenerator ?? throw new ArgumentNullException(nameof(ticketCodeGenerator));
 
     public IReadOnlyList<Ticket> IssueTickets(
@@ -26,32 +27,31 @@ public class TicketIssuer(ITicketCodeGenerator ticketCodeGenerator)
         if (order.Status != OrderStatus.Completed)
             throw new DomainRuleViolationException(TicketErrors.OrderMustBeCompleted(order.Id));
 
-        var tickets = new List<Ticket>();
-
-        var codeEnumerator = GenerateDistinctBatch(order.TotalQuantity).GetEnumerator();
+        var tickets = new List<Ticket>(order.TotalQuantity);
+        var issuedCodes = new HashSet<TicketCode>();
 
         foreach (var item in order.Items)
         {
             tickets.AddRange(CreateForOrderItem(
                 orderId: order.Id,
                 orderItem: item,
-                codeEnumerator: codeEnumerator,
+                issuedCodes: issuedCodes,
                 now: now));
         }
         
         return tickets.AsReadOnly();
     }
 
-    private static IReadOnlyList<Ticket> CreateForOrderItem(
+    private IReadOnlyList<Ticket> CreateForOrderItem(
     OrderId orderId,
     OrderItem orderItem,
-    IEnumerator<TicketCode> codeEnumerator,
+    HashSet<TicketCode> issuedCodes,
     DateTimeOffset now) => orderItem.Type switch
     {
         OrderItemType.Seat => [Ticket.CreateForInventorySeat(
             orderId: orderId,
             orderItemId: orderItem.Id,
-            code: codeEnumerator.MoveNext() ? codeEnumerator.Current : throw new InvalidOperationException("Not enough ticket codes generated for the order items."),
+            code: GenerateUniqueCode(issuedCodes),
             inventorySeatId: orderItem.InventorySeatId!.Value,
             now: now)],
 
@@ -59,7 +59,7 @@ public class TicketIssuer(ITicketCodeGenerator ticketCodeGenerator)
             .Select(_ => Ticket.CreateForGeneralAdmissionPool(
                 orderId: orderId,
                 orderItemId: orderItem.Id,
-                code: codeEnumerator.MoveNext() ? codeEnumerator.Current : throw new InvalidOperationException("Not enough ticket codes generated for the order items."),
+                code: GenerateUniqueCode(issuedCodes),
                 generalAdmissionPoolId: orderItem.GeneralAdmissionPoolId!.Value,
                 now: now))
             .ToList(),
@@ -67,24 +67,23 @@ public class TicketIssuer(ITicketCodeGenerator ticketCodeGenerator)
         _ => throw new ArgumentException($"Unsupported order item type '{orderItem.Type}'.", nameof(orderItem))
     };
 
-    private HashSet<TicketCode> GenerateDistinctBatch(int quantity)
+    private TicketCode GenerateUniqueCode(HashSet<TicketCode> issuedCodes)
     {
-        HashSet<TicketCode> codes = [];
-
         var attempts = 0;
-        var maxAttempts = quantity * 10;
+        var maxAttempts = Math.Max(issuedCodes.Count + 1, 1) * MaxUniqueGenerationAttemptsMultiplier;
 
-        while (codes.Count < quantity)
+        while (attempts < maxAttempts)
         {
-            if (attempts >= maxAttempts)
+            var code = _ticketCodeGenerator.Generate();
+
+            if (issuedCodes.Add(code))
             {
-                throw new InvalidOperationException("Unable to generate distinct ticket codes within the maximum number of attempts.");
+                return code;
             }
 
-            codes.Add(_ticketCodeGenerator.Generate());
             attempts++;
         }
 
-        return codes;
+        throw new InvalidOperationException("Unable to generate distinct ticket codes within the maximum number of attempts.");
     }
 }

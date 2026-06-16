@@ -1,6 +1,7 @@
 using FluentValidation;
 using FluentValidation.Results;
 
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -29,6 +30,7 @@ public sealed record CheckoutReservationResult(
     string BuyerName,
     string BuyerEmail,
     IReadOnlyList<CheckoutReservationItemResult> Items,
+    IReadOnlyList<CheckoutReservationTicketResult> Tickets,
     bool IsNewOrder);
 
 public sealed record CheckoutReservationItemResult(
@@ -41,6 +43,13 @@ public sealed record CheckoutReservationItemResult(
     decimal UnitPrice,
     decimal Total);
 
+public sealed record CheckoutReservationTicketResult(
+    Guid TicketId,
+    string Code,
+    Guid? InventorySeatId,
+    Guid? GeneralAdmissionPoolId,
+    DateTimeOffset CreatedAt);
+
 public sealed class CheckoutReservationHandler(
     TicketingDbContext db,
     TicketIssuer ticketIssuer,
@@ -48,6 +57,8 @@ public sealed class CheckoutReservationHandler(
     TimeProvider timeProvider,
     ILogger<CheckoutReservationHandler> logger)
 {
+    private const int MaxTicketCodeCollisionRetries = 3;
+
     public async Task<Result<CheckoutReservationResult>> Handle(
         CheckoutReservationCommand command,
         CancellationToken ct)
@@ -63,88 +74,166 @@ public sealed class CheckoutReservationHandler(
 
         var reservationId = new ReservationId(command.ReservationId);
 
-        var reservation = await db.Reservations
-            .FirstOrDefaultAsync(r => r.Id == reservationId, ct);
-
-        if (reservation is null)
+        for (int attempt = 1; attempt <= MaxTicketCodeCollisionRetries + 1; attempt++)
         {
-            return CheckoutReservationErrors.ReservationNotFound(command.ReservationId);
-        }
+            var reservation = await db.Reservations
+                .FirstOrDefaultAsync(r => r.Id == reservationId, ct);
 
-        // Idempotency: completed reservation with an existing order → return it
-        if (reservation.Status == ReservationStatus.Completed)
-        {
-            var existingOrder = await db.Orders
-                .AsNoTracking()
-                .FirstOrDefaultAsync(o => o.ReservationId == reservationId, ct);
+            if (reservation is null)
+            {
+                return CheckoutReservationErrors.ReservationNotFound(command.ReservationId);
+            }
 
-            if (existingOrder is null)
+            // Idempotency: completed reservation with an existing order → return it
+            if (reservation.Status == ReservationStatus.Completed)
+            {
+                var existingOrder = await db.Orders
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(o => o.ReservationId == reservationId, ct);
+
+                if (existingOrder is null)
+                {
+                    logger.LogError(
+                        "Reservation {ReservationId} is Completed but no order was found.",
+                        reservation.Id);
+
+                    return CheckoutReservationErrors.OrderNotFound(command.ReservationId);
+                }
+
+                var existingTickets = await db.Tickets
+                    .AsNoTracking()
+                    .Where(t => t.OrderId == existingOrder.Id)
+                    .ToListAsync(ct);
+
+                return ToResult(existingOrder, existingTickets, isNewOrder: false);
+            }
+
+            var inventory = await db.Inventories
+                .Include(i => i.Seats)
+                .Include(i => i.Pools)
+                .FirstOrDefaultAsync(i => i.Id == reservation.InventoryId, ct);
+
+            if (inventory is null)
             {
                 logger.LogError(
-                    "Reservation {ReservationId} is Completed but no order was found.",
-                    reservation.Id);
+                    "Inventory {InventoryId} referenced by reservation {ReservationId} was not found.",
+                    reservation.InventoryId, reservation.Id);
 
-                return CheckoutReservationErrors.OrderNotFound(command.ReservationId);
+                return CheckoutReservationErrors.InventoryNotFound(reservation.InventoryId.Value);
             }
 
-            return ToResult(existingOrder, isNewOrder: false);
-        }
-
-        var inventory = await db.Inventories
-            .Include(i => i.Seats)
-            .Include(i => i.Pools)
-            .FirstOrDefaultAsync(i => i.Id == reservation.InventoryId, ct);
-
-        if (inventory is null)
-        {
-            logger.LogError(
-                "Inventory {InventoryId} referenced by reservation {ReservationId} was not found.",
-                reservation.InventoryId, reservation.Id);
-
-            return CheckoutReservationErrors.InventoryNotFound(reservation.InventoryId.Value);
-        }
-
-        Order order;
-
-        try
-        {
-            var now = timeProvider.GetUtcNow();
-
-            order = Order.CreateFromReservation(reservation, command.BuyerName, command.BuyerEmail, now);
-
-            reservation.Complete(now);
-
-            var seatIds = GetSeatIds(reservation.Items);
-
-            if (seatIds.Count > 0)
+            try
             {
-                inventory.SellSeats(seatIds);
-            }
+                var now = timeProvider.GetUtcNow();
 
-            foreach (var (poolId, quantity) in GetGeneralAdmissionPools(reservation.Items))
+                var order = Order.CreateFromReservation(reservation, command.BuyerName, command.BuyerEmail, now);
+
+                reservation.Complete(now);
+
+                var seatIds = GetSeatIds(reservation.Items);
+
+                if (seatIds.Count > 0)
+                {
+                    inventory.SellSeats(seatIds);
+                }
+
+                foreach (var (poolId, quantity) in GetGeneralAdmissionPools(reservation.Items))
+                {
+                    inventory.SellGeneralAdmissionPool(poolId, quantity);
+                }
+
+                db.Orders.Add(order);
+                var tickets = ticketIssuer.IssueTickets(order, now);
+
+                var issuedCodes = tickets
+                    .Select(t => t.Code.Value)
+                    .ToArray();
+
+                if (issuedCodes.Length != issuedCodes.Distinct(StringComparer.Ordinal).Count())
+                {
+                    logger.LogWarning(
+                        "Duplicate ticket codes generated in-memory for reservation {ReservationId}; retrying {Attempt}/{MaxAttempts}.",
+                        command.ReservationId,
+                        attempt,
+                        MaxTicketCodeCollisionRetries);
+
+                    db.ChangeTracker.Clear();
+                    continue;
+                }
+
+                var existingCodes = await db.Tickets
+                    .AsNoTracking()
+                    .Select(t => t.Code.Value)
+                    .ToListAsync(ct);
+
+                var existingCodeCollision = existingCodes.Any(issuedCodes.Contains);
+
+                if (existingCodeCollision)
+                {
+                    logger.LogWarning(
+                        "Generated ticket codes collided with existing tickets for reservation {ReservationId}; retrying {Attempt}/{MaxAttempts}.",
+                        command.ReservationId,
+                        attempt,
+                        MaxTicketCodeCollisionRetries);
+
+                    db.ChangeTracker.Clear();
+                    continue;
+                }
+
+                db.Tickets.AddRange(tickets);
+                await db.SaveChangesAsync(ct);
+
+                return ToResult(order, tickets, isNewOrder: true);
+            }
+            catch (DomainException ex)
             {
-                inventory.SellGeneralAdmissionPool(poolId, quantity);
+                logger.LogInformation(ex, "Domain rule rejected checkout for reservation {ReservationId}.", command.ReservationId);
+                return Error.FromDomainException(ex);
             }
+            catch (DbUpdateException ex) when (IsTicketCodeUniqueViolation(ex) && attempt <= MaxTicketCodeCollisionRetries)
+            {
+                logger.LogWarning(
+                    ex,
+                    "Ticket code collision while checking out reservation {ReservationId}; retrying {Attempt}/{MaxAttempts}.",
+                    command.ReservationId,
+                    attempt,
+                    MaxTicketCodeCollisionRetries);
 
-            db.Orders.Add(order);
-            var tickets = ticketIssuer.IssueTickets(order, now);
-            db.Tickets.AddRange(tickets);
-            await db.SaveChangesAsync(ct);
-        }
-        catch (DomainException ex)
-        {
-            logger.LogInformation(ex, "Domain rule rejected checkout for reservation {ReservationId}.", command.ReservationId);
-            return Error.FromDomainException(ex);
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            logger.LogInformation(
-                "Concurrency conflict during checkout for reservation {ReservationId}.",
-                command.ReservationId);
-            return CheckoutReservationErrors.ConcurrencyConflict();
+                db.ChangeTracker.Clear();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                logger.LogInformation(
+                    "Concurrency conflict during checkout for reservation {ReservationId}.",
+                    command.ReservationId);
+                return CheckoutReservationErrors.ConcurrencyConflict();
+            }
         }
 
-        return ToResult(order, isNewOrder: true);
+        logger.LogError(
+            "Ticket code collision retries exhausted for reservation {ReservationId}.",
+            command.ReservationId);
+
+        return CheckoutReservationErrors.ConcurrencyConflict();
+    }
+
+    private static bool IsTicketCodeUniqueViolation(DbUpdateException ex)
+    {
+        var sqlException = ex.InnerException as SqlException;
+
+        if (sqlException is null)
+        {
+            return false;
+        }
+
+        // SQL Server: 2601 = unique index violation, 2627 = unique constraint violation
+        if (sqlException.Number is not (2601 or 2627))
+        {
+            return false;
+        }
+
+        return sqlException.Message.Contains("IX_tickets_ticket_code", StringComparison.OrdinalIgnoreCase)
+            || sqlException.Message.Contains("ticket_code", StringComparison.OrdinalIgnoreCase);
     }
 
     private static IReadOnlyList<InventorySeatId> GetSeatIds(IReadOnlyList<ReservationItem> items) =>
@@ -154,7 +243,7 @@ public sealed class CheckoutReservationHandler(
         [.. items.Where(i => i.GeneralAdmissionPoolId.HasValue)
             .Select(i => (i.GeneralAdmissionPoolId!.Value, i.Quantity))];
 
-    private static CheckoutReservationResult ToResult(Order order, bool isNewOrder) =>
+    private static CheckoutReservationResult ToResult(Order order, IReadOnlyList<Ticket> tickets, bool isNewOrder) =>
         new(
             OrderId: order.Id.Value,
             ReservationId: order.ReservationId.Value,
@@ -172,5 +261,11 @@ public sealed class CheckoutReservationHandler(
                 Quantity: i.Quantity.Value,
                 UnitPrice: i.UnitPrice.Value,
                 Total: i.Total.Value))],
+            Tickets: [.. tickets.Select(t => new CheckoutReservationTicketResult(
+                TicketId: t.Id.Value,
+                Code: t.Code.Value,
+                InventorySeatId: t.InventorySeatId?.Value,
+                GeneralAdmissionPoolId: t.GeneralAdmissionPoolId?.Value,
+                CreatedAt: t.CreatedAt))],
             IsNewOrder: isNewOrder);
 }

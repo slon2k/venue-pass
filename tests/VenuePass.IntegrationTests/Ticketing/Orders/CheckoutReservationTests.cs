@@ -57,6 +57,12 @@ public sealed class CheckoutReservationTests
         Assert.Equal("Seat", body.Items[0].Type);
         Assert.Equal(seatIds[0], body.Items[0].InventorySeatId);
         Assert.Equal(1, body.Items[0].Quantity);
+        Assert.Single(body.Tickets);
+        Assert.NotEqual(Guid.Empty, body.Tickets[0].TicketId);
+        Assert.Equal(seatIds[0], body.Tickets[0].InventorySeatId);
+        Assert.Null(body.Tickets[0].GeneralAdmissionPoolId);
+        Assert.Equal(16, body.Tickets[0].Code.Length);
+        Assert.True(body.Tickets[0].CreatedAt > DateTimeOffset.MinValue);
         Assert.True(body.Total > 0);
         Assert.Equal(body.Total, body.Items[0].Total);
     }
@@ -84,6 +90,10 @@ public sealed class CheckoutReservationTests
         Assert.Equal("GeneralAdmissionPool", body.Items[0].Type);
         Assert.Equal(poolIds[0], body.Items[0].GeneralAdmissionPoolId);
         Assert.Equal(3, body.Items[0].Quantity);
+        Assert.Equal(3, body.Tickets.Count);
+        Assert.All(body.Tickets, t => Assert.Equal(poolIds[0], t.GeneralAdmissionPoolId));
+        Assert.All(body.Tickets, t => Assert.Null(t.InventorySeatId));
+        Assert.Equal(body.Tickets.Count, body.Tickets.Select(t => t.Code).Distinct(StringComparer.Ordinal).Count());
         Assert.Equal(body.Items[0].UnitPrice * 3, body.Total);
     }
 
@@ -107,6 +117,7 @@ public sealed class CheckoutReservationTests
         CheckoutResponse? body = await response.Content.ReadFromJsonAsync<CheckoutResponse>();
         Assert.NotNull(body);
         Assert.Equal(2, body!.Items.Count);
+        Assert.Equal(3, body.Tickets.Count);
 
         decimal expectedTotal = body.Items.Sum(i => i.Total);
         Assert.Equal(expectedTotal, body.Total);
@@ -226,6 +237,9 @@ public sealed class CheckoutReservationTests
         CheckoutResponse? secondBody = await second.Content.ReadFromJsonAsync<CheckoutResponse>();
         Assert.NotNull(secondBody);
         Assert.Equal(firstBody!.OrderId, secondBody!.OrderId);
+        Assert.Equal(
+            firstBody.Tickets.Select(t => t.Code).OrderBy(c => c),
+            secondBody!.Tickets.Select(t => t.Code).OrderBy(c => c));
     }
 
     // -------------------------------------------------------------------------
@@ -386,7 +400,8 @@ public sealed class CheckoutReservationTests
         decimal Total,
         string BuyerName,
         string BuyerEmail,
-        IReadOnlyList<CheckoutItemResponse> Items);
+        IReadOnlyList<CheckoutItemResponse> Items,
+        IReadOnlyList<CheckoutTicketResponse> Tickets);
 
     private sealed record CheckoutItemResponse(
         Guid OrderItemId,
@@ -397,6 +412,13 @@ public sealed class CheckoutReservationTests
         int Quantity,
         decimal UnitPrice,
         decimal Total);
+
+    private sealed record CheckoutTicketResponse(
+        Guid TicketId,
+        string Code,
+        Guid? InventorySeatId,
+        Guid? GeneralAdmissionPoolId,
+        DateTimeOffset CreatedAt);
 
     private sealed record InventoryStatusResponse(
         Guid EventId,

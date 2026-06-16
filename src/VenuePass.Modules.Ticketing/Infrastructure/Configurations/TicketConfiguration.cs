@@ -11,7 +11,13 @@ internal sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
 {
     public void Configure(EntityTypeBuilder<Ticket> builder)
     {
-        builder.ToTable("tickets");
+        builder.ToTable("tickets", TicketingDbContext.Schema, table =>
+        {
+            table.HasCheckConstraint(
+                "CK_tickets_exactly_one_target",
+                "([inventory_seat_id] IS NOT NULL AND [general_admission_pool_id] IS NULL) OR " +
+                "([inventory_seat_id] IS NULL AND [general_admission_pool_id] IS NOT NULL)");
+        });
 
         builder.HasKey(t => t.Id);
 
@@ -50,8 +56,7 @@ internal sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
             .HasMaxLength(TicketCode.Length)
             .IsFixedLength()
             .HasColumnName("ticket_code")
-            .IsRequired()
-            .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            .IsRequired();
 
         builder.HasIndex(t => t.Code)
             .IsUnique()
