@@ -21,6 +21,8 @@ public class Reservation : AggregateRoot<ReservationId>
 
     public Amount Total { get; private set; } = new Amount(0);
 
+    public DateTimeOffset CreatedAt { get; private set; }
+
     public IReadOnlyList<ReservationItem> Items => _items.AsReadOnly();
 
     public bool IsExpired(DateTimeOffset now) => ExpiresAt <= now;
@@ -35,6 +37,7 @@ public class Reservation : AggregateRoot<ReservationId>
         InventoryId inventoryId,
         IReadOnlyList<ReservationItem> items,
         DateTimeOffset expiresAt,
+        DateTimeOffset createdAt,
         Currency currency) : base(id)
     {
         if (id.IsEmpty)
@@ -61,6 +64,7 @@ public class Reservation : AggregateRoot<ReservationId>
         OfferId = offerId;
         InventoryId = inventoryId;
         ExpiresAt = expiresAt;
+        CreatedAt = createdAt;
         Currency = currency;
         _items.AddRange(items);
         RecalculateTotal();
@@ -111,6 +115,7 @@ public class Reservation : AggregateRoot<ReservationId>
             offerId: offer.Id,
             inventoryId: offer.InventoryId,
             expiresAt: expiresAt,
+            createdAt: now,
             currency: offer.Currency,
             items: items
         );

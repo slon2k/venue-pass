@@ -10,6 +10,7 @@ using VenuePass.Modules.Ticketing.Domain.Common;
 using VenuePass.Modules.Ticketing.Domain.Inventories;
 using VenuePass.Modules.Ticketing.Domain.Orders;
 using VenuePass.Modules.Ticketing.Domain.Reservations;
+using VenuePass.Modules.Ticketing.Domain.Tickets;
 using VenuePass.Modules.Ticketing.Infrastructure;
 
 namespace VenuePass.Modules.Ticketing.Features.CheckoutReservation;
@@ -42,6 +43,7 @@ public sealed record CheckoutReservationItemResult(
 
 public sealed class CheckoutReservationHandler(
     TicketingDbContext db,
+    TicketIssuer ticketIssuer,
     IValidator<CheckoutReservationCommand> validator,
     TimeProvider timeProvider,
     ILogger<CheckoutReservationHandler> logger)
@@ -125,6 +127,8 @@ public sealed class CheckoutReservationHandler(
             }
 
             db.Orders.Add(order);
+            var tickets = ticketIssuer.IssueTickets(order, now);
+            db.Tickets.AddRange(tickets);
             await db.SaveChangesAsync(ct);
         }
         catch (DomainException ex)

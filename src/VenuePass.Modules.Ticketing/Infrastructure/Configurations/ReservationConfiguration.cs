@@ -59,6 +59,10 @@ internal sealed class ReservationConfiguration : IEntityTypeConfiguration<Reserv
             .HasColumnName("expires_at")
             .IsRequired();
 
+        builder.Property(r => r.CreatedAt)
+            .HasColumnName("created_at")
+            .IsRequired();
+
         builder.Property(r => r.Currency)
             .HasConversion(
                 currency => currency.Value,
