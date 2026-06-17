@@ -30,6 +30,8 @@ public class Order : AggregateRoot<OrderId>
 
     public IReadOnlyList<OrderItem> Items => _items.AsReadOnly();
 
+    public int TotalQuantity => _items.Sum(i => i.Quantity.Value);
+
     private Order() { }
 
     private Order(
@@ -43,6 +45,9 @@ public class Order : AggregateRoot<OrderId>
         DateTimeOffset createdAt,
         IReadOnlyList<OrderItem> items) : base(id)
     {
+        ArgumentNullException.ThrowIfNull(items);
+        ArgumentNullException.ThrowIfNull(currency);
+
         if (id.IsEmpty)
             throw new ArgumentException("Order ID cannot be empty.", nameof(id));
 
@@ -54,6 +59,12 @@ public class Order : AggregateRoot<OrderId>
 
         if (inventoryId.IsEmpty)
             throw new ArgumentException("Inventory ID cannot be empty.", nameof(inventoryId));
+
+        if (currency.IsEmpty)
+            throw new ArgumentException("Currency cannot be empty.", nameof(currency));
+
+        if (createdAt == default)
+            throw new ArgumentException("Creation time cannot be the default value.", nameof(createdAt));
 
         ArgumentException.ThrowIfNullOrWhiteSpace(buyerName, nameof(buyerName));
         ArgumentException.ThrowIfNullOrWhiteSpace(buyerEmail, nameof(buyerEmail));
@@ -139,6 +150,11 @@ public class OrderItem : Entity<OrderItemId>
         if (priceZoneId.IsEmpty)
             throw new ArgumentException("Price zone ID cannot be empty.", nameof(priceZoneId));
 
+        if (!Enum.IsDefined(type))
+        {
+            throw new ArgumentException($"Unsupported order item type '{type}'.", nameof(type));
+        }
+
         if (type == OrderItemType.Seat)
         {
             if (inventorySeatId is null || inventorySeatId.Value.IsEmpty)
@@ -176,9 +192,12 @@ public class OrderItem : Entity<OrderItemId>
     {
         ArgumentNullException.ThrowIfNull(item);
 
-        var type = item.Type == ReservationItemType.Seat
-            ? OrderItemType.Seat
-            : OrderItemType.GeneralAdmissionPool;
+        var type = item.Type switch
+        {
+             ReservationItemType.Seat => OrderItemType.Seat,
+             ReservationItemType.GeneralAdmissionPool => OrderItemType.GeneralAdmissionPool,
+             _ => throw new ArgumentException($"Unsupported reservation item type '{item.Type}'.", nameof(item))
+        };
 
         return new OrderItem(
             id: OrderItemId.Create(),

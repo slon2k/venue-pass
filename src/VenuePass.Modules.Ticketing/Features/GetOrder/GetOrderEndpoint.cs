@@ -18,7 +18,8 @@ public static class GetOrderEndpoint
         string BuyerName,
         string BuyerEmail,
         DateTimeOffset CreatedAt,
-        IReadOnlyList<GetOrderItemResponse> Items);
+        IReadOnlyList<GetOrderItemResponse> Items,
+        IReadOnlyList<GetOrderTicketResponse> Tickets);
 
     public sealed record GetOrderItemResponse(
         Guid OrderItemId,
@@ -29,6 +30,14 @@ public static class GetOrderEndpoint
         int Quantity,
         decimal UnitPrice,
         decimal Total);
+
+    public sealed record GetOrderTicketResponse(
+        Guid TicketId,
+        string Code,
+        string Status,
+        Guid? InventorySeatId,
+        Guid? GeneralAdmissionPoolId,
+        DateTimeOffset CreatedAt);
 
     public static IEndpointRouteBuilder MapGetOrder(this IEndpointRouteBuilder app)
     {
@@ -71,5 +80,12 @@ public static class GetOrderEndpoint
                 PriceZoneId: i.PriceZoneId,
                 Quantity: i.Quantity,
                 UnitPrice: i.UnitPrice,
-                Total: i.Total))]));
+                Total: i.Total))],
+            Tickets: [.. result.Tickets.Select(t => new GetOrderTicketResponse(
+                TicketId: t.TicketId,
+                Code: t.Code,
+                Status: t.Status,
+                InventorySeatId: t.InventorySeatId,
+                GeneralAdmissionPoolId: t.GeneralAdmissionPoolId,
+                CreatedAt: t.CreatedAt))]));
 }

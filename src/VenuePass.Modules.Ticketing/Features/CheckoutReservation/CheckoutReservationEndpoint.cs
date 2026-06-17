@@ -22,7 +22,8 @@ public static class CheckoutReservationEndpoint
         decimal Total,
         string BuyerName,
         string BuyerEmail,
-        IReadOnlyList<CheckoutReservationItemResponse> Items);
+        IReadOnlyList<CheckoutReservationItemResponse> Items,
+        IReadOnlyList<CheckoutReservationTicketResponse> Tickets);
 
     public sealed record CheckoutReservationItemResponse(
         Guid OrderItemId,
@@ -33,6 +34,13 @@ public static class CheckoutReservationEndpoint
         int Quantity,
         decimal UnitPrice,
         decimal Total);
+
+    public sealed record CheckoutReservationTicketResponse(
+        Guid TicketId,
+        string Code,
+        Guid? InventorySeatId,
+        Guid? GeneralAdmissionPoolId,
+        DateTimeOffset CreatedAt);
 
     public static IEndpointRouteBuilder MapCheckoutReservation(this IEndpointRouteBuilder app)
     {
@@ -84,7 +92,13 @@ public static class CheckoutReservationEndpoint
                 PriceZoneId: i.PriceZoneId,
                 Quantity: i.Quantity,
                 UnitPrice: i.UnitPrice,
-                Total: i.Total))]);
+                Total: i.Total))],
+            Tickets: [.. result.Tickets.Select(t => new CheckoutReservationTicketResponse(
+                TicketId: t.TicketId,
+                Code: t.Code,
+                InventorySeatId: t.InventorySeatId,
+                GeneralAdmissionPoolId: t.GeneralAdmissionPoolId,
+                CreatedAt: t.CreatedAt))]);
 
         return result.IsNewOrder
             ? Results.Created($"/orders/{result.OrderId}", response)

@@ -23,6 +23,8 @@ public sealed record Currency
 
     public static implicit operator string(Currency currency) => currency.Value;
 
+    public bool IsEmpty => string.IsNullOrWhiteSpace(Value);
+
     public override string ToString() => Value;
 
     public static readonly Currency USD = new("USD");
