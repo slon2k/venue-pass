@@ -9,7 +9,7 @@ Reservation and checkout lifecycle is implemented: customers can reserve availab
 - [x] Capability A: Reservation domain and availability locking
 - [x] Capability B: Reservation API and expiration flow
 - [x] Capability C: Checkout/order creation
-- [ ] Capability D: Ticket issuance and ticket retrieval
+- [x] Capability D: Ticket issuance and ticket retrieval
 - [ ] Capability E: Integration and concurrency tests
 
 ## Capability Breakdown
@@ -40,11 +40,11 @@ Reservation and checkout lifecycle is implemented: customers can reserve availab
 
 ### Capability D: Ticket issuance and ticket retrieval
 
-- [ ] D1: Implement ticket issuance after successful order creation
-- [ ] D2: Generate unique ticket codes suitable for future check-in
-- [ ] D3: Persist issued tickets
-- [ ] D4: Deliver `GetOrder` endpoint including issued tickets
-- [ ] D5: Deliver ticket lookup endpoint by ticket code
+- [x] D1: Implement ticket issuance after successful order creation
+- [x] D2: Generate unique ticket codes suitable for future check-in
+- [x] D3: Persist issued tickets
+- [x] D4: Deliver `GetOrder` endpoint including issued tickets
+- [x] D5: Deliver ticket lookup endpoint by ticket code
 
 ### Capability E: Integration and concurrency tests
 
@@ -101,13 +101,13 @@ These requirements define minimum business behavior for M04 and should be treate
 
 ### Ticket Issuance Requirements
 
-- [ ] Successful checkout issues tickets.
-- [ ] One reserved seat produces one ticket.
-- [ ] Each reserved GA unit produces one ticket.
-- [ ] Each ticket has a unique ticket code.
-- [ ] Tickets are persisted and retrievable by order.
-- [ ] Ticket status starts as `Issued`.
-- [ ] Ticket check-in/use is deferred to Milestone 05.
+- [x] Successful checkout issues tickets.
+- [x] One reserved seat produces one ticket.
+- [x] Each reserved GA unit produces one ticket.
+- [x] Each ticket has a unique ticket code.
+- [x] Tickets are persisted and retrievable by order.
+- [x] Ticket status starts as `Issued`.
+- [x] Ticket check-in/use is deferred to Milestone 05.
 
 ### Inventory Status Requirements
 
@@ -124,11 +124,11 @@ These requirements define minimum business behavior for M04 and should be treate
 - [x] `GetReservation` response includes: status, expiration time, items, prices, and total.
 - [x] `CancelReservation` cancels only reserved reservations.
 - [x] `CheckoutReservation` request includes: reservation ID and buyer/contact details.
-- [ ] `CheckoutReservation` response includes: order ID, order total, and issued tickets.
-- [ ] `GetOrder` response includes: order status, items, total, and tickets.
-- [ ] `GetTicketByCode` endpoint is `GET /tickets/{ticketCode}` and requires authentication.
-- [ ] `GetTicketByCode` response includes: ticket code, ticket status, order ID, and related inventory target reference.
-- [ ] `GetTicketByCode` returns `404` when the ticket code does not exist.
+- [x] `CheckoutReservation` response includes: order ID, order total, and issued tickets.
+- [x] `GetOrder` response includes: order status, items, total, and tickets.
+- [x] `GetTicketByCode` endpoint is `GET /tickets/{ticketCode}` and requires authentication.
+- [x] `GetTicketByCode` response includes: ticket code, ticket status, order ID, and related inventory target reference.
+- [x] `GetTicketByCode` returns `404` when the ticket code does not exist.
 
 ## Accepted Decisions (Locked For M04)
 
