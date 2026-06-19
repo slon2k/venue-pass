@@ -31,7 +31,7 @@ public static class GetTicketEndpoint
         return app;
     }
 
-    private static async Task<IResult> Handle(string ticketCode, [FromServices] GetTicketHandler handler, CancellationToken ct)
+    private static async Task<IResult> Handle(string ticketCode, GetTicketHandler handler, CancellationToken ct)
     {
         var result = await handler.Handle(new GetTicketQuery(ticketCode), ct);
 
