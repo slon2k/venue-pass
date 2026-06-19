@@ -10,7 +10,7 @@ Reservation and checkout lifecycle is implemented: customers can reserve availab
 - [x] Capability B: Reservation API and expiration flow
 - [x] Capability C: Checkout/order creation
 - [x] Capability D: Ticket issuance and ticket retrieval
-- [ ] Capability E: Integration and concurrency tests
+- [x] Capability E: Integration and concurrency tests
 
 ## Capability Breakdown
 
@@ -48,13 +48,13 @@ Reservation and checkout lifecycle is implemented: customers can reserve availab
 
 ### Capability E: Integration and concurrency tests
 
-- [ ] E1: Reservation flow tests: active offer → reserve seats/pools
-- [ ] E2: Reservation rejection tests: unavailable target, inactive offer, expired sale window
-- [ ] E3: Expiration/cancellation tests release inventory
-- [ ] E4: Checkout tests create order, mark inventory sold, and issue tickets
-- [ ] E5: Double-reservation/concurrency tests prevent oversell
-- [ ] E6: End-to-end test: publish event → inventory → offer → reservation → order → tickets
-- [ ] E7: Authorization enforcement tests across all new M04 Ticketing endpoints
+- [x] E1: Reservation flow tests: active offer → reserve seats/pools
+- [x] E2: Reservation rejection tests: unavailable target, inactive offer, expired sale window
+- [x] E3: Expiration/cancellation tests release inventory
+- [x] E4: Checkout tests create order, mark inventory sold, and issue tickets
+- [x] E5: Double-reservation/concurrency tests prevent oversell
+- [x] E6: End-to-end test: publish event → inventory → offer → reservation → order → tickets
+- [x] E7: Authorization enforcement tests across all new M04 Ticketing endpoints
 
 ## Functional Requirements Baseline (M04)
 

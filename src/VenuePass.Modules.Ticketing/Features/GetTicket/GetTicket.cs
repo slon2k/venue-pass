@@ -20,9 +20,11 @@ public sealed class GetTicketHandler(TicketingDbContext db)
 {
     public async Task<Result<GetTicketResult>> Handle(GetTicketQuery query, CancellationToken ct)
     {
+        var ticketCode = new TicketCode(query.TicketCode);
+
         var ticket = await db.Tickets
             .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.Code.Value == query.TicketCode, ct);
+            .FirstOrDefaultAsync(t => t.Code == ticketCode, ct);
 
         if (ticket is null)
         {

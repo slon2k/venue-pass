@@ -21,13 +21,13 @@ Add the integration and concurrency test coverage needed to prove the M04 ticket
 
 ## Acceptance Criteria
 
-- Reservation tests cover successful seat and GA pool reservation from an active offer.
-- Rejection tests cover unavailable inventory, inactive offers, and invalid sale windows.
-- Expiration and cancellation tests confirm inventory is released correctly.
-- Checkout tests confirm exactly one order is created and tickets are issued.
-- Concurrency tests demonstrate that duplicate reservation attempts do not oversell inventory.
-- End-to-end tests cover publish event -> inventory -> offer -> reservation -> order -> tickets.
-- Authorization tests verify the new customer-facing ticketing endpoints require authentication.
+- [x] Reservation tests cover successful seat and GA pool reservation from an active offer.
+- [x] Rejection tests cover unavailable inventory, inactive offers, and invalid sale windows.
+- [x] Expiration and cancellation tests confirm inventory is released correctly.
+- [x] Checkout tests confirm exactly one order is created and tickets are issued.
+- [x] Concurrency tests demonstrate that duplicate reservation attempts do not oversell inventory.
+- [x] End-to-end tests cover publish event -> inventory -> offer -> reservation -> order -> tickets.
+- [x] Authorization tests verify the new customer-facing ticketing endpoints require authentication.
 
 ## Test Matrix
 
