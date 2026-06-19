@@ -33,14 +33,24 @@ internal static class TicketingSeedHelpers
         // in the Ticketing module processes the integration event synchronously during setup.
         await using EventsApiFactory factory = fixture.CreateFactory(enableOutboxDispatcher: true);
 
+        return await PublishEventAndSyncInventoryAsync(factory);
+    }
+
+    /// <summary>
+    /// Creates a venue, manifest template, event, publishes it, and waits for
+    /// the outbox dispatcher to process the message so the Ticketing module's
+    /// EventPublishedHandler runs and inventory is created. Returns the eventId.
+    /// </summary>
+    public static async Task<Guid> PublishEventAndSyncInventoryAsync(EventsApiFactory factory)
+    {
+        // Use clients from the provided factory so callers can customize the DI container
+        // (for example, to shorten the expiration sweep interval in background-worker tests).
         using HttpClient adminClient = factory.CreateClient();
         adminClient.DefaultRequestHeaders.Add(TestAuthHandler.SubHeader, Guid.NewGuid().ToString());
         adminClient.DefaultRequestHeaders.Add(TestAuthHandler.RoleHeader, "EventAdmin");
 
-        // Re-create a manager client against the same factory so all requests share the same DI scope.
-        string managerId = Guid.NewGuid().ToString();
         using HttpClient factoryManagerClient = factory.CreateClient();
-        factoryManagerClient.DefaultRequestHeaders.Add(TestAuthHandler.SubHeader, managerId);
+        factoryManagerClient.DefaultRequestHeaders.Add(TestAuthHandler.SubHeader, Guid.NewGuid().ToString());
         factoryManagerClient.DefaultRequestHeaders.Add(TestAuthHandler.RoleHeader, "EventManager");
 
         Guid venueId = await CreateVenueAsync(adminClient);
@@ -85,13 +95,15 @@ internal static class TicketingSeedHelpers
         HttpClient managerClient,
         Guid eventId,
         string name = "Standard",
-        string currency = "USD")
+        string currency = "USD",
+        DateTimeOffset? saleStart = null,
+        DateTimeOffset? saleEnd = null)
     {
         CreateOfferRequest request = new(
             Name: name,
             Currency: currency,
-            SaleStart: null,
-            SaleEnd: null);
+            SaleStart: saleStart,
+            SaleEnd: saleEnd);
 
         HttpResponseMessage response = await managerClient.PostAsJsonAsync($"/events/{eventId}/offers", request);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -163,6 +175,37 @@ internal static class TicketingSeedHelpers
         Assert.NotNull(body);
 
         return body!.OrderId;
+    }
+
+    /// <summary>GET /reservations/{id} — returns the response body. Asserts 200 OK.</summary>
+    public static async Task<GetReservationSeedResponse> GetReservationAsync(HttpClient client, Guid reservationId)
+    {
+        HttpResponseMessage response = await client.GetAsync($"/reservations/{reservationId}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        GetReservationSeedResponse? body = await response.Content.ReadFromJsonAsync<GetReservationSeedResponse>();
+        Assert.NotNull(body);
+
+        return body!;
+    }
+
+    /// <summary>DELETE /reservations/{id} — asserts 204 No Content.</summary>
+    public static async Task CancelReservationAsync(HttpClient client, Guid reservationId)
+    {
+        HttpResponseMessage response = await client.DeleteAsync($"/reservations/{reservationId}");
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    /// <summary>GET /tickets/{ticketCode} — returns the response body. Asserts 200 OK.</summary>
+    public static async Task<GetTicketSeedResponse> GetTicketAsync(HttpClient client, string ticketCode)
+    {
+        HttpResponseMessage response = await client.GetAsync($"/tickets/{ticketCode}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        GetTicketSeedResponse? body = await response.Content.ReadFromJsonAsync<GetTicketSeedResponse>();
+        Assert.NotNull(body);
+
+        return body!;
     }
 
     /// <summary>GET /orders/{orderId} — returns the response body. Asserts 200 OK.</summary>
@@ -370,6 +413,34 @@ internal static class TicketingSeedHelpers
     private sealed record CheckoutReservationRequest(string BuyerName, string BuyerEmail);
 
     private sealed record CheckoutReservationResponse(Guid OrderId);
+
+    internal sealed record GetReservationSeedResponse(
+        Guid ReservationId,
+        Guid OfferId,
+        Guid InventoryId,
+        string Status,
+        DateTimeOffset ExpiresAt,
+        string Currency,
+        decimal Total,
+        IReadOnlyList<GetReservationItemSeedResponse> Items);
+
+    internal sealed record GetReservationItemSeedResponse(
+        Guid ReservationItemId,
+        string Type,
+        Guid PriceZoneId,
+        Guid? InventorySeatId,
+        Guid? GeneralAdmissionPoolId,
+        decimal UnitPrice,
+        int Quantity,
+        decimal Total);
+
+    internal sealed record GetTicketSeedResponse(
+        Guid TicketId,
+        string Code,
+        string Status,
+        Guid? InventorySeatId,
+        Guid? GeneralAdmissionPoolId,
+        DateTimeOffset CreatedAt);
 }
 
 /// <summary>Input record for <see cref="TicketingSeedHelpers.ConfigurePriceZonesAsync"/>.</summary>
@@ -392,7 +463,8 @@ internal sealed record GetOrderSeedResponse(
     string BuyerName,
     string BuyerEmail,
     DateTimeOffset CreatedAt,
-    IReadOnlyList<GetOrderItemSeedResponse> Items);
+    IReadOnlyList<GetOrderItemSeedResponse> Items,
+    IReadOnlyList<GetOrderTicketSeedResponse> Tickets);
 
 internal sealed record GetOrderItemSeedResponse(
     Guid OrderItemId,
@@ -403,3 +475,11 @@ internal sealed record GetOrderItemSeedResponse(
     int Quantity,
     decimal UnitPrice,
     decimal Total);
+
+internal sealed record GetOrderTicketSeedResponse(
+    Guid TicketId,
+    string Code,
+    string Status,
+    Guid? InventorySeatId,
+    Guid? GeneralAdmissionPoolId,
+    DateTimeOffset CreatedAt);

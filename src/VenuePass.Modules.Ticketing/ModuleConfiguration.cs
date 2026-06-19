@@ -20,6 +20,7 @@ using VenuePass.Modules.Ticketing.Features.GetOffer;
 using VenuePass.Modules.Ticketing.Features.GetOffers;
 using VenuePass.Modules.Ticketing.Features.GetOrder;
 using VenuePass.Modules.Ticketing.Features.GetReservation;
+using VenuePass.Modules.Ticketing.Features.GetTicket;
 using VenuePass.Modules.Ticketing.Infrastructure;
 using VenuePass.Modules.Ticketing.Options;
 
@@ -79,6 +80,7 @@ public static class ModuleConfiguration
         services.AddScoped<ExpireReservationHandler>();
         services.AddScoped<CheckoutReservationHandler>();
         services.AddScoped<GetOrderHandler>();
+        services.AddScoped<GetTicketHandler>();
 
         return services;
     }
