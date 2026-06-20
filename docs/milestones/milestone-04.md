@@ -376,13 +376,13 @@ Required concurrency tokens:
 
 ## Definition of Done
 
-- [ ] All in-scope capability issues are implemented and merged.
+- [x] All in-scope capability issues are implemented and merged.
 - [ ] Reservation lifecycle is validated end-to-end (`Reserved` -> `Completed`/`Cancelled`/`Expired`).
 - [ ] Concurrency tests demonstrate no double booking/oversell for seats and GA pools.
 - [ ] Checkout creates exactly one order per reservation and issues tickets.
 - [ ] Inventory status reflects reserved, released, and sold states correctly.
-- [ ] Architecture tests pass without new module-boundary violations.
-- [ ] Baseline CI remains green.
+- [x] Architecture tests pass without new module-boundary violations.
+- [x] Baseline CI remains green.
 - [ ] Milestone and issue docs are updated to reflect completion state.
 
 ## Validation Checklist
