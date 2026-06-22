@@ -113,7 +113,6 @@ public sealed record TicketExportDto
 {
     public Guid TicketId { get; }
     public string TicketCode { get; }
-    public string TicketLabel { get; }  
     public TicketType TicketType { get; }
 
     public TicketValidationStatus Status { get; }
@@ -130,7 +129,6 @@ public sealed record TicketExportDto
     Guid orderId,
     Guid orderItemId,
     string code,
-    string label,
     TicketType ticketType,
     Guid? inventorySeatId,
     Guid? generalAdmissionPoolId,
@@ -138,7 +136,6 @@ public sealed record TicketExportDto
     DateTimeOffset issuedAt)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(code, nameof(code));
-        ArgumentException.ThrowIfNullOrWhiteSpace(label, nameof(label));
 
         if (!Enum.IsDefined(ticketType))
         {
@@ -187,7 +184,6 @@ public sealed record TicketExportDto
         OrderId = orderId;
         OrderItemId = orderItemId;
         TicketCode = code;
-        TicketLabel = label;
         TicketType = ticketType;
         InventorySeatId = inventorySeatId;
         GeneralAdmissionPoolId = generalAdmissionPoolId;
@@ -201,7 +197,6 @@ public sealed record TicketExportDto
         Guid orderId,
         Guid orderItemId,
         string code,
-        string label,
         TicketValidationStatus status,
         Guid inventorySeatId,
         DateTimeOffset issuedAt)
@@ -214,7 +209,6 @@ public sealed record TicketExportDto
             orderId: orderId,
             orderItemId: orderItemId,
             code: code,
-            label: label,
             ticketType: TicketType.ReservedSeating,
             inventorySeatId: inventorySeatId,
             generalAdmissionPoolId: null,
@@ -228,7 +222,6 @@ public sealed record TicketExportDto
         Guid orderId,
         Guid orderItemId,
         string code,
-        string label,
         Guid generalAdmissionPoolId,
         TicketValidationStatus status,
         DateTimeOffset issuedAt)
@@ -241,7 +234,6 @@ public sealed record TicketExportDto
             orderId: orderId,
             orderItemId: orderItemId,
             code: code,
-            label: label,
             ticketType: TicketType.GeneralAdmission,
             inventorySeatId: null,
             generalAdmissionPoolId: generalAdmissionPoolId,
