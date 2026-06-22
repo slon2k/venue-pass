@@ -85,6 +85,12 @@ public sealed record TicketValidationResultDto
         failureReason: TicketValidationFailureReason.TicketNotFound,
         ticket: null);
 
+    public static TicketValidationResultDto EventNotFound() => new(
+        isFound: true,
+        isValid: false,
+        failureReason: TicketValidationFailureReason.IncorrectEvent,
+        ticket: null);
+
     public static TicketValidationResultDto MalformedTicketCode() => new(
         isFound: false,
         isValid: false,
