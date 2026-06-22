@@ -1,5 +1,7 @@
 using VenuePass.BuildingBlocks.Domain;
+using VenuePass.Modules.Ticketing.Domain.Inventories;
 using VenuePass.Modules.Ticketing.Domain.Orders;
+using VenuePass.Modules.Ticketing.Domain.PublishedEvents;
 
 namespace VenuePass.Modules.Ticketing.Domain.Tickets;
 
@@ -10,12 +12,17 @@ public class TicketIssuer(ITicketCodeGenerator ticketCodeGenerator)
     private readonly ITicketCodeGenerator _ticketCodeGenerator = ticketCodeGenerator ?? throw new ArgumentNullException(nameof(ticketCodeGenerator));
 
     public IReadOnlyList<Ticket> IssueTickets(
+        Inventory inventory,
         Order order,
         DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(order, nameof(order));
+        ArgumentNullException.ThrowIfNull(inventory, nameof(inventory));
 
-        if (now == default)
+        if (order.InventoryId != inventory.Id)
+            throw new DomainRuleViolationException(TicketErrors.OrderInventoryMismatch(order.Id, order.InventoryId, inventory.Id));
+
+         if (now == default)
             throw new ArgumentException("Current time cannot be the default value.", nameof(now));
 
         if (order.Items.Count == 0)
@@ -33,6 +40,7 @@ public class TicketIssuer(ITicketCodeGenerator ticketCodeGenerator)
         foreach (var item in order.Items)
         {
             tickets.AddRange(CreateForOrderItem(
+                eventReferenceId: inventory.EventReferenceId,
                 orderId: order.Id,
                 orderItem: item,
                 issuedCodes: issuedCodes,
@@ -43,12 +51,14 @@ public class TicketIssuer(ITicketCodeGenerator ticketCodeGenerator)
     }
 
     private IReadOnlyList<Ticket> CreateForOrderItem(
+    PublishedEventReferenceId eventReferenceId,
     OrderId orderId,
     OrderItem orderItem,
     HashSet<TicketCode> issuedCodes,
     DateTimeOffset now) => orderItem.Type switch
     {
         OrderItemType.Seat => [Ticket.CreateForInventorySeat(
+            publishedEventReferenceId: eventReferenceId,
             orderId: orderId,
             orderItemId: orderItem.Id,
             code: GenerateUniqueCode(issuedCodes),
@@ -57,6 +67,7 @@ public class TicketIssuer(ITicketCodeGenerator ticketCodeGenerator)
 
         OrderItemType.GeneralAdmissionPool => Enumerable.Range(0, orderItem.Quantity.Value)
             .Select(_ => Ticket.CreateForGeneralAdmissionPool(
+                publishedEventReferenceId: eventReferenceId,
                 orderId: orderId,
                 orderItemId: orderItem.Id,
                 code: GenerateUniqueCode(issuedCodes),

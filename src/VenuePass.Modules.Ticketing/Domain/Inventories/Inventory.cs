@@ -9,7 +9,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>
     private readonly List<InventorySeat> _seats = [];
     private readonly List<GeneralAdmissionPool> _pools = [];
 
-    public PublishedEventReferenceId EventReferenceId { get; private set; } = null!;
+    public PublishedEventReferenceId EventReferenceId { get; private set; }
     public IReadOnlyList<InventorySeat> Seats => _seats;
     public IReadOnlyList<GeneralAdmissionPool> Pools => _pools;
 

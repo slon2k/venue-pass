@@ -143,7 +143,7 @@ public sealed class CheckoutReservationHandler(
                 }
 
                 db.Orders.Add(order);
-                var tickets = ticketIssuer.IssueTickets(order, now);
+                var tickets = ticketIssuer.IssueTickets(inventory, order, now);
 
                 var issuedCodes = tickets
                     .Select(t => t.Code.Value)
