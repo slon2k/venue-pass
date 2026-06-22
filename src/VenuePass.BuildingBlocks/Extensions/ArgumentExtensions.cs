@@ -41,4 +41,12 @@ public static class ArgumentExtensions
             throw new ArgumentException($"'{argumentName}' must be exactly {requiredLength} characters long.", argumentName);
         }
     }
+
+    public static void ThrowIfEmpty(this Guid argument, string argumentName)
+    {
+        if (argument == Guid.Empty)
+        {
+            throw new ArgumentException($"'{argumentName}' must be a non-empty GUID.", argumentName);
+        }
+    }
 }

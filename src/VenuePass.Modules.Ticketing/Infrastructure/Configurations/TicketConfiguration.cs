@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 using VenuePass.Modules.Ticketing.Domain.Inventories;
 using VenuePass.Modules.Ticketing.Domain.Orders;
+using VenuePass.Modules.Ticketing.Domain.PublishedEvents;
 using VenuePass.Modules.Ticketing.Domain.Tickets;
 
 namespace VenuePass.Modules.Ticketing.Infrastructure.Configurations;
@@ -29,6 +30,13 @@ internal sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
             .HasColumnName("id");
 
         builder.Ignore(t => t.DomainEvents);
+
+        builder.Property(t => t.PublishedEventReferenceId)
+            .HasConversion(
+                id => id.Value,
+                value => new PublishedEventReferenceId(value))
+            .HasColumnName("published_event_reference_id")
+            .IsRequired();
 
         builder.Property(t => t.OrderId)
             .HasConversion(

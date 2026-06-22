@@ -32,9 +32,10 @@ public sealed class PublishedEventReference : Entity<PublishedEventReferenceId>
         syncedAt);
 }
 
-public record PublishedEventReferenceId(Guid Value)
+public readonly record struct PublishedEventReferenceId(Guid Value)
 {
     public static PublishedEventReferenceId Create() => new(Guid.CreateVersion7());
     public static implicit operator Guid(PublishedEventReferenceId id) => id.Value;
+    public bool IsEmpty => Value == Guid.Empty;
     public override string ToString() => Value.ToString();
 }

@@ -1,11 +1,13 @@
 using VenuePass.BuildingBlocks.Domain;
 using VenuePass.Modules.Ticketing.Domain.Inventories;
 using VenuePass.Modules.Ticketing.Domain.Orders;
+using VenuePass.Modules.Ticketing.Domain.PublishedEvents;
 
 namespace VenuePass.Modules.Ticketing.Domain.Tickets
 {
     public class Ticket : AggregateRoot<TicketId>
     {
+        public PublishedEventReferenceId PublishedEventReferenceId { get; private set; }
         public OrderId OrderId { get; private set; }
 
         public OrderItemId OrderItemId { get; private set; }
@@ -24,6 +26,7 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
 
         private Ticket(
             TicketId id,
+            PublishedEventReferenceId publishedEventReferenceId,
             OrderId orderId,
             OrderItemId orderItemId,
             TicketCode code,
@@ -33,6 +36,9 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
         {
             if (id.IsEmpty)
                 throw new ArgumentException("Ticket ID cannot be empty.", nameof(id));
+
+            if (publishedEventReferenceId.IsEmpty)
+                throw new ArgumentException("Published Event Reference ID cannot be empty.", nameof(publishedEventReferenceId));
 
             if (orderId.IsEmpty)
                 throw new ArgumentException("Order ID cannot be empty.", nameof(orderId));
@@ -58,6 +64,7 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
             if (code.IsEmpty)
                 throw new ArgumentException("Ticket code cannot be empty.", nameof(code));            
 
+            PublishedEventReferenceId = publishedEventReferenceId;
             OrderId = orderId;
             OrderItemId = orderItemId;
             Code = code;
@@ -68,6 +75,7 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
         }
 
         internal static Ticket CreateForInventorySeat(
+            PublishedEventReferenceId publishedEventReferenceId,
             OrderId orderId,
             OrderItemId orderItemId,
             TicketCode code,
@@ -76,6 +84,7 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
         {
             return new Ticket(
                 id: TicketId.Create(),
+                publishedEventReferenceId: publishedEventReferenceId,
                 orderId: orderId,
                 orderItemId: orderItemId,
                 code: code,
@@ -86,6 +95,7 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
         }
 
         internal static Ticket CreateForGeneralAdmissionPool(
+            PublishedEventReferenceId publishedEventReferenceId,
             OrderId orderId,
             OrderItemId orderItemId,
             TicketCode code,
@@ -94,6 +104,7 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
         {
             return new Ticket(
                 id: TicketId.Create(),
+                publishedEventReferenceId: publishedEventReferenceId,
                 orderId: orderId,
                 orderItemId: orderItemId,
                 code: code,
@@ -101,6 +112,17 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
                 generalAdmissionPoolId: generalAdmissionPoolId,
                 createdAt: now
             );
+        }
+
+        public bool Cancel()
+        {
+            if (Status == TicketStatus.Canceled)
+            {
+                return false;
+            };
+
+            Status = TicketStatus.Canceled;
+            return true;
         }
     }
 
@@ -117,6 +139,28 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
         private const string CrockfordBase32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
         public const int Length = 16;
         public string Value { get; }
+
+        public static bool TryCreate(string value, out TicketCode ticketCode)
+        {
+            ticketCode = default;
+
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+
+            value = value.Trim().Replace("-", "").ToUpperInvariant();
+
+            if (value.Length != Length)
+                return false;
+
+            foreach (var c in value)
+            {
+                if (!CrockfordBase32.Contains(c))
+                    return false;
+            }
+
+            ticketCode = new TicketCode(value);
+            return true;
+        }
 
         public TicketCode(string value)
         {
@@ -149,5 +193,7 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
     public enum TicketStatus
     {
         Issued = 1,
+
+        Canceled = 2,
     }
 }

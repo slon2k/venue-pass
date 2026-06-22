@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using VenuePass.BuildingBlocks.Messaging;
 using VenuePass.Modules.Events.Contracts.IntegrationEvents;
+using VenuePass.Modules.Ticketing.Contracts;
 using VenuePass.Modules.Ticketing.Domain.Tickets;
 using VenuePass.Modules.Ticketing.Features.ActivateOffer;
 using VenuePass.Modules.Ticketing.Features.CancelReservation;
@@ -43,6 +44,7 @@ public static class ModuleConfiguration
         services.AddValidatorsFromAssembly(typeof(ModuleConfiguration).Assembly);        
         services.AddSingleton<TicketIssuer>();
         services.AddSingleton<ITicketCodeGenerator, TicketCodeGenerator>();
+        services.AddScoped<ITicketingModuleContract, TicketModuleContract>();
 
         services.AddAuthorizationBuilder()
             .AddPolicy("EventAdmin", policy => policy.RequireRole("EventAdmin"))

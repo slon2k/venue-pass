@@ -41,4 +41,8 @@ public static class TicketErrors
     public static DomainError OrderHasInvalidTotalQuantity(OrderId orderId, int totalQuantity) => new(
         "Ticketing.Tickets.OrderHasInvalidTotalQuantity",
         $"Order '{orderId.Value}' has an invalid total quantity of '{totalQuantity}'.");
+
+    public static DomainError OrderInventoryMismatch(OrderId orderId, InventoryId orderInventoryId, InventoryId inventoryId) => new(
+        "Ticketing.Tickets.OrderInventoryMismatch",
+        $"Order '{orderId.Value}' is associated with inventory '{orderInventoryId.Value}', but was expected to be associated with inventory '{inventoryId.Value}'.");
 }
