@@ -7,6 +7,7 @@ using VenuePass.Modules.Ticketing.Domain.Orders;
 using VenuePass.Modules.Ticketing.Domain.PublishedEvents;
 using VenuePass.Modules.Ticketing.Domain.Reservations;
 using VenuePass.Modules.Ticketing.Domain.Tickets;
+using VenuePass.Modules.Ticketing.Infrastructure.Outbox;
 
 namespace VenuePass.Modules.Ticketing.Infrastructure;
 
@@ -20,6 +21,7 @@ public sealed class TicketingDbContext(DbContextOptions<TicketingDbContext> opti
     public DbSet<Reservation> Reservations => Set<Reservation>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<Ticket> Tickets => Set<Ticket>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
