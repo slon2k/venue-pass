@@ -23,6 +23,7 @@ using VenuePass.Modules.Ticketing.Features.GetOrder;
 using VenuePass.Modules.Ticketing.Features.GetReservation;
 using VenuePass.Modules.Ticketing.Features.GetTicket;
 using VenuePass.Modules.Ticketing.Infrastructure;
+using VenuePass.Modules.Ticketing.Infrastructure.Outbox;
 using VenuePass.Modules.Ticketing.Options;
 
 namespace VenuePass.Modules.Ticketing;
@@ -44,6 +45,7 @@ public static class ModuleConfiguration
         services.AddValidatorsFromAssembly(typeof(ModuleConfiguration).Assembly);        
         services.AddSingleton<TicketIssuer>();
         services.AddSingleton<ITicketCodeGenerator, TicketCodeGenerator>();
+        services.AddHostedService<TicketingOutboxDispatcher>();
         services.AddScoped<ITicketingModuleContract, TicketModuleContract>();
 
         services.AddAuthorizationBuilder()
