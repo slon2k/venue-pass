@@ -1,33 +1,39 @@
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
+using VenuePass.BuildingBlocks.Domain;
+using VenuePass.IntegrationTests.Infrastructure;
+using VenuePass.Modules.Ticketing.Domain.Common;
 using VenuePass.Modules.Ticketing.Contracts;
-using VenuePass.Modules.Ticketing.Domain.Inventories;
+using VenuePass.Modules.Ticketing.Domain.Offers;
 using VenuePass.Modules.Ticketing.Domain.Orders;
 using VenuePass.Modules.Ticketing.Domain.PublishedEvents;
+using VenuePass.Modules.Ticketing.Domain.Reservations;
 using VenuePass.Modules.Ticketing.Domain.Tickets;
 using VenuePass.Modules.Ticketing.Infrastructure;
 
+using InventoryDomain = VenuePass.Modules.Ticketing.Domain.Inventories;
+
 using Xunit;
 
-namespace VenuePass.Modules.Ticketing.Tests.Infrastructure;
+namespace VenuePass.IntegrationTests.Ticketing.Contracts;
 
-public sealed class TicketModuleContractTests : IDisposable
+[Collection(EventsTestCollectionFixture.Name)]
+public sealed class TicketModuleContractTests
 {
-    private readonly SqliteConnection _connection;
+    private readonly EventsIntegrationTestFixture _fixture;
 
-    public TicketModuleContractTests()
+    public TicketModuleContractTests(EventsIntegrationTestFixture fixture)
     {
-        _connection = new SqliteConnection("DataSource=:memory:");
-        _connection.Open();
+        _fixture = fixture;
     }
-
-    public void Dispose() => _connection.Dispose();
 
     [Fact]
     public async Task ValidateTicketForEvent_WhenEventDoesNotExist_ReturnsEventNotFound()
     {
-        await using var db = CreateDbContext();
+        using var scope = _fixture.Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+
         var contract = new TicketModuleContract(db);
 
         var result = await contract.ValidateTicketForEventAsync(
@@ -42,8 +48,10 @@ public sealed class TicketModuleContractTests : IDisposable
     [Fact]
     public async Task ValidateTicketForEvent_WhenTicketCodeIsMalformed_ReturnsMalformedTicketCode()
     {
-        await using var db = CreateDbContext();
-        var (reference, _) = CreateEventAndSave(db);
+        using var scope = _fixture.Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+
+        var (reference, _, _) = CreateEventAndSave(db);
         var contract = new TicketModuleContract(db);
 
         var result = await contract.ValidateTicketForEventAsync(
@@ -58,8 +66,10 @@ public sealed class TicketModuleContractTests : IDisposable
     [Fact]
     public async Task ValidateTicketForEvent_WhenTicketDoesNotExist_ReturnsTicketNotFound()
     {
-        await using var db = CreateDbContext();
-        var (reference, _) = CreateEventAndSave(db);
+        using var scope = _fixture.Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+
+        var (reference, _, _) = CreateEventAndSave(db);
         var contract = new TicketModuleContract(db);
 
         var result = await contract.ValidateTicketForEventAsync(
@@ -74,9 +84,11 @@ public sealed class TicketModuleContractTests : IDisposable
     [Fact]
     public async Task ValidateTicketForEvent_WhenIssuedTicket_ReturnsValid()
     {
-        await using var db = CreateDbContext();
-        var (reference, seatId) = CreateEventAndSave(db);
-        var ticket = CreateAndSaveTicket(db, reference.Id, seatId, TicketStatus.Issued);
+        using var scope = _fixture.Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+
+        var (reference, seatId, inventoryId) = CreateEventAndSave(db);
+        var ticket = CreateAndSaveTicket(db, reference.Id, inventoryId, seatId, TicketStatus.Issued);
         var contract = new TicketModuleContract(db);
 
         var result = await contract.ValidateTicketForEventAsync(
@@ -96,9 +108,11 @@ public sealed class TicketModuleContractTests : IDisposable
     [Fact]
     public async Task ValidateTicketForEvent_WhenCanceledTicket_ReturnsInvalidWithTicketCanceledReason()
     {
-        await using var db = CreateDbContext();
-        var (reference, seatId) = CreateEventAndSave(db);
-        var ticket = CreateAndSaveTicket(db, reference.Id, seatId, TicketStatus.Canceled);
+        using var scope = _fixture.Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+
+        var (reference, seatId, inventoryId) = CreateEventAndSave(db);
+        var ticket = CreateAndSaveTicket(db, reference.Id, inventoryId, seatId, TicketStatus.Canceled);
         var contract = new TicketModuleContract(db);
 
         var result = await contract.ValidateTicketForEventAsync(
@@ -115,10 +129,12 @@ public sealed class TicketModuleContractTests : IDisposable
     [Fact]
     public async Task ValidateTicketForEvent_WhenTicketBelongsToDifferentEvent_ReturnsIncorrectEvent()
     {
-        await using var db = CreateDbContext();
-        var (reference, seatId) = CreateEventAndSave(db);
-        var (otherReference, _) = CreateEventAndSave(db);
-        var ticket = CreateAndSaveTicket(db, reference.Id, seatId, TicketStatus.Issued);
+        using var scope = _fixture.Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+
+        var (reference, seatId, inventoryId) = CreateEventAndSave(db);
+        var (otherReference, _, _) = CreateEventAndSave(db);
+        var ticket = CreateAndSaveTicket(db, reference.Id, inventoryId, seatId, TicketStatus.Issued);
         var contract = new TicketModuleContract(db);
 
         var result = await contract.ValidateTicketForEventAsync(
@@ -133,9 +149,11 @@ public sealed class TicketModuleContractTests : IDisposable
     [Fact]
     public async Task ValidateTicketForEvent_WhenIssuedTicket_TicketDtoContainsAllRequiredIdentifiers()
     {
-        await using var db = CreateDbContext();
-        var (reference, seatId) = CreateEventAndSave(db);
-        var ticket = CreateAndSaveTicket(db, reference.Id, seatId, TicketStatus.Issued);
+        using var scope = _fixture.Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+
+        var (reference, seatId, inventoryId) = CreateEventAndSave(db);
+        var ticket = CreateAndSaveTicket(db, reference.Id, inventoryId, seatId, TicketStatus.Issued);
         var contract = new TicketModuleContract(db);
 
         var result = await contract.ValidateTicketForEventAsync(
@@ -156,19 +174,7 @@ public sealed class TicketModuleContractTests : IDisposable
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private TicketingDbContext CreateDbContext()
-    {
-        var options = new DbContextOptionsBuilder<TicketingDbContext>()
-            .UseSqlite(_connection)
-            .Options;
-
-        var db = new TicketingDbContext(options);
-        db.Database.EnsureCreated();
-        db.Database.ExecuteSqlRaw("PRAGMA foreign_keys = OFF;");
-        return db;
-    }
-
-    private static (PublishedEventReference reference, InventorySeatId seatId) CreateEventAndSave(TicketingDbContext db)
+    private static (PublishedEventReference reference, InventoryDomain.InventorySeatId seatId, InventoryDomain.InventoryId inventoryId) CreateEventAndSave(TicketingDbContext db)
     {
         var reference = PublishedEventReference.Create(
             Guid.CreateVersion7(),
@@ -178,23 +184,76 @@ public sealed class TicketModuleContractTests : IDisposable
         db.PublishedEventReferences.Add(reference);
         db.SaveChanges();
 
-        var seatId = new InventorySeatId(Guid.CreateVersion7());
-        return (reference, seatId);
+        var sourceSeatId = Guid.CreateVersion7();
+        var manifest = new InventoryDomain.InventoryManifest(
+        [
+            new InventoryDomain.InventorySectionInput("Main",
+            [
+                new InventoryDomain.InventoryRowInput("A", [new InventoryDomain.InventorySeatInput(sourceSeatId, "1")])
+            ])
+        ],
+        []);
+
+        var inventory = InventoryDomain.Inventory.CreateFromManifest(reference.Id, manifest);
+        db.Inventories.Add(inventory);
+        db.SaveChanges();
+
+        var seatId = inventory.Seats.Single(s => s.SourceSeatId == sourceSeatId).Id;
+
+        return (reference, seatId, inventory.Id);
     }
 
     private static Ticket CreateAndSaveTicket(
         TicketingDbContext db,
         PublishedEventReferenceId publishedEventReferenceId,
-        InventorySeatId seatId,
+        InventoryDomain.InventoryId inventoryId,
+        InventoryDomain.InventorySeatId seatId,
         TicketStatus status)
     {
+        var now = DateTimeOffset.UtcNow;
+
+        var inventory = db.Inventories
+            .Include(i => i.Seats)
+            .Single(i => i.Id == inventoryId);
+
+        var offer = Offer.Create(
+            inventoryId,
+            new OfferName($"Offer-{Guid.CreateVersion7():N}"),
+            DateTimeRange.Between(now.AddHours(-1), now.AddHours(1)),
+            new Currency("USD"));
+
+        offer.ConfigurePriceZone(
+            inventory,
+            new PriceZoneName("Main"),
+            new Amount(100),
+            [new PriceZoneInventorySeatItemInput(seatId)],
+            []);
+        offer.Activate();
+        db.Offers.Add(offer);
+        db.SaveChanges();
+
+        var reservation = Reservation.Create(
+            offer,
+            [new ReservationItemInventorySeatInput(seatId)],
+            [],
+            now,
+            now.AddMinutes(30));
+        db.Reservations.Add(reservation);
+        db.SaveChanges();
+
+        var order = Order.CreateFromReservation(reservation, "Test Buyer", "buyer@example.com", now);
+        db.Orders.Add(order);
+        db.SaveChanges();
+
+        var ticketCode = new TicketCode(Guid.CreateVersion7().ToString("N")[..16].ToUpperInvariant());
+
         var ticket = Ticket.CreateForInventorySeat(
             publishedEventReferenceId,
-            new OrderId(Guid.CreateVersion7()),
-            new OrderItemId(Guid.CreateVersion7()),
-            new TicketCode("ABCDEFGHJKMNPQRS"),
+            order.Id,
+            order.Items[0].Id,
+            ticketCode,
             seatId,
-            DateTimeOffset.UtcNow);
+            now);
 
         if (status == TicketStatus.Canceled)
         {

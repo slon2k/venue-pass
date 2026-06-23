@@ -1,30 +1,40 @@
 using System.Text.Json;
+
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+
 using VenuePass.BuildingBlocks.Messaging;
+using VenuePass.IntegrationTests.Infrastructure;
 using VenuePass.Modules.Events.Infrastructure;
 using VenuePass.Modules.Events.Infrastructure.Outbox;
+
 using Xunit;
 
-namespace VenuePass.Modules.Events.Tests.Infrastructure.Outbox;
+namespace VenuePass.IntegrationTests.Events.Infrastructure;
 
+[Collection(EventsTestCollectionFixture.Name)]
 public sealed class EventsOutboxDispatcherTests
 {
+    private readonly EventsIntegrationTestFixture _fixture;
+
+    public EventsOutboxDispatcherTests(EventsIntegrationTestFixture fixture)
+    {
+        _fixture = fixture;
+    }
+
     [Fact]
     public async Task DispatchBatchAsync_HappyPath_InvokesHandlerAndMarksProcessed()
     {
-        // Arrange
         var now = new DateTimeOffset(2026, 6, 4, 12, 0, 0, TimeSpan.Zero);
         var timeProvider = new FakeTimeProvider(now);
         var recorder = new HandlingRecorder();
-        var services = CreateServices(
-            dbName: Guid.NewGuid().ToString(),
-            configureServices: s =>
-            {
-                s.AddSingleton(recorder);
-                s.AddScoped<IIntegrationEventHandler<TestIntegrationEvent>, RecordingHandler>();
-            });
+        var services = CreateServices(configureServices: s =>
+        {
+            s.AddSingleton(recorder);
+            s.AddScoped<IIntegrationEventHandler<TestIntegrationEvent>, RecordingHandler>();
+        });
 
         var payload = new TestIntegrationEvent(Guid.CreateVersion7(), now, "happy");
         var message = OutboxMessage.Create(now, typeof(TestIntegrationEvent).AssemblyQualifiedName!, JsonSerializer.Serialize(payload));
@@ -33,10 +43,8 @@ public sealed class EventsOutboxDispatcherTests
 
         var dispatcher = CreateDispatcher(services, timeProvider);
 
-        // Act
         await dispatcher.DispatchBatchAsync(CancellationToken.None);
 
-        // Assert
         var saved = await GetMessageAsync(services, message.Id);
         Assert.NotNull(saved);
         Assert.NotNull(saved!.ProcessedOn);
@@ -53,18 +61,15 @@ public sealed class EventsOutboxDispatcherTests
     [Fact]
     public async Task DispatchBatchAsync_MultipleHandlers_InvokesEachHandlerAndMarksProcessed()
     {
-        // Arrange
         var now = new DateTimeOffset(2026, 6, 4, 12, 2, 0, TimeSpan.Zero);
         var timeProvider = new FakeTimeProvider(now);
         var recorder = new HandlingRecorder();
-        var services = CreateServices(
-            dbName: Guid.NewGuid().ToString(),
-            configureServices: s =>
-            {
-                s.AddSingleton(recorder);
-                s.AddScoped<IIntegrationEventHandler<TestIntegrationEvent>, FirstRecordingHandler>();
-                s.AddScoped<IIntegrationEventHandler<TestIntegrationEvent>, SecondRecordingHandler>();
-            });
+        var services = CreateServices(configureServices: s =>
+        {
+            s.AddSingleton(recorder);
+            s.AddScoped<IIntegrationEventHandler<TestIntegrationEvent>, FirstRecordingHandler>();
+            s.AddScoped<IIntegrationEventHandler<TestIntegrationEvent>, SecondRecordingHandler>();
+        });
 
         var payload = new TestIntegrationEvent(Guid.CreateVersion7(), now, "multi-handler");
         var message = OutboxMessage.Create(now, typeof(TestIntegrationEvent).AssemblyQualifiedName!, JsonSerializer.Serialize(payload));
@@ -73,10 +78,8 @@ public sealed class EventsOutboxDispatcherTests
 
         var dispatcher = CreateDispatcher(services, timeProvider);
 
-        // Act
         await dispatcher.DispatchBatchAsync(CancellationToken.None);
 
-        // Assert
         var saved = await GetMessageAsync(services, message.Id);
         Assert.NotNull(saved);
         Assert.NotNull(saved!.ProcessedOn);
@@ -91,10 +94,9 @@ public sealed class EventsOutboxDispatcherTests
     [Fact]
     public async Task DispatchBatchAsync_NoHandler_MarksProcessedGracefully()
     {
-        // Arrange
         var now = new DateTimeOffset(2026, 6, 4, 12, 5, 0, TimeSpan.Zero);
         var timeProvider = new FakeTimeProvider(now);
-        var services = CreateServices(Guid.NewGuid().ToString());
+        var services = CreateServices();
 
         var payload = new TestIntegrationEvent(Guid.CreateVersion7(), now, "no-handler");
         var message = OutboxMessage.Create(now, typeof(TestIntegrationEvent).AssemblyQualifiedName!, JsonSerializer.Serialize(payload));
@@ -102,10 +104,8 @@ public sealed class EventsOutboxDispatcherTests
 
         var dispatcher = CreateDispatcher(services, timeProvider);
 
-        // Act
         await dispatcher.DispatchBatchAsync(CancellationToken.None);
 
-        // Assert
         var saved = await GetMessageAsync(services, message.Id);
         Assert.NotNull(saved);
         Assert.NotNull(saved!.ProcessedOn);
@@ -116,12 +116,10 @@ public sealed class EventsOutboxDispatcherTests
     [Fact]
     public async Task DispatchBatchAsync_HandlerThrows_RecordsFailureAndSchedulesRetry()
     {
-        // Arrange
         var now = new DateTimeOffset(2026, 6, 4, 12, 10, 0, TimeSpan.Zero);
         var timeProvider = new FakeTimeProvider(now);
-        var services = CreateServices(
-            dbName: Guid.NewGuid().ToString(),
-            configureServices: s => s.AddScoped<IIntegrationEventHandler<TestIntegrationEvent>, ThrowingHandler>());
+        var services = CreateServices(configureServices: s =>
+            s.AddScoped<IIntegrationEventHandler<TestIntegrationEvent>, ThrowingHandler>());
 
         var payload = new TestIntegrationEvent(Guid.CreateVersion7(), now, "throws");
         var message = OutboxMessage.Create(now, typeof(TestIntegrationEvent).AssemblyQualifiedName!, JsonSerializer.Serialize(payload));
@@ -129,10 +127,8 @@ public sealed class EventsOutboxDispatcherTests
 
         var dispatcher = CreateDispatcher(services, timeProvider);
 
-        // Act
         await dispatcher.DispatchBatchAsync(CancellationToken.None);
 
-        // Assert
         var saved = await GetMessageAsync(services, message.Id);
         Assert.NotNull(saved);
         Assert.Null(saved!.ProcessedOn);
@@ -145,17 +141,14 @@ public sealed class EventsOutboxDispatcherTests
     [Fact]
     public async Task DispatchBatchAsync_MessageNotYetEligible_SkipsMessage()
     {
-        // Arrange
         var now = new DateTimeOffset(2026, 6, 4, 12, 20, 0, TimeSpan.Zero);
         var timeProvider = new FakeTimeProvider(now);
         var recorder = new HandlingRecorder();
-        var services = CreateServices(
-            dbName: Guid.NewGuid().ToString(),
-            configureServices: s =>
-            {
-                s.AddSingleton(recorder);
-                s.AddScoped<IIntegrationEventHandler<TestIntegrationEvent>, RecordingHandler>();
-            });
+        var services = CreateServices(configureServices: s =>
+        {
+            s.AddSingleton(recorder);
+            s.AddScoped<IIntegrationEventHandler<TestIntegrationEvent>, RecordingHandler>();
+        });
 
         var payload = new TestIntegrationEvent(Guid.CreateVersion7(), now, "not-eligible");
         var message = OutboxMessage.Create(now, typeof(TestIntegrationEvent).AssemblyQualifiedName!, JsonSerializer.Serialize(payload));
@@ -164,10 +157,8 @@ public sealed class EventsOutboxDispatcherTests
 
         var dispatcher = CreateDispatcher(services, timeProvider);
 
-        // Act
         await dispatcher.DispatchBatchAsync(CancellationToken.None);
 
-        // Assert
         var saved = await GetMessageAsync(services, message.Id);
         Assert.NotNull(saved);
         Assert.Null(saved!.ProcessedOn);
@@ -180,12 +171,10 @@ public sealed class EventsOutboxDispatcherTests
     [Fact]
     public async Task DispatchBatchAsync_MaxAttemptsReached_MarksAbandonedWithError()
     {
-        // Arrange
         var now = new DateTimeOffset(2026, 6, 4, 12, 30, 0, TimeSpan.Zero);
         var timeProvider = new FakeTimeProvider(now);
-        var services = CreateServices(
-            dbName: Guid.NewGuid().ToString(),
-            configureServices: s => s.AddScoped<IIntegrationEventHandler<TestIntegrationEvent>, ThrowingHandler>());
+        var services = CreateServices(configureServices: s =>
+            s.AddScoped<IIntegrationEventHandler<TestIntegrationEvent>, ThrowingHandler>());
 
         var payload = new TestIntegrationEvent(Guid.CreateVersion7(), now, "max-attempts");
         var message = OutboxMessage.Create(now.AddMinutes(-10), typeof(TestIntegrationEvent).AssemblyQualifiedName!, JsonSerializer.Serialize(payload));
@@ -197,10 +186,8 @@ public sealed class EventsOutboxDispatcherTests
 
         var dispatcher = CreateDispatcher(services, timeProvider);
 
-        // Act
         await dispatcher.DispatchBatchAsync(CancellationToken.None);
 
-        // Assert
         var saved = await GetMessageAsync(services, message.Id);
         Assert.NotNull(saved);
         Assert.NotNull(saved!.ProcessedOn);
@@ -214,10 +201,9 @@ public sealed class EventsOutboxDispatcherTests
     [Fact]
     public async Task DispatchBatchAsync_UnresolvableType_MarksProcessedAsPoisonPill()
     {
-        // Arrange
         var now = new DateTimeOffset(2026, 6, 4, 12, 35, 0, TimeSpan.Zero);
         var timeProvider = new FakeTimeProvider(now);
-        var services = CreateServices(Guid.NewGuid().ToString());
+        var services = CreateServices();
 
         var message = OutboxMessage.Create(
             occurredOn: now,
@@ -228,10 +214,8 @@ public sealed class EventsOutboxDispatcherTests
 
         var dispatcher = CreateDispatcher(services, timeProvider);
 
-        // Act
         await dispatcher.DispatchBatchAsync(CancellationToken.None);
 
-        // Assert
         var saved = await GetMessageAsync(services, message.Id);
         Assert.NotNull(saved);
         Assert.NotNull(saved!.ProcessedOn);
@@ -242,10 +226,9 @@ public sealed class EventsOutboxDispatcherTests
     [Fact]
     public async Task DispatchBatchAsync_InvalidJsonPayload_MarksProcessedAsPoisonPill()
     {
-        // Arrange
         var now = new DateTimeOffset(2026, 6, 4, 12, 40, 0, TimeSpan.Zero);
         var timeProvider = new FakeTimeProvider(now);
-        var services = CreateServices(Guid.NewGuid().ToString());
+        var services = CreateServices();
 
         var message = OutboxMessage.Create(
             occurredOn: now,
@@ -256,10 +239,8 @@ public sealed class EventsOutboxDispatcherTests
 
         var dispatcher = CreateDispatcher(services, timeProvider);
 
-        // Act
         await dispatcher.DispatchBatchAsync(CancellationToken.None);
 
-        // Assert
         var saved = await GetMessageAsync(services, message.Id);
         Assert.NotNull(saved);
         Assert.NotNull(saved!.ProcessedOn);
@@ -270,18 +251,15 @@ public sealed class EventsOutboxDispatcherTests
     [Fact]
     public async Task DispatchBatchAsync_AlreadyProcessedMessage_IsSkipped()
     {
-        // Arrange
         var now = new DateTimeOffset(2026, 6, 4, 12, 45, 0, TimeSpan.Zero);
         var processedAt = now.AddMinutes(-1);
         var timeProvider = new FakeTimeProvider(now);
         var recorder = new HandlingRecorder();
-        var services = CreateServices(
-            dbName: Guid.NewGuid().ToString(),
-            configureServices: s =>
-            {
-                s.AddSingleton(recorder);
-                s.AddScoped<IIntegrationEventHandler<TestIntegrationEvent>, RecordingHandler>();
-            });
+        var services = CreateServices(configureServices: s =>
+        {
+            s.AddSingleton(recorder);
+            s.AddScoped<IIntegrationEventHandler<TestIntegrationEvent>, RecordingHandler>();
+        });
 
         var payload = new TestIntegrationEvent(Guid.CreateVersion7(), now, "already-processed");
         var message = OutboxMessage.Create(
@@ -294,25 +272,46 @@ public sealed class EventsOutboxDispatcherTests
 
         var dispatcher = CreateDispatcher(services, timeProvider);
 
-        // Act
         await dispatcher.DispatchBatchAsync(CancellationToken.None);
 
-        // Assert
         var saved = await GetMessageAsync(services, message.Id);
         Assert.NotNull(saved);
         Assert.Equal(processedAt, saved!.ProcessedOn);
         Assert.Equal(0, recorder.CallCount);
     }
 
-    private static ServiceProvider CreateServices(string dbName, Action<IServiceCollection>? configureServices = null)
+    // ── Infrastructure ────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Creates a ServiceProvider backed by an isolated SQL Server database.
+    /// Each call gets a unique database (via a unique Initial Catalog) to avoid
+    /// cross-test contamination of the outbox table.
+    /// </summary>
+    private ServiceProvider CreateServices(Action<IServiceCollection>? configureServices = null)
     {
+        var isolatedConnectionString = BuildIsolatedConnectionString();
+
         var services = new ServiceCollection();
-
-        services.AddDbContext<EventsDbContext>(options => options.UseInMemoryDatabase(dbName));
-
+        services.AddDbContext<EventsDbContext>(options => options.UseSqlServer(isolatedConnectionString));
         configureServices?.Invoke(services);
 
-        return services.BuildServiceProvider();
+        var provider = services.BuildServiceProvider();
+
+        // Create schema for this isolated database.
+        using var scope = provider.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EventsDbContext>();
+        db.Database.EnsureCreated();
+
+        return provider;
+    }
+
+    private string BuildIsolatedConnectionString()
+    {
+        var builder = new SqlConnectionStringBuilder(_fixture.ConnectionString)
+        {
+            InitialCatalog = $"outbox_test_{Guid.NewGuid():N}"
+        };
+        return builder.ConnectionString;
     }
 
     private static EventsOutboxDispatcher CreateDispatcher(IServiceProvider services, TimeProvider timeProvider)
@@ -333,6 +332,8 @@ public sealed class EventsOutboxDispatcherTests
         return await db.OutboxMessages.SingleOrDefaultAsync(x => x.Id == id);
     }
 
+    // ── Test doubles ──────────────────────────────────────────────────────────
+
     private sealed class FakeTimeProvider(DateTimeOffset now) : TimeProvider
     {
         public override DateTimeOffset GetUtcNow() => now;
@@ -343,9 +344,7 @@ public sealed class EventsOutboxDispatcherTests
     private sealed class HandlingRecorder
     {
         public int CallCount => HandledEvents.Count;
-
         public List<TestIntegrationEvent> HandledEvents { get; } = [];
-
         public List<string> Invocations { get; } = [];
     }
 

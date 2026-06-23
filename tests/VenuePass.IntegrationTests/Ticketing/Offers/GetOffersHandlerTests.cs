@@ -1,42 +1,40 @@
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 using VenuePass.BuildingBlocks.Domain;
+using VenuePass.IntegrationTests.Infrastructure;
 using VenuePass.Modules.Ticketing.Domain.Common;
-using VenuePass.Modules.Ticketing.Domain.Inventories;
 using VenuePass.Modules.Ticketing.Domain.Offers;
 using VenuePass.Modules.Ticketing.Domain.PublishedEvents;
 using VenuePass.Modules.Ticketing.Features.GetOffers;
 using VenuePass.Modules.Ticketing.Infrastructure;
+using InventoryDomain = VenuePass.Modules.Ticketing.Domain.Inventories;
 
 using Xunit;
 
-namespace VenuePass.Modules.Ticketing.Tests.Features.GetOffers;
+namespace VenuePass.IntegrationTests.Ticketing.Offers;
 
-public sealed class GetOffersHandlerTests : IDisposable
+[Collection(EventsTestCollectionFixture.Name)]
+public sealed class GetOffersHandlerTests
 {
-    private readonly SqliteConnection _connection;
+    private readonly EventsIntegrationTestFixture _fixture;
 
-    public GetOffersHandlerTests()
+    public GetOffersHandlerTests(EventsIntegrationTestFixture fixture)
     {
-        _connection = new SqliteConnection("DataSource=:memory:");
-        _connection.Open();
+        _fixture = fixture;
     }
-
-    public void Dispose() => _connection.Dispose();
 
     [Fact]
     public async Task Handle_WhenEventReferenceDoesNotExist_ReturnsNotFoundError()
     {
-        // Arrange
-        await using var db = CreateDbContext();
+        using var scope = _fixture.Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+
         var handler = new GetOffersHandler(db);
         var unknownEventId = Guid.CreateVersion7();
 
-        // Act
         var result = await handler.Handle(new GetOffersQuery(unknownEventId), CancellationToken.None);
 
-        // Assert
         Assert.True(result.IsFailure);
         Assert.Equal(GetOffersErrors.EventNotFound(unknownEventId).Code, result.Error.Code);
     }
@@ -44,8 +42,9 @@ public sealed class GetOffersHandlerTests : IDisposable
     [Fact]
     public async Task Handle_WhenEventReferenceExistsButNoInventory_ReturnsNotFoundError()
     {
-        // Arrange
-        await using var db = CreateDbContext();
+        using var scope = _fixture.Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+
         var eventId = Guid.CreateVersion7();
         db.PublishedEventReferences.Add(
             PublishedEventReference.Create(eventId, Guid.CreateVersion7(), DateTimeOffset.UtcNow));
@@ -53,10 +52,8 @@ public sealed class GetOffersHandlerTests : IDisposable
 
         var handler = new GetOffersHandler(db);
 
-        // Act
         var result = await handler.Handle(new GetOffersQuery(eventId), CancellationToken.None);
 
-        // Assert
         Assert.True(result.IsFailure);
         Assert.Equal(GetOffersErrors.EventNotFound(eventId).Code, result.Error.Code);
     }
@@ -64,16 +61,15 @@ public sealed class GetOffersHandlerTests : IDisposable
     [Fact]
     public async Task Handle_WhenEventHasNoOffers_ReturnsEmptyList()
     {
-        // Arrange
-        await using var db = CreateDbContext();
+        using var scope = _fixture.Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+
         var (eventId, _) = CreateEventWithInventory(db);
 
         var handler = new GetOffersHandler(db);
 
-        // Act
         var result = await handler.Handle(new GetOffersQuery(eventId), CancellationToken.None);
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.Empty(result.Value.Offers);
     }
@@ -81,8 +77,9 @@ public sealed class GetOffersHandlerTests : IDisposable
     [Fact]
     public async Task Handle_WhenEventHasOffers_ReturnsAllOffers()
     {
-        // Arrange
-        await using var db = CreateDbContext();
+        using var scope = _fixture.Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+
         var (eventId, inventory) = CreateEventWithInventory(db);
 
         var salesRange = CreateSalesRange();
@@ -93,10 +90,8 @@ public sealed class GetOffersHandlerTests : IDisposable
 
         var handler = new GetOffersHandler(db);
 
-        // Act
         var result = await handler.Handle(new GetOffersQuery(eventId), CancellationToken.None);
 
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.Equal(2, result.Value.Offers.Count);
         Assert.Contains(result.Value.Offers, o => o.Name == "Standard" && o.Currency == "USD");
@@ -106,8 +101,9 @@ public sealed class GetOffersHandlerTests : IDisposable
     [Fact]
     public async Task Handle_WhenOfferHasPriceZones_ReturnsPriceZonesMapped()
     {
-        // Arrange
-        await using var db = CreateDbContext();
+        using var scope = _fixture.Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+
         var (eventId, inventory) = CreateEventWithInventory(db);
 
         var offer = Offer.Create(inventory.Id, new OfferName("Standard"), CreateSalesRange(), Currency.USD);
@@ -123,10 +119,8 @@ public sealed class GetOffersHandlerTests : IDisposable
 
         var handler = new GetOffersHandler(db);
 
-        // Act
         var result = await handler.Handle(new GetOffersQuery(eventId), CancellationToken.None);
 
-        // Assert
         Assert.True(result.IsSuccess);
         var item = Assert.Single(result.Value.Offers);
         Assert.Equal(offer.Id.Value, item.OfferId);
@@ -146,8 +140,9 @@ public sealed class GetOffersHandlerTests : IDisposable
     [Fact]
     public async Task Handle_WhenMultipleInventoriesExist_ReturnsOnlyOffersForCorrectInventory()
     {
-        // Arrange
-        await using var db = CreateDbContext();
+        using var scope = _fixture.Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+
         var (eventId, inventory) = CreateEventWithInventory(db);
         var (_, otherInventory) = CreateEventWithInventory(db);
 
@@ -158,10 +153,8 @@ public sealed class GetOffersHandlerTests : IDisposable
 
         var handler = new GetOffersHandler(db);
 
-        // Act
         var result = await handler.Handle(new GetOffersQuery(eventId), CancellationToken.None);
 
-        // Assert
         Assert.True(result.IsSuccess);
         var item = Assert.Single(result.Value.Offers);
         Assert.Equal("Mine", item.Name);
@@ -169,39 +162,28 @@ public sealed class GetOffersHandlerTests : IDisposable
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private TicketingDbContext CreateDbContext()
-    {
-        var options = new DbContextOptionsBuilder<TicketingDbContext>()
-            .UseSqlite(_connection)
-            .Options;
-
-        var db = new TicketingDbContext(options);
-        db.Database.EnsureCreated();
-        return db;
-    }
-
-    private static (Guid EventId, Inventory Inventory) CreateEventWithInventory(TicketingDbContext db)
+    private static (Guid EventId, InventoryDomain.Inventory Inventory) CreateEventWithInventory(TicketingDbContext db)
     {
         var eventId = Guid.CreateVersion7();
         var reference = PublishedEventReference.Create(eventId, Guid.CreateVersion7(), DateTimeOffset.UtcNow);
         db.PublishedEventReferences.Add(reference);
         db.SaveChanges();
 
-        var manifest = new InventoryManifest(
+        var manifest = new InventoryDomain.InventoryManifest(
             sections:
             [
-                new InventorySectionInput("Main",
+                new InventoryDomain.InventorySectionInput("Main",
                 [
-                    new InventoryRowInput("A",
+                    new InventoryDomain.InventoryRowInput("A",
                     [
-                        new InventorySeatInput(Guid.CreateVersion7(), "1"),
-                        new InventorySeatInput(Guid.CreateVersion7(), "2")
+                        new InventoryDomain.InventorySeatInput(Guid.CreateVersion7(), "1"),
+                        new InventoryDomain.InventorySeatInput(Guid.CreateVersion7(), "2")
                     ])
                 ])
             ],
-            generalAdmissionAreas: [new InventoryGeneralAdmissionAreaInput(Guid.CreateVersion7(), "Floor", 100)]);
+            generalAdmissionAreas: [new InventoryDomain.InventoryGeneralAdmissionAreaInput(Guid.CreateVersion7(), "Floor", 100)]);
 
-        var inventory = Inventory.CreateFromManifest(reference.Id, manifest);
+        var inventory = InventoryDomain.Inventory.CreateFromManifest(reference.Id, manifest);
         db.Inventories.Add(inventory);
         db.SaveChanges();
 
@@ -212,3 +194,7 @@ public sealed class GetOffersHandlerTests : IDisposable
         new DateTimeOffset(2026, 7, 1, 10, 0, 0, TimeSpan.Zero),
         new DateTimeOffset(2026, 8, 1, 10, 0, 0, TimeSpan.Zero));
 }
+
+
+
+
