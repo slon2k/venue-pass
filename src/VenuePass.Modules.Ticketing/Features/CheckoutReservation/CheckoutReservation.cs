@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using FluentValidation;
 using FluentValidation.Results;
 
@@ -7,12 +9,14 @@ using Microsoft.Extensions.Logging;
 
 using VenuePass.BuildingBlocks.Application;
 using VenuePass.BuildingBlocks.Domain;
+using VenuePass.Modules.Ticketing.Contracts;
 using VenuePass.Modules.Ticketing.Domain.Common;
 using VenuePass.Modules.Ticketing.Domain.Inventories;
 using VenuePass.Modules.Ticketing.Domain.Orders;
 using VenuePass.Modules.Ticketing.Domain.Reservations;
 using VenuePass.Modules.Ticketing.Domain.Tickets;
 using VenuePass.Modules.Ticketing.Infrastructure;
+using VenuePass.Modules.Ticketing.Infrastructure.Outbox;
 
 namespace VenuePass.Modules.Ticketing.Features.CheckoutReservation;
 
@@ -178,6 +182,24 @@ public sealed class CheckoutReservationHandler(
 
                     db.ChangeTracker.Clear();
                     continue;
+                }
+
+                foreach (var ticket in tickets)
+                {
+                    var integrationEvent = new TicketIssuedIntegrationEvent(
+                        MessageId: Guid.NewGuid(),
+                        TicketId: ticket.Id.Value,
+                        TicketCode: ticket.Code.Value,
+                        OrderId: order.Id.Value,
+                        OrderItemId: ticket.OrderItemId.Value,
+                        EventId: inventory.EventReferenceId.Value,
+                        InventoryId: inventory.Id.Value,
+                        OccurredOn: now);
+
+                    db.OutboxMessages.Add(OutboxMessage.Create(
+                        occurredOn: integrationEvent.OccurredOn,
+                        type: integrationEvent.GetType().AssemblyQualifiedName!,
+                        payload: JsonSerializer.Serialize(integrationEvent)));
                 }
 
                 db.Tickets.AddRange(tickets);
