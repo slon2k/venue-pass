@@ -12,6 +12,7 @@ using VenuePass.Modules.Ticketing.Features.GetOrder;
 using VenuePass.Modules.Ticketing.Features.GetReservation;
 using VenuePass.Modules.Ticketing.Features.CancelReservation;
 using VenuePass.Modules.Ticketing.Features.GetTicket;
+using VenuePass.Modules.Ticketing.Features.CancelTicket;
 
 namespace VenuePass.Modules.Ticketing;
 
@@ -31,6 +32,7 @@ public static class ModuleEndpointMappings
         app.MapCheckoutReservation();
         app.MapGetOrder();
         app.MapGetTicket();
+        app.MapCancelTicket();
 
         return app;
     }

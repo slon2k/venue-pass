@@ -76,7 +76,7 @@ public sealed class TicketTests
             Now);
 
         // Act
-        var result = ticket.Cancel();
+        var result = ticket.Cancel(Now);
 
         // Assert
         Assert.True(result);
@@ -94,10 +94,10 @@ public sealed class TicketTests
             TicketCode,
             SeatId,
             Now);
-        ticket.Cancel();
+        ticket.Cancel(Now);
 
         // Act
-        var result = ticket.Cancel();
+        var result = ticket.Cancel(Now);
 
         // Assert
         Assert.False(result);
@@ -117,9 +117,9 @@ public sealed class TicketTests
             Now);
 
         // Act
-        var firstResult = ticket.Cancel();
-        var secondResult = ticket.Cancel();
-        var thirdResult = ticket.Cancel();
+        var firstResult = ticket.Cancel(Now);
+        var secondResult = ticket.Cancel(Now);
+        var thirdResult = ticket.Cancel(Now);
 
         // Assert
         Assert.True(firstResult);

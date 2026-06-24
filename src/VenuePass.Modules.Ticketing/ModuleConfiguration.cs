@@ -10,6 +10,7 @@ using VenuePass.Modules.Ticketing.Contracts;
 using VenuePass.Modules.Ticketing.Domain.Tickets;
 using VenuePass.Modules.Ticketing.Features.ActivateOffer;
 using VenuePass.Modules.Ticketing.Features.CancelReservation;
+using VenuePass.Modules.Ticketing.Features.CancelTicket;
 using VenuePass.Modules.Ticketing.Features.CheckoutReservation;
 using VenuePass.Modules.Ticketing.Features.ConfigurePricing;
 using VenuePass.Modules.Ticketing.Features.CreateOffer;
@@ -85,6 +86,7 @@ public static class ModuleConfiguration
         services.AddScoped<CheckoutReservationHandler>();
         services.AddScoped<GetOrderHandler>();
         services.AddScoped<GetTicketHandler>();
+        services.AddScoped<CancelTicketHandler>();
 
         return services;
     }

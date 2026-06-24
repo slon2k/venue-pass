@@ -22,6 +22,8 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
 
         public DateTimeOffset CreatedAt { get; private set; }
 
+        public DateTimeOffset? CanceledAt { get; private set; }
+
         private Ticket() { }
 
         private Ticket(
@@ -114,7 +116,7 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
             );
         }
 
-        public bool Cancel()
+        public bool Cancel(DateTimeOffset canceledAt)
         {
             if (Status == TicketStatus.Canceled)
             {
@@ -122,6 +124,7 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
             };
 
             Status = TicketStatus.Canceled;
+            CanceledAt = canceledAt;
             return true;
         }
     }

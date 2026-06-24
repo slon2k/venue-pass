@@ -91,5 +91,13 @@ internal sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         builder.Property(t => t.CreatedAt)
             .HasColumnName("created_at")
             .IsRequired();
+
+        builder.Property(t => t.CanceledAt)
+            .HasColumnName("canceled_at")
+            .IsRequired(false);
+
+        builder.Property<byte[]>("RowVersion")
+            .IsRowVersion()
+            .HasColumnName("row_version");
     }
 }
