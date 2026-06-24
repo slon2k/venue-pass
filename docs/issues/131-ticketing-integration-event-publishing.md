@@ -1,6 +1,7 @@
 # Issue 131 - Ticketing Integration Event Publishing
 
 ## Status
+
 - **Issue**: 131
 - **Title**: Ticketing Integration Event Publishing
 - **Milestone**: 05 - Attendance: Check-In
@@ -10,6 +11,7 @@
 ## Problem Statement
 
 Ticketing module needs to emit integration events when key lifecycle events occur:
+
 1. `TicketIssued` - when a ticket is successfully created during checkout
 2. `TicketCanceled` - when a ticket is canceled
 
