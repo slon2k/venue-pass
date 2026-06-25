@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 using FluentValidation;
 using FluentValidation.Results;
 
@@ -196,10 +194,7 @@ public sealed class CheckoutReservationHandler(
                         InventoryId: inventory.Id.Value,
                         OccurredOn: now);
 
-                    db.OutboxMessages.Add(OutboxMessage.Create(
-                        occurredOn: integrationEvent.OccurredOn,
-                        type: integrationEvent.GetType().AssemblyQualifiedName!,
-                        payload: JsonSerializer.Serialize(integrationEvent)));
+                    db.OutboxMessages.Add(OutboxMessage.Create(integrationEvent));
                 }
 
                 db.Tickets.AddRange(tickets);

@@ -257,7 +257,7 @@ public sealed class TicketModuleContractTests
 
         if (status == TicketStatus.Canceled)
         {
-            ticket.Cancel();
+            ticket.Cancel(now);
         }
 
         db.Tickets.Add(ticket);
