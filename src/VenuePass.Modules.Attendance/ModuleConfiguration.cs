@@ -1,0 +1,46 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
+
+using VenuePass.Modules.Attendance.Infrastructure;
+
+namespace VenuePass.Modules.Attendance;
+
+public static class ModuleConfiguration
+{
+    public static IServiceCollection AddAttendanceModule(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        string connectionString = configuration.GetConnectionString("Database")
+            ?? throw new InvalidOperationException("Connection string 'Database' is missing.");
+
+        services.AddDatabase(connectionString);
+        services.RegisterHandlers();
+
+        services.AddAuthorizationBuilder()
+            .AddPolicy("AttendanceAdmin", policy => policy.RequireRole("AttendanceAdmin"))
+            .AddPolicy("AttendanceManager", policy => policy.RequireRole("AttendanceManager"));
+
+        return services;
+    }
+
+    private static IServiceCollection AddDatabase(this IServiceCollection services, string connectionString)
+    {
+        services.AddDbContext<AttendanceDbContext>(options =>
+        {
+            options.UseSqlServer(connectionString, sql =>
+            {
+                sql.MigrationsAssembly(typeof(AttendanceDbContext).Assembly.FullName);
+                sql.MigrationsHistoryTable("__EFMigrationsHistory", AttendanceDbContext.Schema);
+            });
+        });
+
+        return services;
+    }
+
+    private static IServiceCollection RegisterHandlers(this IServiceCollection services)
+    {
+        return services;
+    }
+}

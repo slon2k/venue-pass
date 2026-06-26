@@ -2,4 +2,14 @@
 	<ItemGroup>
 		<ProjectReference Include="..\VenuePass.BuildingBlocks\VenuePass.BuildingBlocks.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="VenuePass.Modules.Attendance.Tests" />
+    <InternalsVisibleTo Include="VenuePass.IntegrationTests" />
+  </ItemGroup>
 </Project>
