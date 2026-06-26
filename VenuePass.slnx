@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/VenuePass.Api/VenuePass.Api.csproj" />
     <Project Path="src/VenuePass.BuildingBlocks/VenuePass.BuildingBlocks.csproj" />
+    <Project Path="src/VenuePass.Modules.Attendance.Contracts/VenuePass.Modules.Attendance.Contracts.csproj" />
     <Project Path="src/VenuePass.Modules.Attendance/VenuePass.Modules.Attendance.csproj" />
     <Project Path="src/VenuePass.Modules.Events/VenuePass.Modules.Events.csproj" />
     <Project Path="src/VenuePass.Modules.Events.Contracts/VenuePass.Modules.Events.Contracts.csproj" />
