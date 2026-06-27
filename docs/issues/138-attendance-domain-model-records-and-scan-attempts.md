@@ -46,6 +46,7 @@ This issue defines the Attendance-owned domain surface for check-in persistence 
 ### `AttendanceRecord`
 
 Must store:
+
 - attendance record ID
 - ticket ID
 - normalized ticket code
@@ -59,6 +60,7 @@ Must store:
 ### `ScanAttempt`
 
 Must store:
+
 - scan attempt ID
 - submitted or normalized ticket code
 - outcome

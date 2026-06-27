@@ -44,6 +44,7 @@ This issue establishes the projection model and persistence contract, not the ev
 ## Projection Persistence Requirements
 
 Projection must store:
+
 - ticket ID
 - normalized ticket code
 - ticket status or projection status
@@ -54,6 +55,7 @@ Projection must store:
 - last updated timestamp
 
 Database behavior:
+
 - one projection per ticket ID
 - one projection per normalized ticket code
 - required indexes for ticket ID and normalized ticket code lookup
