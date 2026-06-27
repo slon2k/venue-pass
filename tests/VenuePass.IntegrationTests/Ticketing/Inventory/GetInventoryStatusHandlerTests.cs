@@ -8,6 +8,7 @@ using VenuePass.Modules.Ticketing.Infrastructure;
 using InventoryDomain = VenuePass.Modules.Ticketing.Domain.Inventories;
 
 using Xunit;
+using VenuePass.Modules.Attendance.Domain.PublishedEvents;
 
 namespace VenuePass.IntegrationTests.Ticketing.Inventory;
 
@@ -315,7 +316,7 @@ public sealed class GetInventoryStatusHandlerTests
         IReadOnlyList<InventoryDomain.InventoryGeneralAdmissionAreaInput> generalAdmissionAreas)
     {
         var eventId = Guid.CreateVersion7();
-        var reference = PublishedEventReference.Create(eventId, Guid.CreateVersion7(), DateTimeOffset.UtcNow);
+        var reference = Modules.Ticketing.Domain.PublishedEvents.PublishedEventReference.Create(eventId, Guid.CreateVersion7(), DateTimeOffset.UtcNow);
         db.PublishedEventReferences.Add(reference);
         db.SaveChanges();
 
