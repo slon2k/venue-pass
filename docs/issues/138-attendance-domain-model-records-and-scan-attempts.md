@@ -21,6 +21,8 @@ This issue defines the Attendance-owned domain surface for check-in persistence 
   - Implement `ScanAttempt`
   - Add value objects or enums needed for scan outcome and rejection reason category
   - Persist required identifiers and timestamps
+  - Add persistence mappings for `AttendanceRecord` and `ScanAttempt`
+  - Add database uniqueness constraint for one successful attendance record per ticket
   - Support both seat and GA references
   - Align entity shape with Capability B persistence requirements
 - Out of scope:
@@ -73,6 +75,7 @@ Must store:
 - [ ] Rejected scan attempts carry a reason category.
 - [ ] Entity model supports both seat and GA references where applicable.
 - [ ] Persistence mappings align with the Attendance schema baseline.
+- [ ] Database uniqueness constraint enforces one successful attendance record per ticket.
 
 ## Test Checklist
 
@@ -82,6 +85,7 @@ Must store:
 - [ ] Domain test: Scan attempt supports rejected outcome with reason category.
 - [ ] Persistence test: accepted and rejected scan attempts both persist.
 - [ ] Persistence test: rejected scan attempt stores reason category.
+- [ ] Persistence test: duplicate successful attendance record for same ticket is rejected deterministically.
 
 ## Related Issues
 

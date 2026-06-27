@@ -14,6 +14,8 @@ Attendance foundation work introduces new module boundaries, schema objects, uni
 
 This issue adds the baseline persistence and architecture tests required to trust the Attendance foundation.
 
+Note: uniqueness and lookup validation tests in this issue execute after Issues 138 and 139 land the corresponding model mappings and constraints.
+
 ## Scope
 
 - In scope:

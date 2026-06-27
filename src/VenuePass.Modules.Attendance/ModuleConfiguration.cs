@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 
 using VenuePass.Modules.Attendance.Infrastructure;
+using VenuePass.Modules.Attendance.Infrastructure.Outbox;
 
 namespace VenuePass.Modules.Attendance;
 
@@ -17,6 +18,7 @@ public static class ModuleConfiguration
 
         services.AddDatabase(connectionString);
         services.RegisterHandlers();
+        services.AddHostedService<AttendanceOutboxDispatcher>();
 
         services.AddAuthorizationBuilder()
             .AddPolicy("AttendanceAdmin", policy => policy.RequireRole("AttendanceAdmin"))

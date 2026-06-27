@@ -22,6 +22,9 @@ This issue establishes the projection model and persistence contract, not the ev
   - Persist projected ticket status and canonical event reference
   - Persist optional order and inventory target references
   - Persist last updated timestamp
+  - Add projection persistence mapping in Attendance schema
+  - Add uniqueness constraints for ticket ID and normalized ticket code
+  - Add lookup indexes for ticket ID and normalized ticket code
   - Add uniqueness and lookup behavior required for idempotent projection persistence
 - Out of scope:
   - `TicketIssued` or `TicketCanceled` event consumer implementation
@@ -64,6 +67,7 @@ Database behavior:
 - [ ] Uniqueness constraints prevent duplicate projections by ticket ID or normalized ticket code.
 - [ ] Projection entity carries canonical event reference and required stable identifiers.
 - [ ] Projection persistence is ready for later idempotent event consumption.
+- [ ] Lookup indexes support deterministic read-path performance by ticket ID and normalized ticket code.
 
 ## Test Checklist
 

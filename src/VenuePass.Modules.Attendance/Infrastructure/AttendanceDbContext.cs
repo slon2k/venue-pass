@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
 using VenuePass.BuildingBlocks.Domain;
+using VenuePass.Modules.Attendance.Infrastructure.Outbox;
 
 namespace VenuePass.Modules.Attendance.Infrastructure;
 
@@ -8,7 +9,9 @@ public class AttendanceDbContext(DbContextOptions<AttendanceDbContext> options) 
 {
     public const string Schema = "attendance";
 
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         var aggregates = ChangeTracker
             .Entries<IAggregateRoot>()
