@@ -14,7 +14,7 @@ public sealed class ScanAttemptTests
         var scannedAt = new DateTimeOffset(2026, 6, 27, 15, 0, 0, TimeSpan.Zero);
 
         var attempt = ScanAttempt.Accepted(
-            submittedTicketCode: "01AR-Z3ND-EKTS-V4RR",
+            submittedTicketCode: new SubmittedTicketCode("01AR-Z3ND-EKTS-V4RR"),
             normalizedTicketCode: new TicketCode("01ARZ3NDEKTSV4RR"),
             ticketId: new TicketId(Guid.CreateVersion7()),
             publishedEventReferenceId: new PublishedEventReferenceId(Guid.CreateVersion7()),
@@ -34,7 +34,7 @@ public sealed class ScanAttemptTests
 
         var attempt = ScanAttempt.MalformedTicketCode(
             publishedEventReferenceId: new PublishedEventReferenceId(Guid.CreateVersion7()),
-            submittedTicketCode: "BAD-CODE",
+            submittedTicketCode: new SubmittedTicketCode("BAD-CODE"),
             scannedAt: scannedAt);
 
         Assert.Equal(ScanOutcome.Rejected, attempt.Outcome);
@@ -52,7 +52,7 @@ public sealed class ScanAttemptTests
         var ticketId = new TicketId(Guid.CreateVersion7());
 
         var attempt = ScanAttempt.ValidationUnavailable(
-            submittedTicketCode: "01AR-Z3ND-EKTS-V4RR",
+            submittedTicketCode: new SubmittedTicketCode("01AR-Z3ND-EKTS-V4RR"),
             normalizedTicketCode: normalized,
             publishedEventReferenceId: new PublishedEventReferenceId(Guid.CreateVersion7()),
             scannedAt: scannedAt,
@@ -69,7 +69,7 @@ public sealed class ScanAttemptTests
     {
         var exception = Assert.Throws<ArgumentException>(() =>
             ScanAttempt.Accepted(
-                submittedTicketCode: "01AR-Z3ND-EKTS-V4RR",
+                submittedTicketCode: new SubmittedTicketCode("01AR-Z3ND-EKTS-V4RR"),
                 normalizedTicketCode: new TicketCode("01ARZ3NDEKTSV4RR"),
                 ticketId: new TicketId(Guid.Empty),
                 publishedEventReferenceId: new PublishedEventReferenceId(Guid.CreateVersion7()),
@@ -83,7 +83,7 @@ public sealed class ScanAttemptTests
     {
         var exception = Assert.Throws<ArgumentException>(() =>
             ScanAttempt.TicketNotFound(
-                submittedTicketCode: "01AR-Z3ND-EKTS-V4RR",
+                submittedTicketCode: new SubmittedTicketCode("01AR-Z3ND-EKTS-V4RR"),
                 normalizedTicketCode: new TicketCode("01ARZ3NDEKTSV4RR"),
                 publishedEventReferenceId: new PublishedEventReferenceId(Guid.Empty),
                 scannedAt: DateTimeOffset.UtcNow));
@@ -97,7 +97,7 @@ public sealed class ScanAttemptTests
         var exception = Assert.Throws<ArgumentException>(() =>
             ScanAttempt.MalformedTicketCode(
                 publishedEventReferenceId: new PublishedEventReferenceId(Guid.CreateVersion7()),
-                submittedTicketCode: "BAD-CODE",
+                submittedTicketCode: new SubmittedTicketCode("BAD-CODE"),
                 scannedAt: default));
 
         Assert.Contains("Scanned timestamp cannot be the default value", exception.Message);
