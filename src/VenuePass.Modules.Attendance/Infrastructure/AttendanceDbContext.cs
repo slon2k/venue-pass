@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 
 using VenuePass.BuildingBlocks.Domain;
+using VenuePass.Modules.Attendance.Domain.AttendanceRecords;
+using VenuePass.Modules.Attendance.Domain.PublishedEvents;
+using VenuePass.Modules.Attendance.Domain.ScanAttempts;
 using VenuePass.Modules.Attendance.Infrastructure.Outbox;
 
 namespace VenuePass.Modules.Attendance.Infrastructure;
@@ -10,6 +13,12 @@ public class AttendanceDbContext(DbContextOptions<AttendanceDbContext> options) 
     public const string Schema = "attendance";
 
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+
+    public DbSet<PublishedEventReference> PublishedEventReferences => Set<PublishedEventReference>();
+
+    public DbSet<ScanAttempt> ScanAttempts => Set<ScanAttempt>();
+
+    public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

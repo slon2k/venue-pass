@@ -6,7 +6,7 @@ namespace VenuePass.Modules.Attendance.Domain.ScanAttempts;
 
 public sealed class ScanAttempt : AggregateRoot<ScanAttemptId>
 {
-    public string SubmittedTicketCode { get; private set; } = string.Empty;
+    public SubmittedTicketCode SubmittedTicketCode { get; private set; } = null!;
 
     public TicketCode? NormalizedTicketCode { get; private set; }
 
@@ -25,7 +25,7 @@ public sealed class ScanAttempt : AggregateRoot<ScanAttemptId>
     private ScanAttempt(
         ScanAttemptId id,
         PublishedEventReferenceId publishedEventReferenceId,
-        string submittedTicketCode,
+        SubmittedTicketCode submittedTicketCode,
         TicketCode? normalizedTicketCode,
         ScanOutcome outcome,
         ScanRejectionCategory rejectionCategory,
@@ -53,6 +53,9 @@ public sealed class ScanAttempt : AggregateRoot<ScanAttemptId>
 
         if (!Enum.IsDefined(rejectionCategory))
             throw new ArgumentException("Invalid scan rejection category.", nameof(rejectionCategory));
+
+        ArgumentNullException.ThrowIfNull(submittedTicketCode);
+
         if (outcome == ScanOutcome.Rejected && rejectionCategory == ScanRejectionCategory.None)
             throw new ArgumentException("A rejection reason category must be provided for rejected scan attempts.", nameof(rejectionCategory));
 
@@ -65,7 +68,7 @@ public sealed class ScanAttempt : AggregateRoot<ScanAttemptId>
         if (outcome == ScanOutcome.Accepted && !normalizedTicketCode.HasValue)
             throw new ArgumentException("Accepted scan attempts must include a normalized ticket code.", nameof(normalizedTicketCode));
 
-        SubmittedTicketCode = submittedTicketCode ?? string.Empty;
+        SubmittedTicketCode = submittedTicketCode;
         NormalizedTicketCode = normalizedTicketCode;
         Outcome = outcome;
         RejectionCategory = rejectionCategory;
@@ -74,7 +77,7 @@ public sealed class ScanAttempt : AggregateRoot<ScanAttemptId>
         PublishedEventReferenceId = publishedEventReferenceId;
     }
 
-    public static ScanAttempt MalformedTicketCode(PublishedEventReferenceId publishedEventReferenceId, string submittedTicketCode, DateTimeOffset scannedAt) => new(
+    public static ScanAttempt MalformedTicketCode(PublishedEventReferenceId publishedEventReferenceId, SubmittedTicketCode submittedTicketCode, DateTimeOffset scannedAt) => new(
         id: ScanAttemptId.Create(),
         publishedEventReferenceId: publishedEventReferenceId,
         submittedTicketCode: submittedTicketCode,
@@ -86,7 +89,7 @@ public sealed class ScanAttempt : AggregateRoot<ScanAttemptId>
     );
 
     public static ScanAttempt TicketNotFound(
-        string submittedTicketCode,
+        SubmittedTicketCode submittedTicketCode,
         TicketCode normalizedTicketCode,
         PublishedEventReferenceId publishedEventReferenceId,
         DateTimeOffset scannedAt) => new(
@@ -100,7 +103,7 @@ public sealed class ScanAttempt : AggregateRoot<ScanAttemptId>
             ticketId: null);
 
     public static ScanAttempt IncorrectEvent(
-        string submittedTicketCode,
+        SubmittedTicketCode submittedTicketCode,
         TicketCode normalizedTicketCode,
         TicketId ticketId,
         PublishedEventReferenceId publishedEventReferenceId,
@@ -115,7 +118,7 @@ public sealed class ScanAttempt : AggregateRoot<ScanAttemptId>
             ticketId: ticketId);
 
     public static ScanAttempt CanceledTicket(
-        string submittedTicketCode,
+        SubmittedTicketCode submittedTicketCode,
         TicketCode normalizedTicketCode,
         TicketId ticketId,
         PublishedEventReferenceId publishedEventReferenceId,
@@ -130,7 +133,7 @@ public sealed class ScanAttempt : AggregateRoot<ScanAttemptId>
             ticketId: ticketId);
 
     public static ScanAttempt DuplicateScan(
-        string submittedTicketCode,
+        SubmittedTicketCode submittedTicketCode,
         TicketCode normalizedTicketCode,
         TicketId ticketId,
         PublishedEventReferenceId publishedEventReferenceId,
@@ -145,7 +148,7 @@ public sealed class ScanAttempt : AggregateRoot<ScanAttemptId>
             ticketId: ticketId);
 
     public static ScanAttempt ValidationUnavailable(
-        string submittedTicketCode,
+        SubmittedTicketCode submittedTicketCode,
         TicketCode? normalizedTicketCode,
         PublishedEventReferenceId publishedEventReferenceId,
         DateTimeOffset scannedAt,
@@ -160,7 +163,7 @@ public sealed class ScanAttempt : AggregateRoot<ScanAttemptId>
             ticketId: ticketId);
 
     public static ScanAttempt UnexpectedError(
-        string submittedTicketCode,
+        SubmittedTicketCode submittedTicketCode,
         TicketCode? normalizedTicketCode,
         PublishedEventReferenceId publishedEventReferenceId,
         DateTimeOffset scannedAt,
@@ -175,7 +178,7 @@ public sealed class ScanAttempt : AggregateRoot<ScanAttemptId>
             ticketId: ticketId);
 
     public static ScanAttempt Accepted(
-        string submittedTicketCode,
+        SubmittedTicketCode submittedTicketCode,
         TicketCode normalizedTicketCode,
         TicketId ticketId,
         PublishedEventReferenceId publishedEventReferenceId,
@@ -217,4 +220,24 @@ public enum ScanRejectionCategory
 
     ValidationUnavailable = 98,
     UnexpectedError = 99,
+}
+
+public record SubmittedTicketCode
+{
+    public const int MaxLength = 128;
+
+    public string Value { get; }
+
+    public SubmittedTicketCode(string value)
+    {
+        value = value?.Trim() ?? string.Empty;
+
+        value = value.Length > MaxLength ? value[..MaxLength] : value;
+
+        Value = value;
+    }
+
+    public static implicit operator string(SubmittedTicketCode code) => code.Value;
+    public bool IsEmpty => string.IsNullOrWhiteSpace(Value);
+    public override string ToString() => Value;
 }
