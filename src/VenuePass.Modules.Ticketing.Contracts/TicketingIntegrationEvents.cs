@@ -8,7 +8,7 @@ public sealed record TicketIssuedIntegrationEvent(
     string TicketCode,
     Guid OrderId,
     Guid OrderItemId,
-    Guid EventId,
+    Guid PublishedEventReferenceId,
     Guid InventoryId,
     DateTimeOffset OccurredOn
 ) : IIntegrationEvent;
@@ -17,6 +17,6 @@ public sealed record TicketCanceledIntegrationEvent(
     Guid MessageId,
     Guid TicketId,
     string TicketCode,
-    Guid EventId,
+    Guid PublishedEventReferenceId,
     DateTimeOffset OccurredOn
 ) : IIntegrationEvent;

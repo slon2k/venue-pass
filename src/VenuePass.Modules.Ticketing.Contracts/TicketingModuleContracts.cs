@@ -30,6 +30,11 @@ public sealed record TicketValidationResultDto
             throw new ArgumentException("A valid ticket validation result must include a ticket.");
         }
 
+        if (isFound && ticket is null)
+        {
+            throw new ArgumentException("A found ticket validation result must include a ticket.");
+        }
+
         if (!isFound && ticket is not null)
         {
             throw new ArgumentException("A not-found validation result must not include a ticket.");
@@ -51,12 +56,14 @@ public sealed record TicketValidationResultDto
         Ticket = ticket;
     }
 
-    public static TicketValidationResultDto CreateForEvent(TicketExportDto ticket, Guid eventId)
+    public static TicketValidationResultDto CreateForPublishedEventReference(
+        TicketExportDto ticket,
+        Guid publishedEventReferenceId)
     {
         ArgumentNullException.ThrowIfNull(ticket);
-        eventId.ThrowIfEmpty(nameof(eventId));
+        publishedEventReferenceId.ThrowIfEmpty(nameof(publishedEventReferenceId));
 
-        if (ticket.PublishedEventReferenceId != eventId)
+        if (ticket.PublishedEventReferenceId != publishedEventReferenceId)
         {
             return new TicketValidationResultDto(
                 isFound: true,
@@ -85,16 +92,16 @@ public sealed record TicketValidationResultDto
         failureReason: TicketValidationFailureReason.TicketNotFound,
         ticket: null);
 
-    public static TicketValidationResultDto EventNotFound() => new(
-        isFound: true,
-        isValid: false,
-        failureReason: TicketValidationFailureReason.IncorrectEvent,
-        ticket: null);
-
     public static TicketValidationResultDto MalformedTicketCode() => new(
         isFound: false,
         isValid: false,
         failureReason: TicketValidationFailureReason.MalformedTicketCode,
+        ticket: null);
+
+    public static TicketValidationResultDto PublishedEventReferenceNotFound() => new(
+        isFound: false,
+        isValid: false,
+        failureReason: TicketValidationFailureReason.PublishedEventReferenceNotFound,
         ticket: null);
 }
 
@@ -111,7 +118,8 @@ public enum TicketValidationFailureReason
     TicketNotFound = 2,
     TicketCanceled = 3,
     IncorrectEvent = 4,
-    Other = 5,
+    PublishedEventReferenceNotFound = 5,
+    Other = 99,
 }
 
 

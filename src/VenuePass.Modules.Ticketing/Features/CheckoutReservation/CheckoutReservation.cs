@@ -190,7 +190,7 @@ public sealed class CheckoutReservationHandler(
                         TicketCode: ticket.Code.Value,
                         OrderId: order.Id.Value,
                         OrderItemId: ticket.OrderItemId.Value,
-                        EventId: inventory.EventReferenceId.Value,
+                        PublishedEventReferenceId: inventory.EventReferenceId.Value,
                         InventoryId: inventory.Id.Value,
                         OccurredOn: now);
 
