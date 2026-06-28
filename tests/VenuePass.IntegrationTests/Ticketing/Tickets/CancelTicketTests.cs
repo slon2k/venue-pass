@@ -56,7 +56,7 @@ public sealed class CancelTicketTests
         Assert.Single(canceledMessages);
 
         var message = canceledMessages[0];
-        Assert.Equal(ticket.PublishedEventReferenceId.Value, message.EventId);
+        Assert.Equal(ticket.PublishedEventReferenceId.Value, message.PublishedEventReferenceId);
         Assert.Equal(ticket.Code.Value, message.TicketCode);
         Assert.Equal(ticket.CanceledAt!.Value, message.OccurredOn);
     }

@@ -29,24 +29,24 @@ public sealed class TicketModuleContractTests
     }
 
     [Fact]
-    public async Task ValidateTicketForEvent_WhenEventDoesNotExist_ReturnsEventNotFound()
+    public async Task ValidateTicketForPublishedEventReference_WhenReferenceDoesNotExist_ReturnsPublishedEventReferenceNotFound()
     {
         using var scope = _fixture.Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
 
         var contract = new TicketModuleContract(db);
 
-        var result = await contract.ValidateTicketForEventAsync(
+        var result = await contract.ValidateTicketForPublishedEventReferenceAsync(
             "ABCDEFGHJKMNPQRS",
             Guid.CreateVersion7());
 
         Assert.False(result.IsValid);
-        Assert.True(result.IsFound);
-        Assert.Equal(TicketValidationFailureReason.IncorrectEvent, result.FailureReason);
+        Assert.False(result.IsFound);
+        Assert.Equal(TicketValidationFailureReason.PublishedEventReferenceNotFound, result.FailureReason);
     }
 
     [Fact]
-    public async Task ValidateTicketForEvent_WhenTicketCodeIsMalformed_ReturnsMalformedTicketCode()
+    public async Task ValidateTicketForPublishedEventReference_WhenTicketCodeIsMalformed_ReturnsMalformedTicketCode()
     {
         using var scope = _fixture.Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
@@ -54,9 +54,9 @@ public sealed class TicketModuleContractTests
         var (reference, _, _) = CreateEventAndSave(db);
         var contract = new TicketModuleContract(db);
 
-        var result = await contract.ValidateTicketForEventAsync(
+        var result = await contract.ValidateTicketForPublishedEventReferenceAsync(
             "NOT-VALID!",
-            reference.EventId);
+            reference.Id.Value);
 
         Assert.False(result.IsValid);
         Assert.False(result.IsFound);
@@ -64,7 +64,7 @@ public sealed class TicketModuleContractTests
     }
 
     [Fact]
-    public async Task ValidateTicketForEvent_WhenTicketDoesNotExist_ReturnsTicketNotFound()
+    public async Task ValidateTicketForPublishedEventReference_WhenTicketDoesNotExist_ReturnsTicketNotFound()
     {
         using var scope = _fixture.Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
@@ -72,9 +72,9 @@ public sealed class TicketModuleContractTests
         var (reference, _, _) = CreateEventAndSave(db);
         var contract = new TicketModuleContract(db);
 
-        var result = await contract.ValidateTicketForEventAsync(
+        var result = await contract.ValidateTicketForPublishedEventReferenceAsync(
             "ABCDEFGHJKMNPQRS",
-            reference.EventId);
+            reference.Id.Value);
 
         Assert.False(result.IsValid);
         Assert.False(result.IsFound);
@@ -82,7 +82,7 @@ public sealed class TicketModuleContractTests
     }
 
     [Fact]
-    public async Task ValidateTicketForEvent_WhenIssuedTicket_ReturnsValid()
+    public async Task ValidateTicketForPublishedEventReference_WhenIssuedTicket_ReturnsValid()
     {
         using var scope = _fixture.Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
@@ -91,9 +91,9 @@ public sealed class TicketModuleContractTests
         var ticket = CreateAndSaveTicket(db, reference.Id, inventoryId, seatId, TicketStatus.Issued);
         var contract = new TicketModuleContract(db);
 
-        var result = await contract.ValidateTicketForEventAsync(
+        var result = await contract.ValidateTicketForPublishedEventReferenceAsync(
             ticket.Code.Value,
-            reference.EventId);
+            reference.Id.Value);
 
         Assert.True(result.IsValid);
         Assert.True(result.IsFound);
@@ -102,11 +102,11 @@ public sealed class TicketModuleContractTests
         Assert.Equal(ticket.Id.Value, result.Ticket.TicketId);
         Assert.Equal(ticket.Code.Value, result.Ticket.TicketCode);
         Assert.Equal(TicketValidationStatus.Issued, result.Ticket.Status);
-        Assert.Equal(reference.EventId, result.Ticket.PublishedEventReferenceId);
+        Assert.Equal(reference.Id.Value, result.Ticket.PublishedEventReferenceId);
     }
 
     [Fact]
-    public async Task ValidateTicketForEvent_WhenCanceledTicket_ReturnsInvalidWithTicketCanceledReason()
+    public async Task ValidateTicketForPublishedEventReference_WhenCanceledTicket_ReturnsInvalidWithTicketCanceledReason()
     {
         using var scope = _fixture.Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
@@ -115,9 +115,9 @@ public sealed class TicketModuleContractTests
         var ticket = CreateAndSaveTicket(db, reference.Id, inventoryId, seatId, TicketStatus.Canceled);
         var contract = new TicketModuleContract(db);
 
-        var result = await contract.ValidateTicketForEventAsync(
+        var result = await contract.ValidateTicketForPublishedEventReferenceAsync(
             ticket.Code.Value,
-            reference.EventId);
+            reference.Id.Value);
 
         Assert.False(result.IsValid);
         Assert.True(result.IsFound);
@@ -127,7 +127,7 @@ public sealed class TicketModuleContractTests
     }
 
     [Fact]
-    public async Task ValidateTicketForEvent_WhenTicketBelongsToDifferentEvent_ReturnsIncorrectEvent()
+    public async Task ValidateTicketForPublishedEventReference_WhenTicketBelongsToDifferentEvent_ReturnsIncorrectEvent()
     {
         using var scope = _fixture.Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
@@ -137,9 +137,9 @@ public sealed class TicketModuleContractTests
         var ticket = CreateAndSaveTicket(db, reference.Id, inventoryId, seatId, TicketStatus.Issued);
         var contract = new TicketModuleContract(db);
 
-        var result = await contract.ValidateTicketForEventAsync(
+        var result = await contract.ValidateTicketForPublishedEventReferenceAsync(
             ticket.Code.Value,
-            otherReference.EventId);
+            otherReference.Id.Value);
 
         Assert.False(result.IsValid);
         Assert.True(result.IsFound);
@@ -147,7 +147,7 @@ public sealed class TicketModuleContractTests
     }
 
     [Fact]
-    public async Task ValidateTicketForEvent_WhenIssuedTicket_TicketDtoContainsAllRequiredIdentifiers()
+    public async Task ValidateTicketForPublishedEventReference_WhenIssuedTicket_TicketDtoContainsAllRequiredIdentifiers()
     {
         using var scope = _fixture.Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
@@ -156,9 +156,9 @@ public sealed class TicketModuleContractTests
         var ticket = CreateAndSaveTicket(db, reference.Id, inventoryId, seatId, TicketStatus.Issued);
         var contract = new TicketModuleContract(db);
 
-        var result = await contract.ValidateTicketForEventAsync(
+        var result = await contract.ValidateTicketForPublishedEventReferenceAsync(
             ticket.Code.Value,
-            reference.EventId);
+            reference.Id.Value);
 
         Assert.True(result.IsValid);
         var dto = result.Ticket!;
@@ -166,7 +166,7 @@ public sealed class TicketModuleContractTests
         Assert.Equal(ticket.Code.Value, dto.TicketCode);
         Assert.Equal(ticket.OrderId.Value, dto.OrderId);
         Assert.Equal(ticket.OrderItemId.Value, dto.OrderItemId);
-        Assert.Equal(reference.EventId, dto.PublishedEventReferenceId);
+        Assert.Equal(reference.Id.Value, dto.PublishedEventReferenceId);
         Assert.Equal(seatId.Value, dto.InventorySeatId);
         Assert.Null(dto.GeneralAdmissionPoolId);
         Assert.Equal(TicketType.ReservedSeating, dto.TicketType);

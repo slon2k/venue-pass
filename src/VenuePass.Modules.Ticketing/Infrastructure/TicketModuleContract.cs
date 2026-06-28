@@ -1,21 +1,29 @@
 using Microsoft.EntityFrameworkCore;
 
+using VenuePass.BuildingBlocks.Extensions;
 using VenuePass.Modules.Ticketing.Contracts;
+using VenuePass.Modules.Ticketing.Domain.PublishedEvents;
 using VenuePass.Modules.Ticketing.Domain.Tickets;
 
 namespace VenuePass.Modules.Ticketing.Infrastructure;
 
 public sealed class TicketModuleContract(TicketingDbContext db) : ITicketingModuleContract
 {
-
-    public async Task<TicketValidationResultDto> ValidateTicketForEventAsync(
+    public async Task<TicketValidationResultDto> ValidateTicketForPublishedEventReferenceAsync(
         string ticketCode,
-        Guid eventId,
+        Guid publishedEventReferenceId,
         CancellationToken cancellationToken = default)
     {
-        if (!await db.PublishedEventReferences.AnyAsync(e => e.EventId == eventId, cancellationToken))
+        publishedEventReferenceId.ThrowIfEmpty(nameof(publishedEventReferenceId));
+
+        var requestedPublishedEventReferenceId = new PublishedEventReferenceId(publishedEventReferenceId);
+
+        // Optional. Attendance can also validate this before calling Ticketing.
+        if (!await db.PublishedEventReferences
+                .AsNoTracking()
+                .AnyAsync(e => e.Id == requestedPublishedEventReferenceId, cancellationToken))
         {
-            return TicketValidationResultDto.EventNotFound();
+            return TicketValidationResultDto.PublishedEventReferenceNotFound();
         }
 
         if (!TicketCode.TryCreate(ticketCode, out var validTicketCode))
@@ -23,23 +31,20 @@ public sealed class TicketModuleContract(TicketingDbContext db) : ITicketingModu
             return TicketValidationResultDto.MalformedTicketCode();
         }
 
-        var ticketWithEventId = await db.Tickets
+        var ticket = await db.Tickets
             .AsNoTracking()
-            .Where(t => t.Code == validTicketCode)
-            .Join(db.PublishedEventReferences,
-                t => t.PublishedEventReferenceId,
-                r => r.Id,
-                (t, r) => new { Ticket = t, ExternalEventId = r.EventId })
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(t => t.Code == validTicketCode, cancellationToken);
 
-        if (ticketWithEventId is null)
+        if (ticket is null)
         {
             return TicketValidationResultDto.TicketNotFound();
         }
 
-        var ticketDto = CreateTicketExportDto(ticketWithEventId.Ticket, ticketWithEventId.ExternalEventId);
+        var ticketDto = CreateTicketExportDto(ticket);
 
-        return TicketValidationResultDto.CreateForEvent(ticketDto, eventId);
+        return TicketValidationResultDto.CreateForPublishedEventReference(
+            ticketDto,
+            publishedEventReferenceId);
     }
 
     private static TicketValidationStatus MapTicketStatus(TicketStatus status) => status switch
@@ -49,17 +54,24 @@ public sealed class TicketModuleContract(TicketingDbContext db) : ITicketingModu
         _ => throw new ArgumentOutOfRangeException(nameof(status), $"Unsupported ticket status: {status}")
     };
 
-    private static TicketExportDto CreateTicketExportDto(Ticket ticket, Guid externalEventId)
+    private static TicketExportDto CreateTicketExportDto(Ticket ticket)
     {
         if (ticket.InventorySeatId is not null && ticket.GeneralAdmissionPoolId is not null)
         {
-            throw new InvalidOperationException("Invalid ticket association: A ticket cannot be associated with both an inventory seat and a general admission pool.");
+            throw new InvalidOperationException(
+                "Invalid ticket association: A ticket cannot be associated with both an inventory seat and a general admission pool.");
+        }
+
+        if (ticket.InventorySeatId is null && ticket.GeneralAdmissionPoolId is null)
+        {
+            throw new InvalidOperationException(
+                "Invalid ticket association: A ticket must be associated with either an inventory seat or a general admission pool.");
         }
 
         return ticket.InventorySeatId is not null
             ? TicketExportDto.CreateForSeat(
                 ticketId: ticket.Id.Value,
-                publishedEventReferenceId: externalEventId,
+                publishedEventReferenceId: ticket.PublishedEventReferenceId.Value,
                 orderId: ticket.OrderId.Value,
                 orderItemId: ticket.OrderItemId.Value,
                 code: ticket.Code.Value,
@@ -68,11 +80,11 @@ public sealed class TicketModuleContract(TicketingDbContext db) : ITicketingModu
                 issuedAt: ticket.CreatedAt)
             : TicketExportDto.CreateForGeneralAdmission(
                 ticketId: ticket.Id.Value,
-                publishedEventReferenceId: externalEventId,
+                publishedEventReferenceId: ticket.PublishedEventReferenceId.Value,
                 orderId: ticket.OrderId.Value,
                 orderItemId: ticket.OrderItemId.Value,
                 code: ticket.Code.Value,
-                generalAdmissionPoolId: ticket.GeneralAdmissionPoolId?.Value ?? throw new InvalidOperationException("GeneralAdmissionPoolId must have a value for general admission tickets."),
+                generalAdmissionPoolId: ticket.GeneralAdmissionPoolId!.Value.Value,
                 status: MapTicketStatus(ticket.Status),
                 issuedAt: ticket.CreatedAt);
     }

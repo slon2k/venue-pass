@@ -2,8 +2,8 @@ namespace VenuePass.Modules.Ticketing.Contracts;
 
 public interface ITicketingModuleContract
 {
-    Task<TicketValidationResultDto> ValidateTicketForEventAsync(
+    Task<TicketValidationResultDto> ValidateTicketForPublishedEventReferenceAsync(
         string ticketCode,
-        Guid eventId,
+        Guid publishedEventReferenceId,
         CancellationToken cancellationToken = default);
 }
