@@ -132,30 +132,3 @@ public readonly record struct AttendanceRecordId(Guid Value)
 }
 
 
-public readonly record struct OrderId(Guid Value)
-{
-        public bool IsEmpty => Value == Guid.Empty;   
-        public static implicit operator Guid(OrderId id) => id.Value;
-        public override string ToString() => Value.ToString();
-}
-
-public readonly record struct OrderItemId(Guid Value)
-{
-        public bool IsEmpty => Value == Guid.Empty;   
-        public static implicit operator Guid(OrderItemId id) => id.Value;
-        public override string ToString() => Value.ToString();
-}
-
-public readonly record struct InventorySeatId(Guid Value)
-{
-        public bool IsEmpty => Value == Guid.Empty;   
-        public static implicit operator Guid(InventorySeatId id) => id.Value;
-        public override string ToString() => Value.ToString();
-}
-
-public readonly record struct GeneralAdmissionPoolId(Guid Value)
-{
-        public bool IsEmpty => Value == Guid.Empty;   
-        public static implicit operator Guid(GeneralAdmissionPoolId id) => id.Value;
-        public override string ToString() => Value.ToString();
-}

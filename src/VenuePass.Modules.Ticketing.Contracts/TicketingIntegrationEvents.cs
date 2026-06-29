@@ -10,6 +10,8 @@ public sealed record TicketIssuedIntegrationEvent(
     Guid OrderItemId,
     Guid PublishedEventReferenceId,
     Guid InventoryId,
+    Guid? InventorySeatId,
+    Guid? GeneralAdmissionPoolId,
     DateTimeOffset OccurredOn
 ) : IIntegrationEvent;
 

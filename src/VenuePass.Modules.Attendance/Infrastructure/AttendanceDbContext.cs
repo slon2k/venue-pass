@@ -4,6 +4,7 @@ using VenuePass.BuildingBlocks.Domain;
 using VenuePass.Modules.Attendance.Domain.AttendanceRecords;
 using VenuePass.Modules.Attendance.Domain.PublishedEvents;
 using VenuePass.Modules.Attendance.Domain.ScanAttempts;
+using VenuePass.Modules.Attendance.Domain.TicketProjections;
 using VenuePass.Modules.Attendance.Infrastructure.Outbox;
 
 namespace VenuePass.Modules.Attendance.Infrastructure;
@@ -19,6 +20,8 @@ public class AttendanceDbContext(DbContextOptions<AttendanceDbContext> options) 
     public DbSet<ScanAttempt> ScanAttempts => Set<ScanAttempt>();
 
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
+
+    public DbSet<TicketProjection> TicketProjections => Set<TicketProjection>();
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
