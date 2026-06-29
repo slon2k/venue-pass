@@ -1,5 +1,5 @@
 using VenuePass.BuildingBlocks.Domain;
-using VenuePass.Modules.Attendance.Domain.AttendanceRecords;
+using VenuePass.Modules.Attendance.Domain.Common;
 
 namespace VenuePass.Modules.Attendance.Domain;
 

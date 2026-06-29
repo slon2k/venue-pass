@@ -192,6 +192,8 @@ public sealed class CheckoutReservationHandler(
                         OrderItemId: ticket.OrderItemId.Value,
                         PublishedEventReferenceId: inventory.EventReferenceId.Value,
                         InventoryId: inventory.Id.Value,
+                        InventorySeatId: ticket.InventorySeatId?.Value,
+                        GeneralAdmissionPoolId: ticket.GeneralAdmissionPoolId?.Value,
                         OccurredOn: now);
 
                     db.OutboxMessages.Add(OutboxMessage.Create(integrationEvent));
