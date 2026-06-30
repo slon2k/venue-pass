@@ -1,4 +1,3 @@
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,18 +24,24 @@ public sealed class TicketProjectionPersistenceTests
     [Fact]
     public async Task Save_DuplicateTicketId_IsRejectedByPersistence()
     {
-        ServiceProvider services = CreateServices();
-        await SeedPublishedEventReferenceAsync(services);
+        string isolatedConnectionString = AttendanceIntegrationTestHelper.BuildIsolatedConnectionString(
+            _fixture.ConnectionString,
+            "attendance_projection_test");
+
+        ServiceProvider services = AttendanceIntegrationTestHelper.CreateServicesWithEnsureCreated(isolatedConnectionString);
+        PublishedEventReferenceId publishedEventReferenceId = await AttendanceIntegrationTestHelper.SeedPublishedEventReferenceAsync(services);
 
         var duplicateTicketId = new TicketId(Guid.CreateVersion7());
 
         var first = CreateProjection(
             ticketId: duplicateTicketId,
-            ticketCode: new TicketCode("0000000000000001"));
+            ticketCode: new TicketCode("0000000000000001"),
+            publishedEventReferenceId: publishedEventReferenceId);
 
         var second = CreateProjection(
             ticketId: duplicateTicketId,
-            ticketCode: new TicketCode("0000000000000002"));
+            ticketCode: new TicketCode("0000000000000002"),
+            publishedEventReferenceId: publishedEventReferenceId);
 
         await SaveProjectionAsync(services, first);
 
@@ -47,18 +52,24 @@ public sealed class TicketProjectionPersistenceTests
     [Fact]
     public async Task Save_DuplicateTicketCode_IsRejectedByPersistence()
     {
-        ServiceProvider services = CreateServices();
-        await SeedPublishedEventReferenceAsync(services);
+        string isolatedConnectionString = AttendanceIntegrationTestHelper.BuildIsolatedConnectionString(
+            _fixture.ConnectionString,
+            "attendance_projection_test");
+
+        ServiceProvider services = AttendanceIntegrationTestHelper.CreateServicesWithEnsureCreated(isolatedConnectionString);
+        PublishedEventReferenceId publishedEventReferenceId = await AttendanceIntegrationTestHelper.SeedPublishedEventReferenceAsync(services);
 
         var duplicateCode = new TicketCode("0000000000000003");
 
         var first = CreateProjection(
             ticketId: new TicketId(Guid.CreateVersion7()),
-            ticketCode: duplicateCode);
+            ticketCode: duplicateCode,
+            publishedEventReferenceId: publishedEventReferenceId);
 
         var second = CreateProjection(
             ticketId: new TicketId(Guid.CreateVersion7()),
-            ticketCode: duplicateCode);
+            ticketCode: duplicateCode,
+            publishedEventReferenceId: publishedEventReferenceId);
 
         await SaveProjectionAsync(services, first);
 
@@ -69,12 +80,17 @@ public sealed class TicketProjectionPersistenceTests
     [Fact]
     public async Task Lookup_ByTicketIdAndTicketCode_ReturnsStoredProjection()
     {
-        ServiceProvider services = CreateServices();
-        await SeedPublishedEventReferenceAsync(services);
+        string isolatedConnectionString = AttendanceIntegrationTestHelper.BuildIsolatedConnectionString(
+            _fixture.ConnectionString,
+            "attendance_projection_test");
+
+        ServiceProvider services = AttendanceIntegrationTestHelper.CreateServicesWithEnsureCreated(isolatedConnectionString);
+        PublishedEventReferenceId publishedEventReferenceId = await AttendanceIntegrationTestHelper.SeedPublishedEventReferenceAsync(services);
 
         var projection = CreateProjection(
             ticketId: new TicketId(Guid.CreateVersion7()),
-            ticketCode: new TicketCode("0000000000000004"));
+            ticketCode: new TicketCode("0000000000000004"),
+            publishedEventReferenceId: publishedEventReferenceId);
 
         await SaveProjectionAsync(services, projection);
 
@@ -95,47 +111,6 @@ public sealed class TicketProjectionPersistenceTests
         Assert.Equal(projection.Id, byTicketCode!.Id);
     }
 
-    private ServiceProvider CreateServices()
-    {
-        string isolatedConnectionString = BuildIsolatedConnectionString();
-
-        var services = new ServiceCollection();
-        services.AddDbContext<AttendanceDbContext>(options => options.UseSqlServer(isolatedConnectionString));
-
-        ServiceProvider provider = services.BuildServiceProvider();
-
-        using var scope = provider.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AttendanceDbContext>();
-        db.Database.EnsureCreated();
-
-        return provider;
-    }
-
-    private string BuildIsolatedConnectionString()
-    {
-        var builder = new SqlConnectionStringBuilder(_fixture.ConnectionString)
-        {
-            InitialCatalog = $"attendance_projection_test_{Guid.NewGuid():N}"
-        };
-
-        return builder.ConnectionString;
-    }
-
-    private static async Task SeedPublishedEventReferenceAsync(IServiceProvider services)
-    {
-        await using var scope = services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<AttendanceDbContext>();
-
-        var reference = PublishedEventReference.Create(
-            id: new PublishedEventReferenceId(KnownPublishedEventReferenceId),
-            eventId: Guid.CreateVersion7(),
-            manifestId: Guid.CreateVersion7(),
-            syncedAt: DateTimeOffset.UtcNow);
-
-        db.PublishedEventReferences.Add(reference);
-        await db.SaveChangesAsync();
-    }
-
     private static async Task SaveProjectionAsync(IServiceProvider services, TicketProjection projection)
     {
         await using var scope = services.CreateAsyncScope();
@@ -144,17 +119,18 @@ public sealed class TicketProjectionPersistenceTests
         await db.SaveChangesAsync();
     }
 
-    private static TicketProjection CreateProjection(TicketId ticketId, TicketCode ticketCode)
+    private static TicketProjection CreateProjection(
+        TicketId ticketId,
+        TicketCode ticketCode,
+        PublishedEventReferenceId publishedEventReferenceId)
         => TicketProjection.Create(
             id: ticketId,
             ticketCode: ticketCode,
-            publishedEventReferenceId: new PublishedEventReferenceId(KnownPublishedEventReferenceId),
+            publishedEventReferenceId: publishedEventReferenceId,
             orderId: new OrderId(Guid.CreateVersion7()),
             orderItemId: new OrderItemId(Guid.CreateVersion7()),
             inventoryId: new InventoryId(Guid.CreateVersion7()),
             inventorySeatId: new InventorySeatId(Guid.CreateVersion7()),
             generalAdmissionPoolId: null,
             issuedAt: DateTimeOffset.UtcNow);
-
-    private static readonly Guid KnownPublishedEventReferenceId = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 }
