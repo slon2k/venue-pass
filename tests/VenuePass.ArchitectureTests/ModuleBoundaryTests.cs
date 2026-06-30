@@ -88,6 +88,36 @@ public sealed class ModuleBoundaryTests
         }
     }
 
+    [Fact]
+    public void Attendance_should_not_reference_ticketing_implementation_assembly()
+    {
+        Assembly attendanceAssembly = LoadAssembly("VenuePass.Modules.Attendance");
+
+        string[] referencedAssemblies = attendanceAssembly
+            .GetReferencedAssemblies()
+            .Select(name => name.Name)
+            .OfType<string>()
+            .ToArray();
+
+        Assert.DoesNotContain("VenuePass.Modules.Ticketing", referencedAssemblies);
+    }
+
+    [Fact]
+    public void Attendance_should_not_depend_on_ticketing_internal_namespaces()
+    {
+        var result = Types.InAssembly(LoadAssembly("VenuePass.Modules.Attendance"))
+            .ShouldNot()
+            .HaveDependencyOnAny(
+                "VenuePass.Modules.Ticketing.Domain",
+                "VenuePass.Modules.Ticketing.Features",
+                "VenuePass.Modules.Ticketing.Infrastructure")
+            .GetResult();
+
+        Assert.True(
+            result.IsSuccessful,
+            "Attendance module must not depend on Ticketing internal namespaces.");
+    }
+
     private sealed record ModuleDescriptor(
         string AssemblyName,
         string RootNamespace,
