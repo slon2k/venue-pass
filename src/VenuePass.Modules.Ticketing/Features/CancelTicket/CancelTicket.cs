@@ -36,11 +36,16 @@ public sealed class CancelTicketHandler(
         }
 
         var integrationEvent = new TicketCanceledIntegrationEvent(
-            Guid.NewGuid(),
-            ticket.Id.Value,
-            ticket.Code.Value,
-            ticket.PublishedEventReferenceId.Value,
-            canceledAt);
+            MessageId: Guid.NewGuid(),
+            TicketId: ticket.Id.Value,
+            TicketCode: ticket.Code.Value,
+            OrderId: ticket.OrderId.Value,
+            OrderItemId: ticket.OrderItemId.Value,
+            PublishedEventReferenceId: ticket.PublishedEventReferenceId.Value,
+            InventoryId: ticket.InventoryId.Value,
+            InventorySeatId: ticket.InventorySeatId?.Value,
+            GeneralAdmissionPoolId: ticket.GeneralAdmissionPoolId?.Value,
+            OccurredOn: canceledAt);
 
         db.OutboxMessages.Add(OutboxMessage.Create(integrationEvent));
 

@@ -10,6 +10,7 @@ namespace VenuePass.Modules.Ticketing.Tests.Domain.Tickets;
 public sealed class TicketTests
 {
     private static readonly PublishedEventReferenceId EventId = new(Guid.CreateVersion7());
+    private static readonly InventoryId InventoryId = new(Guid.CreateVersion7());
     private static readonly OrderId OrderId = new(Guid.CreateVersion7());
     private static readonly OrderItemId OrderItemId = new(Guid.CreateVersion7());
     private static readonly TicketCode TicketCode = new("ABCDEFGHJKMNPQRS");
@@ -26,6 +27,7 @@ public sealed class TicketTests
             OrderId,
             OrderItemId,
             TicketCode,
+            InventoryId,
             SeatId,
             Now);
 
@@ -35,6 +37,7 @@ public sealed class TicketTests
         Assert.Equal(OrderId, ticket.OrderId);
         Assert.Equal(OrderItemId, ticket.OrderItemId);
         Assert.Equal(TicketCode, ticket.Code);
+        Assert.Equal(InventoryId, ticket.InventoryId);
         Assert.Equal(SeatId, ticket.InventorySeatId);
         Assert.Null(ticket.GeneralAdmissionPoolId);
         Assert.Equal(Now, ticket.CreatedAt);
@@ -49,6 +52,7 @@ public sealed class TicketTests
             OrderId,
             OrderItemId,
             TicketCode,
+            InventoryId,
             PoolId,
             Now);
 
@@ -58,6 +62,7 @@ public sealed class TicketTests
         Assert.Equal(OrderId, ticket.OrderId);
         Assert.Equal(OrderItemId, ticket.OrderItemId);
         Assert.Equal(TicketCode, ticket.Code);
+        Assert.Equal(InventoryId, ticket.InventoryId);
         Assert.Null(ticket.InventorySeatId);
         Assert.Equal(PoolId, ticket.GeneralAdmissionPoolId);
         Assert.Equal(Now, ticket.CreatedAt);
@@ -72,6 +77,7 @@ public sealed class TicketTests
             OrderId,
             OrderItemId,
             TicketCode,
+            InventoryId,
             SeatId,
             Now);
 
@@ -92,6 +98,7 @@ public sealed class TicketTests
             OrderId,
             OrderItemId,
             TicketCode,
+            InventoryId,
             SeatId,
             Now);
         ticket.Cancel(Now);
@@ -113,6 +120,7 @@ public sealed class TicketTests
             OrderId,
             OrderItemId,
             TicketCode,
+            InventoryId,
             SeatId,
             Now);
 

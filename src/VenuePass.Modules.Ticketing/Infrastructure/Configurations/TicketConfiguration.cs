@@ -38,6 +38,13 @@ internal sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
             .HasColumnName("published_event_reference_id")
             .IsRequired();
 
+        builder.Property(t => t.InventoryId)
+            .HasConversion(
+                id => id.Value,
+                value => new InventoryId(value))
+            .HasColumnName("inventory_id")
+            .IsRequired();
+
         builder.Property(t => t.OrderId)
             .HasConversion(
                 id => id.Value,
@@ -69,6 +76,9 @@ internal sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
         builder.HasIndex(t => t.Code)
             .IsUnique()
             .HasDatabaseName("IX_tickets_ticket_code");
+
+        builder.HasIndex(t => t.InventoryId)
+            .HasDatabaseName("IX_tickets_inventory_id");
 
         builder.Property(t => t.InventorySeatId)
             .HasConversion(

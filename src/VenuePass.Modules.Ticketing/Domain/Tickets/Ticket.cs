@@ -14,6 +14,8 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
 
         public TicketCode Code { get; private set; }
 
+        public InventoryId InventoryId { get; private set; }
+
         public InventorySeatId? InventorySeatId { get; private set; }
 
         public GeneralAdmissionPoolId? GeneralAdmissionPoolId { get; private set; }
@@ -32,6 +34,7 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
             OrderId orderId,
             OrderItemId orderItemId,
             TicketCode code,
+            InventoryId inventoryId,
             InventorySeatId? inventorySeatId,
             GeneralAdmissionPoolId? generalAdmissionPoolId,
             DateTimeOffset createdAt) : base(id)
@@ -47,6 +50,9 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
 
             if (orderItemId.IsEmpty)
                 throw new ArgumentException("Order Item ID cannot be empty.", nameof(orderItemId));
+
+            if (inventoryId.IsEmpty)
+                throw new ArgumentException("Inventory ID cannot be empty.", nameof(inventoryId));
 
             if (inventorySeatId.HasValue && inventorySeatId.Value.IsEmpty)
                 throw new ArgumentException("Inventory Seat ID cannot be empty when provided.", nameof(inventorySeatId));
@@ -70,6 +76,7 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
             OrderId = orderId;
             OrderItemId = orderItemId;
             Code = code;
+            InventoryId = inventoryId;
             InventorySeatId = inventorySeatId;
             GeneralAdmissionPoolId = generalAdmissionPoolId;
             Status = TicketStatus.Issued;
@@ -81,6 +88,7 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
             OrderId orderId,
             OrderItemId orderItemId,
             TicketCode code,
+            InventoryId inventoryId,
             InventorySeatId inventorySeatId,
             DateTimeOffset now)
         {
@@ -90,6 +98,7 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
                 orderId: orderId,
                 orderItemId: orderItemId,
                 code: code,
+                inventoryId: inventoryId,
                 inventorySeatId: inventorySeatId,
                 generalAdmissionPoolId: null,
                 createdAt: now
@@ -101,6 +110,7 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
             OrderId orderId,
             OrderItemId orderItemId,
             TicketCode code,
+            InventoryId inventoryId,
             GeneralAdmissionPoolId generalAdmissionPoolId,
             DateTimeOffset now)
         {
@@ -110,6 +120,7 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
                 orderId: orderId,
                 orderItemId: orderItemId,
                 code: code,
+                inventoryId: inventoryId,
                 inventorySeatId: null,
                 generalAdmissionPoolId: generalAdmissionPoolId,
                 createdAt: now
@@ -118,6 +129,9 @@ namespace VenuePass.Modules.Ticketing.Domain.Tickets
 
         public bool Cancel(DateTimeOffset canceledAt)
         {
+            if (canceledAt == default)
+                throw new ArgumentException("Cancellation time cannot be the default value.", nameof(canceledAt));
+
             if (Status == TicketStatus.Canceled)
             {
                 return false;
