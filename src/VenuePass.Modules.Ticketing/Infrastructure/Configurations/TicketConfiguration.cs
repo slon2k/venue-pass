@@ -45,6 +45,11 @@ internal sealed class TicketConfiguration : IEntityTypeConfiguration<Ticket>
             .HasColumnName("inventory_id")
             .IsRequired();
 
+        builder.HasOne<Inventory>()
+            .WithMany()
+            .HasForeignKey(t => t.InventoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Property(t => t.OrderId)
             .HasConversion(
                 id => id.Value,
