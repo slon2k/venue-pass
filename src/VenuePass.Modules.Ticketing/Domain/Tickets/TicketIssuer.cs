@@ -41,6 +41,7 @@ public class TicketIssuer(ITicketCodeGenerator ticketCodeGenerator)
         {
             tickets.AddRange(CreateForOrderItem(
                 eventReferenceId: inventory.EventReferenceId,
+                inventoryId: inventory.Id,
                 orderId: order.Id,
                 orderItem: item,
                 issuedCodes: issuedCodes,
@@ -52,6 +53,7 @@ public class TicketIssuer(ITicketCodeGenerator ticketCodeGenerator)
 
     private IReadOnlyList<Ticket> CreateForOrderItem(
     PublishedEventReferenceId eventReferenceId,
+    InventoryId inventoryId,
     OrderId orderId,
     OrderItem orderItem,
     HashSet<TicketCode> issuedCodes,
@@ -62,6 +64,7 @@ public class TicketIssuer(ITicketCodeGenerator ticketCodeGenerator)
             orderId: orderId,
             orderItemId: orderItem.Id,
             code: GenerateUniqueCode(issuedCodes),
+            inventoryId: inventoryId,
             inventorySeatId: orderItem.InventorySeatId!.Value,
             now: now)],
 
@@ -71,6 +74,7 @@ public class TicketIssuer(ITicketCodeGenerator ticketCodeGenerator)
                 orderId: orderId,
                 orderItemId: orderItem.Id,
                 code: GenerateUniqueCode(issuedCodes),
+                inventoryId: inventoryId,
                 generalAdmissionPoolId: orderItem.GeneralAdmissionPoolId!.Value,
                 now: now))
             .ToList(),

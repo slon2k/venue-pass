@@ -252,6 +252,7 @@ public sealed class TicketModuleContractTests
             order.Id,
             order.Items[0].Id,
             ticketCode,
+            inventoryId,
             seatId,
             now);
 
