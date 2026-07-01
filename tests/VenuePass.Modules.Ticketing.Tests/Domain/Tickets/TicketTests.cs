@@ -135,4 +135,24 @@ public sealed class TicketTests
         Assert.False(thirdResult);
         Assert.Equal(TicketStatus.Canceled, ticket.Status);
     }
+
+    [Fact]
+    public void Cancel_WhenCanceledAtIsDefault_ThrowsArgumentException()
+    {
+        // Arrange
+        var ticket = Ticket.CreateForInventorySeat(
+            EventId,
+            OrderId,
+            OrderItemId,
+            TicketCode,
+            InventoryId,
+            SeatId,
+            Now);
+
+        // Act
+        var ex = Assert.Throws<ArgumentException>(() => ticket.Cancel(default));
+
+        // Assert
+        Assert.Contains("Cancellation time cannot be the default value", ex.Message);
+    }
 }

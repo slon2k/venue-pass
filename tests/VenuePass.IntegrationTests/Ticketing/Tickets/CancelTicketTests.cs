@@ -56,7 +56,48 @@ public sealed class CancelTicketTests
         Assert.Single(canceledMessages);
 
         var message = canceledMessages[0];
+        Assert.Equal(ticket.Id.Value, message.TicketId);
         Assert.Equal(ticket.PublishedEventReferenceId.Value, message.PublishedEventReferenceId);
+        Assert.Equal(ticket.OrderId.Value, message.OrderId);
+        Assert.Equal(ticket.OrderItemId.Value, message.OrderItemId);
+        Assert.Equal(ticket.InventoryId.Value, message.InventoryId);
+        Assert.Equal(ticket.InventorySeatId?.Value, message.InventorySeatId);
+        Assert.Equal(ticket.GeneralAdmissionPoolId?.Value, message.GeneralAdmissionPoolId);
+        Assert.Equal(ticket.Code.Value, message.TicketCode);
+        Assert.Equal(ticket.CanceledAt!.Value, message.OccurredOn);
+    }
+
+    [Fact]
+    public async Task CancelTicket_WhenGeneralAdmissionTicket_PublishesPoolFieldsInOutbox()
+    {
+        var ticketId = await CreateIssuedGeneralAdmissionTicketAsync();
+
+        HttpResponseMessage response = await _managerClient.DeleteAsync($"/tickets/{ticketId}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        await using var scope = _fixture.Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
+
+        var ticket = await db.Tickets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.Id == new TicketId(ticketId));
+
+        Assert.NotNull(ticket);
+        Assert.Equal(TicketStatus.Canceled, ticket!.Status);
+        Assert.NotNull(ticket.CanceledAt);
+
+        var canceledMessages = await LoadTicketCanceledMessagesAsync(db, ticketId);
+        Assert.Single(canceledMessages);
+
+        var message = canceledMessages[0];
+        Assert.Equal(ticket.Id.Value, message.TicketId);
+        Assert.Equal(ticket.PublishedEventReferenceId.Value, message.PublishedEventReferenceId);
+        Assert.Equal(ticket.OrderId.Value, message.OrderId);
+        Assert.Equal(ticket.OrderItemId.Value, message.OrderItemId);
+        Assert.Equal(ticket.InventoryId.Value, message.InventoryId);
+        Assert.Null(message.InventorySeatId);
+        Assert.Equal(ticket.GeneralAdmissionPoolId?.Value, message.GeneralAdmissionPoolId);
         Assert.Equal(ticket.Code.Value, message.TicketCode);
         Assert.Equal(ticket.CanceledAt!.Value, message.OccurredOn);
     }
@@ -127,6 +168,30 @@ public sealed class CancelTicketTests
             _customerClient,
             offerId,
             seatIds: [seatIds[0]]);
+
+        Guid orderId = await TicketingSeedHelpers.CheckoutReservationAsync(_customerClient, reservationId);
+        GetOrderSeedResponse order = await TicketingSeedHelpers.GetOrderAsync(_customerClient, orderId);
+
+        Assert.Single(order.Tickets);
+        return order.Tickets[0].TicketId;
+    }
+
+    private async Task<Guid> CreateIssuedGeneralAdmissionTicketAsync()
+    {
+        Guid eventId = await TicketingSeedHelpers.PublishEventAndSyncInventoryAsync(_fixture, _managerClient);
+        (_, List<Guid> poolIds) = await TicketingSeedHelpers.GetInventoryIdsAsync(_fixture, eventId);
+
+        Guid offerId = await TicketingSeedHelpers.CreateOfferAsync(_managerClient, eventId);
+        await TicketingSeedHelpers.ConfigurePriceZonesAsync(
+            _managerClient,
+            offerId,
+            [new PriceZoneItem("Zone GA", 25m, [], poolIds)]);
+        await TicketingSeedHelpers.ActivateOfferAsync(_managerClient, offerId);
+
+        Guid reservationId = await TicketingSeedHelpers.CreateReservationAsync(
+            _customerClient,
+            offerId,
+            gaPoolSelections: [new GaPoolSelectionItem(poolIds[0], 1)]);
 
         Guid orderId = await TicketingSeedHelpers.CheckoutReservationAsync(_customerClient, reservationId);
         GetOrderSeedResponse order = await TicketingSeedHelpers.GetOrderAsync(_customerClient, orderId);
