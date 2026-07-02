@@ -78,3 +78,9 @@ Implement Attendance-side projection consumers for `TicketIssued` and `TicketCan
 - Missing idempotency guards can produce duplicate projections and nondeterministic reads.
 - Replayed `TicketIssued` events could incorrectly reactivate canceled projections if status precedence is not enforced.
 - Contract mismatches between ticket ID and ticket code can corrupt projection state if not handled deterministically.
+
+## Related Issues
+
+- Issue 150: Attendance TicketIssued Projection Consumer
+- Issue 151: Attendance TicketCanceled Projection Consumer
+- Issue 152: Projection Convergence And Boundary Tests
