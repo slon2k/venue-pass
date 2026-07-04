@@ -19,7 +19,8 @@ public class TicketProjectionConfiguration : IEntityTypeConfiguration<TicketProj
                 "(inventory_seat_id IS NULL AND general_admission_pool_id IS NOT NULL))");
         });
 
-        builder.HasKey(t => t.Id);
+        builder.HasKey(t => t.Id)
+            .HasName("PK_ticket_projections");
 
         builder.Property(t => t.Id)
             .HasConversion(
