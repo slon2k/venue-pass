@@ -24,6 +24,8 @@ public sealed class TicketProjection : Entity<TicketId>
 
     public DateTimeOffset LastUpdatedAt { get; private set; }
 
+    public byte[] RowVersion { get; private set; } = [];
+
     private TicketProjection()
     {
     }

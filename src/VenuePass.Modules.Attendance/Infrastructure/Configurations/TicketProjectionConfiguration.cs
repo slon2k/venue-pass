@@ -89,6 +89,10 @@ public class TicketProjectionConfiguration : IEntityTypeConfiguration<TicketProj
             .HasColumnName("last_updated_at")
             .IsRequired();
 
+        builder.Property(t => t.RowVersion)
+            .IsRowVersion()
+            .HasColumnName("row_version");
+
         builder.HasOne<PublishedEventReference>()
             .WithMany()
             .HasForeignKey(t => t.PublishedEventReferenceId)
