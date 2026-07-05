@@ -110,12 +110,33 @@ public sealed class TicketProjection : Entity<TicketId>
             generalAdmissionPoolId,
             issuedAt);
 
+    public static TicketProjection CreateCanceled(
+        TicketId id,
+        TicketCode ticketCode,
+        PublishedEventReferenceId publishedEventReferenceId,
+        OrderId orderId,
+        OrderItemId orderItemId,
+        InventoryId inventoryId,
+        InventorySeatId? inventorySeatId,
+        GeneralAdmissionPoolId? generalAdmissionPoolId,
+        DateTimeOffset canceledAt) => new(
+            id,
+            ticketCode,
+            TicketProjectionStatus.Canceled,
+            publishedEventReferenceId,
+            orderId,
+            orderItemId,
+            inventoryId,
+            inventorySeatId,
+            generalAdmissionPoolId,
+            canceledAt);
+
     public bool Cancel(DateTimeOffset canceledAt)
     {
         if (canceledAt == default)
             throw new ArgumentException("Canceled timestamp cannot be the default value.", nameof(canceledAt));
 
-        if (LastUpdatedAt > canceledAt)
+        if (canceledAt < LastUpdatedAt)
             return false;
 
         if (Status == TicketProjectionStatus.Canceled)

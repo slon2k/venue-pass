@@ -145,9 +145,8 @@ internal sealed class TicketIssuedHandler(
     private static bool StableFieldsMatch(
         TicketProjection projection,
         TicketIssuedIntegrationEvent integrationEvent,
-        TicketCode ticketCode)
-    {
-        return projection.Id.Value == integrationEvent.TicketId
+        TicketCode ticketCode) => 
+            projection.Id.Value == integrationEvent.TicketId
             && projection.TicketCode == ticketCode
             && projection.PublishedEventReferenceId.Value == integrationEvent.PublishedEventReferenceId
             && projection.OrderId.Value == integrationEvent.OrderId
@@ -155,13 +154,10 @@ internal sealed class TicketIssuedHandler(
             && projection.InventoryId.Value == integrationEvent.InventoryId
             && projection.InventorySeatId?.Value == integrationEvent.InventorySeatId
             && projection.GeneralAdmissionPoolId?.Value == integrationEvent.GeneralAdmissionPoolId;
-    }
 
     private static TicketProjection FromIntegrationEvent(
         TicketIssuedIntegrationEvent integrationEvent,
-        TicketCode ticketCode)
-    {
-        return TicketProjection.Create(
+        TicketCode ticketCode) => TicketProjection.Create(
             id: new TicketId(integrationEvent.TicketId),
             ticketCode: ticketCode,
             publishedEventReferenceId: new PublishedEventReferenceId(integrationEvent.PublishedEventReferenceId),
@@ -175,9 +171,8 @@ internal sealed class TicketIssuedHandler(
                 ? new GeneralAdmissionPoolId(integrationEvent.GeneralAdmissionPoolId.Value)
                 : null,
             issuedAt: integrationEvent.OccurredOn);
-    }
 
-    internal static bool IsDuplicateTicketProjection(DbUpdateException exception)
+    private static bool IsDuplicateTicketProjection(DbUpdateException exception)
     {
         var message = exception.InnerException?.Message ?? exception.Message;
 
