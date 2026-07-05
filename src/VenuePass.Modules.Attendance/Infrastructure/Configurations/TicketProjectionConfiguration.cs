@@ -76,18 +76,22 @@ public class TicketProjectionConfiguration : IEntityTypeConfiguration<TicketProj
         builder.Property(t => t.InventorySeatId)
             .HasConversion(
                 id => id.HasValue ? id.Value.Value : (Guid?)null,
-                value => value != null ? new InventorySeatId(value.Value) : null)
+                value => value.HasValue ? new InventorySeatId(value.Value) : null)
             .HasColumnName("inventory_seat_id");
 
         builder.Property(t => t.GeneralAdmissionPoolId)
             .HasConversion(
                 id => id.HasValue ? id.Value.Value : (Guid?)null,
-                value => value != null ? new GeneralAdmissionPoolId(value.Value) : null)
+                value => value.HasValue ? new GeneralAdmissionPoolId(value.Value) : null)
             .HasColumnName("general_admission_pool_id");
 
         builder.Property(t => t.LastUpdatedAt)
             .HasColumnName("last_updated_at")
             .IsRequired();
+
+        builder.Property(t => t.RowVersion)
+            .IsRowVersion()
+            .HasColumnName("row_version");
 
         builder.HasOne<PublishedEventReference>()
             .WithMany()

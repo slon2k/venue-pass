@@ -7,6 +7,7 @@ using VenuePass.Modules.Attendance.Infrastructure.Outbox;
 using VenuePass.BuildingBlocks.Messaging;
 using VenuePass.Modules.Ticketing.Contracts;
 using VenuePass.Modules.Attendance.Features.TicketIssued;
+using VenuePass.Modules.Attendance.Features.TicketCanceled;
 
 namespace VenuePass.Modules.Attendance;
 
@@ -47,6 +48,7 @@ public static class ModuleConfiguration
     private static IServiceCollection RegisterHandlers(this IServiceCollection services)
     {
         services.AddScoped<IIntegrationEventHandler<TicketIssuedIntegrationEvent>, TicketIssuedHandler>();
+        services.AddScoped<IIntegrationEventHandler<TicketCanceledIntegrationEvent>, TicketCanceledHandler>();
 
         return services;
     }
