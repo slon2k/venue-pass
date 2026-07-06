@@ -42,11 +42,11 @@ The TicketIssued and TicketCanceled consumers need shared hardening around deliv
 
 ## Test Checklist
 
-- [ ] Integration test: `TicketCanceled` before `TicketIssued` converges correctly.
-- [ ] Integration test: replayed `TicketIssued` does not reopen canceled state.
-- [ ] Integration test: replayed `TicketCanceled` remains idempotent.
-- [ ] Integration test: concurrent duplicate event handling does not create duplicate projections.
-- [ ] Architecture test: Attendance consumes Ticketing events/contracts only and does not depend on Ticketing internals.
+- [x] Integration test: `TicketCanceled` before `TicketIssued` converges correctly.
+- [x] Integration test: replayed `TicketIssued` does not reopen canceled state.
+- [x] Integration test: replayed `TicketCanceled` remains idempotent.
+- [x] Integration test: concurrent duplicate event handling does not create duplicate projections.
+- [x] Architecture test: Attendance consumes Ticketing events/contracts only and does not depend on Ticketing internals.
 
 ## Dependencies
 

@@ -195,6 +195,45 @@ public sealed class TicketCanceledProjectionHandlerTests
         Assert.Equal(1, count);
     }
 
+    [Fact]
+    public async Task Handle_DuplicateDeliveryWithDifferentMessageId_DoesNotCreateDuplicateProjection()
+    {
+        // Arrange: At-least-once delivery scenario with same event data but different MessageId
+        ServiceProvider services = CreateServices(
+            AttendanceIntegrationTestHelper.BuildIsolatedConnectionString(
+                _fixture.ConnectionString, "attendance_duplicate_canceled_test"));
+
+        PublishedEventReferenceId publishedEventReferenceId =
+            await AttendanceIntegrationTestHelper.SeedPublishedEventReferenceAsync(services);
+
+        TicketCanceledIntegrationEvent firstDelivery = CreateCanceledIntegrationEvent(
+            ticketCode: "0000000000000005",
+            publishedEventReferenceId: publishedEventReferenceId.Value);
+
+        TicketCanceledIntegrationEvent secondDelivery = firstDelivery with { MessageId = Guid.NewGuid() };
+
+        // Act: First and second delivery (same event, different MessageId)
+        await InvokeHandlerAsync(services, firstDelivery);
+        await InvokeHandlerAsync(services, secondDelivery);
+
+        // Assert: Only 1 row should exist (at-least-once semantics handled correctly)
+        await using AsyncServiceScope assertScope = services.CreateAsyncScope();
+        AttendanceDbContext db = assertScope.ServiceProvider.GetRequiredService<AttendanceDbContext>();
+
+        int count = await db.TicketProjections
+            .AsNoTracking()
+            .CountAsync(x => x.Id == new TicketId(firstDelivery.TicketId));
+
+        Assert.Equal(1, count);
+
+        TicketProjection? projection = await db.TicketProjections
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Id == new TicketId(firstDelivery.TicketId));
+
+        Assert.NotNull(projection);
+        Assert.Equal(TicketProjectionStatus.Canceled, projection.Status);
+    }
+
     private static ServiceProvider CreateServices(string connectionString)
     {
         var services = new ServiceCollection();
