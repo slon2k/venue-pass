@@ -23,9 +23,9 @@ Ticketing remains the source of truth for ticket validity. Attendance owns check
 
 ## In Scope
 
-- [ ] Capability A: Ticketing readiness for Attendance
-- [ ] Capability B: Attendance module foundation and persistence
-- [ ] Capability C: Ticket lifecycle projection in Attendance
+- [x] Capability A: Ticketing readiness for Attendance
+- [x] Capability B: Attendance module foundation and persistence
+- [x] Capability C: Ticket lifecycle projection in Attendance
 - [ ] Capability D: Scan/check-in flow
 - [ ] Capability E: Attendance record retrieval
 - [ ] Capability F: Integration, authorization, and concurrency tests
@@ -34,10 +34,10 @@ Ticketing remains the source of truth for ticket validity. Attendance owns check
 
 ### Capability A: Ticketing readiness for Attendance
 
-- [ ] A1: Add public Ticketing module contract for ticket validation:
+- [x] A1: Add public Ticketing module contract for ticket validation:
   - `ITicketingModule.GetTicketForValidationAsync(...)`
-- [ ] A2: Implement ticket validation query in Ticketing.
-- [ ] A3: Ensure validation response includes data required by Attendance:
+- [x] A2: Implement ticket validation query in Ticketing.
+- [x] A3: Ensure validation response includes data required by Attendance:
   - ticket ID
   - ticket code
   - ticket status
@@ -46,38 +46,38 @@ Ticketing remains the source of truth for ticket validity. Attendance owns check
   - order item ID
   - event or published event reference
   - inventory target reference (seat or GA)
-- [ ] A4: Emit `TicketIssued` integration event on successful checkout.
-- [ ] A5: Add `TicketStatus.Canceled`.
-- [ ] A6: Add minimal ticket cancellation behavior in Ticketing.
-- [ ] A7: Deliver `CancelTicket` endpoint and handler.
-- [ ] A8: Emit `TicketCanceled` integration event when a ticket is canceled.
-- [ ] A9: Ensure canceled tickets validate as invalid through Ticketing contract.
+- [x] A4: Emit `TicketIssued` integration event on successful checkout.
+- [x] A5: Add `TicketStatus.Canceled`.
+- [x] A6: Add minimal ticket cancellation behavior in Ticketing.
+- [x] A7: Deliver `CancelTicket` endpoint and handler.
+- [x] A8: Emit `TicketCanceled` integration event when a ticket is canceled.
+- [x] A9: Ensure canceled tickets validate as invalid through Ticketing contract.
 
 ### Capability B: Attendance module foundation and persistence
 
-- [ ] B1: Add Attendance module configuration.
-- [ ] B2: Add `AttendanceDbContext`.
-- [ ] B3: Add `attendance` schema and migrations.
-- [ ] B4: Add Attendance outbox configuration when not already provided by shared infrastructure.
-- [ ] B5: Implement Attendance domain model:
+- [x] B1: Add Attendance module configuration.
+- [x] B2: Add `AttendanceDbContext`.
+- [x] B3: Add `attendance` schema and migrations.
+- [x] B4: Add Attendance outbox configuration when not already provided by shared infrastructure.
+- [x] B5: Implement Attendance domain model:
   - `AttendanceRecord`
   - `ScanAttempt`
-- [ ] B6: Implement Attendance ticket projection/read model.
-- [ ] B7: Add persistence configuration for:
+- [x] B6: Implement Attendance ticket projection/read model.
+- [x] B7: Add persistence configuration for:
   - attendance records
   - scan attempts
   - ticket projections
-- [ ] B8: Add uniqueness constraints for duplicate prevention:
+- [x] B8: Add uniqueness constraints for duplicate prevention:
   - one successful check-in per ticket
 
 ### Capability C: Ticket lifecycle projection in Attendance
 
-- [ ] C1: Subscribe Attendance to `TicketIssued`.
-- [ ] C2: Handle `TicketIssued` by creating or updating local projection.
-- [ ] C3: Subscribe Attendance to `TicketCanceled`.
-- [ ] C4: Handle `TicketCanceled` by marking local projection canceled or invalid.
-- [ ] C5: Make both consumers idempotent.
-- [ ] C6: Treat projection as read model only, never source of truth for scan validity.
+- [x] C1: Subscribe Attendance to `TicketIssued`.
+- [x] C2: Handle `TicketIssued` by creating or updating local projection.
+- [x] C3: Subscribe Attendance to `TicketCanceled`.
+- [x] C4: Handle `TicketCanceled` by marking local projection canceled or invalid.
+- [x] C5: Make both consumers idempotent.
+- [x] C6: Treat projection as read model only, never source of truth for scan validity.
 
 ### Capability D: Scan/check-in flow
 
@@ -138,28 +138,28 @@ These requirements define minimum business behavior for M05 and are implementati
 
 ### Ticketing Readiness Requirements (TR)
 
-- [ ] TR-01: Ticketing exposes a public module contract for ticket validation.
-- [ ] TR-02: Attendance consumes Ticketing through public contract only.
-- [ ] TR-03: Attendance does not depend on Ticketing internals.
-- [ ] TR-04: Ticket validation accepts ticket code input.
-- [ ] TR-05: Ticket validation normalizes ticket code input using Ticketing rules.
-- [ ] TR-06: Unknown ticket codes return invalid or not-found validation result.
-- [ ] TR-07: Issued tickets return valid validation result.
-- [ ] TR-08: Canceled tickets return invalid validation result.
-- [ ] TR-09: Validation response includes current ticket status.
-- [ ] TR-10: Validation response includes stable identifiers required by Attendance:
+- [x] TR-01: Ticketing exposes a public module contract for ticket validation.
+- [x] TR-02: Attendance consumes Ticketing through public contract only.
+- [x] TR-03: Attendance does not depend on Ticketing internals.
+- [x] TR-04: Ticket validation accepts ticket code input.
+- [x] TR-05: Ticket validation normalizes ticket code input using Ticketing rules.
+- [x] TR-06: Unknown ticket codes return invalid or not-found validation result.
+- [x] TR-07: Issued tickets return valid validation result.
+- [x] TR-08: Canceled tickets return invalid validation result.
+- [x] TR-09: Validation response includes current ticket status.
+- [x] TR-10: Validation response includes stable identifiers required by Attendance:
   - ticket ID
   - ticket code
   - order ID
   - order item ID
   - event or published event reference
   - inventory target reference
-- [ ] TR-11: Ticketing remains source of truth for ticket validity.
+- [x] TR-11: Ticketing remains source of truth for ticket validity.
 
 ### Ticket Lifecycle Event Requirements (EV)
 
-- [ ] EV-01: Successful checkout emits one `TicketIssued` event per issued ticket.
-- [ ] EV-02: `TicketIssued` includes:
+- [x] EV-01: Successful checkout emits one `TicketIssued` event per issued ticket.
+- [x] EV-02: `TicketIssued` includes:
   - ticket ID
   - ticket code
   - order ID
@@ -167,29 +167,29 @@ These requirements define minimum business behavior for M05 and are implementati
   - event or published event reference
   - inventory target reference
   - issued timestamp
-- [ ] EV-03: Ticketing supports minimal cancellation of issued tickets.
-- [ ] EV-04: Canceling a ticket changes status from Issued to Canceled.
-- [ ] EV-05: Canceling a ticket emits `TicketCanceled`.
-- [ ] EV-06: `TicketCanceled` includes:
+- [x] EV-03: Ticketing supports minimal cancellation of issued tickets.
+- [x] EV-04: Canceling a ticket changes status from Issued to Canceled.
+- [x] EV-05: Canceling a ticket emits `TicketCanceled`.
+- [x] EV-06: `TicketCanceled` includes:
   - ticket ID
   - ticket code
   - event or published event reference
   - canceled timestamp
-- [ ] EV-07: Repeated cancellation is deterministic and idempotent.
-- [ ] EV-08: Cancellation in M05 does not include refunds, order cancellation, inventory release, or payment reversal.
-- [ ] EV-09: Repeated/idempotent checkout does not emit duplicate `TicketIssued` events for tickets already issued.
-- [ ] EV-10: Repeated/idempotent cancellation does not emit duplicate `TicketCanceled` events for tickets already canceled.
+- [x] EV-07: Repeated cancellation is deterministic and idempotent.
+- [x] EV-08: Cancellation in M05 does not include refunds, order cancellation, inventory release, or payment reversal.
+- [x] EV-09: Repeated/idempotent checkout does not emit duplicate `TicketIssued` events for tickets already issued.
+- [x] EV-10: Repeated/idempotent cancellation does not emit duplicate `TicketCanceled` events for tickets already canceled.
 
 ### Attendance Projection Requirements (AP)
 
-- [ ] AP-01: Attendance receives `TicketIssued`.
-- [ ] AP-02: Attendance stores or updates local ticket projection.
-- [ ] AP-03: Attendance receives `TicketCanceled`.
-- [ ] AP-04: Attendance marks local projection canceled or invalid.
-- [ ] AP-05: Projection handlers are idempotent by ticket ID.
-- [ ] AP-06: Projection handlers are idempotent by ticket code.
-- [ ] AP-07: Projection is not authoritative for scan validity.
-- [ ] AP-08: Scan flow still calls Ticketing validation on every scan.
+- [x] AP-01: Attendance receives `TicketIssued`.
+- [x] AP-02: Attendance stores or updates local ticket projection.
+- [x] AP-03: Attendance receives `TicketCanceled`.
+- [x] AP-04: Attendance marks local projection canceled or invalid.
+- [x] AP-05: Projection handlers are idempotent by ticket ID.
+- [x] AP-06: Projection handlers are idempotent by ticket code.
+- [x] AP-07: Projection is not authoritative for scan validity.
+- [x] AP-08: Scan flow still calls Ticketing validation on every scan.
 
 ### Scan and Check-In Requirements (SC)
 

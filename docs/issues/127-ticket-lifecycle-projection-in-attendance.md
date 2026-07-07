@@ -22,14 +22,14 @@ Implement Attendance-side projection consumers for `TicketIssued` and `TicketCan
 
 ## Functional Requirements
 
-- [ ] AP-01 Attendance receives `TicketIssued`
-- [ ] AP-02 `TicketIssued` stores or updates local projection
-- [ ] AP-03 Attendance receives `TicketCanceled`
-- [ ] AP-04 `TicketCanceled` marks projection canceled or invalid
-- [ ] AP-05 Projection handlers are idempotent by ticket ID
-- [ ] AP-06 Projection handlers are idempotent by ticket code
-- [ ] AP-07 Projection is not authoritative for scan validity
-- [ ] AP-08 Scan flow still calls Ticketing validation on every scan
+- [x] AP-01 Attendance receives `TicketIssued`
+- [x] AP-02 `TicketIssued` stores or updates local projection
+- [x] AP-03 Attendance receives `TicketCanceled`
+- [x] AP-04 `TicketCanceled` marks projection canceled or invalid
+- [x] AP-05 Projection handlers are idempotent by ticket ID
+- [x] AP-06 Projection handlers are idempotent by ticket code
+- [x] AP-07 Projection is not authoritative for scan validity
+- [x] AP-08 Scan flow still calls Ticketing validation on every scan
 
 ## Consumer and Idempotency Notes
 
@@ -45,26 +45,26 @@ Implement Attendance-side projection consumers for `TicketIssued` and `TicketCan
 
 ## Acceptance Criteria
 
-- [ ] `TicketIssued` creates projection when missing.
-- [ ] `TicketIssued` updates projection when already present.
-- [ ] `TicketCanceled` marks projection invalid.
-- [ ] Duplicate `TicketIssued` deliveries are idempotent.
-- [ ] Duplicate `TicketCanceled` deliveries are idempotent.
-- [ ] Out-of-order `TicketCanceled` before `TicketIssued` converges to canceled/invalid projection state.
-- [ ] Replayed or delayed `TicketIssued` does not revert canceled projection to issued.
-- [ ] Projection consumers do not expose projection as authoritative ticket-validity source.
-- [ ] Architecture tests still ensure Attendance does not depend on Ticketing internals.
+- [x] `TicketIssued` creates projection when missing.
+- [x] `TicketIssued` updates projection when already present.
+- [x] `TicketCanceled` marks projection invalid.
+- [x] Duplicate `TicketIssued` deliveries are idempotent.
+- [x] Duplicate `TicketCanceled` deliveries are idempotent.
+- [x] Out-of-order `TicketCanceled` before `TicketIssued` converges to canceled/invalid projection state.
+- [x] Replayed or delayed `TicketIssued` does not revert canceled projection to issued.
+- [x] Projection consumers do not expose projection as authoritative ticket-validity source.
+- [x] Architecture tests still ensure Attendance does not depend on Ticketing internals.
 
 ## Test Checklist
 
-- [ ] Integration test: `TicketIssued` creates projection.
-- [ ] Integration test: replayed `TicketIssued` remains idempotent.
-- [ ] Integration test: `TicketCanceled` invalidates projection.
-- [ ] Integration test: replayed `TicketCanceled` remains idempotent.
-- [ ] Integration test: `TicketCanceled` arriving before `TicketIssued` creates or keeps canceled projection.
-- [ ] Integration test: replayed/delayed `TicketIssued` does not revert canceled projection to issued.
-- [ ] Integration test: concurrent duplicate event handling does not create duplicate projections.
-- [ ] Architecture test: Attendance consumes Ticketing events/contracts only and does not depend on Ticketing internals.
+- [x] Integration test: `TicketIssued` creates projection.
+- [x] Integration test: replayed `TicketIssued` remains idempotent.
+- [x] Integration test: `TicketCanceled` invalidates projection.
+- [x] Integration test: replayed `TicketCanceled` remains idempotent.
+- [x] Integration test: `TicketCanceled` arriving before `TicketIssued` creates or keeps canceled projection.
+- [x] Integration test: replayed/delayed `TicketIssued` does not revert canceled projection to issued.
+- [x] Integration test: concurrent duplicate event handling does not create duplicate projections.
+- [x] Architecture test: Attendance consumes Ticketing events/contracts only and does not depend on Ticketing internals.
 
 ## Dependencies
 
