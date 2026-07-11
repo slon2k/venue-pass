@@ -238,9 +238,7 @@ public sealed class CheckoutReservationHandler(
 
     private static bool IsTicketCodeUniqueViolation(DbUpdateException ex)
     {
-        var sqlException = ex.InnerException as SqlException;
-
-        if (sqlException is null)
+        if (ex.InnerException is not SqlException sqlException)
         {
             return false;
         }

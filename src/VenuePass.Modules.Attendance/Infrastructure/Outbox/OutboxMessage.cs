@@ -1,3 +1,6 @@
+using System.Text.Json;
+using VenuePass.BuildingBlocks.Messaging;
+
 namespace VenuePass.Modules.Attendance.Infrastructure.Outbox;
 public sealed class OutboxMessage
 {
@@ -44,6 +47,17 @@ public sealed class OutboxMessage
         ArgumentException.ThrowIfNullOrWhiteSpace(payload);
 
         return new OutboxMessage(Guid.CreateVersion7(), occurredOn, type, payload);
+    }
+
+    public static OutboxMessage Create<TEvent>(TEvent @event)
+        where TEvent : IIntegrationEvent
+    {
+        ArgumentNullException.ThrowIfNull(@event);
+
+        return Create(
+            occurredOn: @event.OccurredOn,
+            type: @event.GetType().AssemblyQualifiedName!,
+            payload: JsonSerializer.Serialize(@event, @event.GetType()));
     }
 
     public void MarkProcessed(DateTimeOffset processedOn)

@@ -2,6 +2,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\VenuePass.BuildingBlocks\VenuePass.BuildingBlocks.csproj" />
     <ProjectReference Include="..\VenuePass.Modules.Ticketing.Contracts\VenuePass.Modules.Ticketing.Contracts.csproj" />
+    <ProjectReference Include="..\VenuePass.Modules.Attendance.Contracts\VenuePass.Modules.Attendance.Contracts.csproj" />
 	</ItemGroup>
 	<ItemGroup>
     <PackageReference Include="FluentValidation" />
