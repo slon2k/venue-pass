@@ -8,6 +8,7 @@ using VenuePass.BuildingBlocks.Messaging;
 using VenuePass.Modules.Ticketing.Contracts;
 using VenuePass.Modules.Attendance.Features.TicketIssued;
 using VenuePass.Modules.Attendance.Features.TicketCanceled;
+using VenuePass.Modules.Attendance.Features.ScanTicket;
 
 namespace VenuePass.Modules.Attendance;
 
@@ -26,7 +27,8 @@ public static class ModuleConfiguration
 
         services.AddAuthorizationBuilder()
             .AddPolicy("AttendanceAdmin", policy => policy.RequireRole("AttendanceAdmin"))
-            .AddPolicy("AttendanceManager", policy => policy.RequireRole("AttendanceManager"));
+            .AddPolicy("AttendanceManager", policy => policy.RequireRole("AttendanceManager"))
+            .AddPolicy("AttendanceOperator", policy => policy.RequireRole("AttendanceOperator"));
 
         return services;
     }
@@ -49,6 +51,7 @@ public static class ModuleConfiguration
     {
         services.AddScoped<IIntegrationEventHandler<TicketIssuedIntegrationEvent>, TicketIssuedHandler>();
         services.AddScoped<IIntegrationEventHandler<TicketCanceledIntegrationEvent>, TicketCanceledHandler>();
+        services.AddScoped<ScanTicketHandler>();
 
         return services;
     }

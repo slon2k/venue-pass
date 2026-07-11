@@ -18,7 +18,6 @@ public sealed class TicketModuleContract(TicketingDbContext db) : ITicketingModu
 
         var requestedPublishedEventReferenceId = new PublishedEventReferenceId(publishedEventReferenceId);
 
-        // Optional. Attendance can also validate this before calling Ticketing.
         if (!await db.PublishedEventReferences
                 .AsNoTracking()
                 .AnyAsync(e => e.Id == requestedPublishedEventReferenceId, cancellationToken))

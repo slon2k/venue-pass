@@ -162,6 +162,20 @@ public sealed class ScanAttempt : AggregateRoot<ScanAttemptId>
             scannedAt: scannedAt,
             ticketId: ticketId);
 
+    public static ScanAttempt PublishedEventReferenceNotFound(
+        PublishedEventReferenceId publishedEventReferenceId,
+        SubmittedTicketCode submittedTicketCode,
+        DateTimeOffset scannedAt,
+        TicketId? ticketId = null) => new(
+            id: ScanAttemptId.Create(),
+            publishedEventReferenceId: publishedEventReferenceId,
+            submittedTicketCode: submittedTicketCode,
+            normalizedTicketCode: null,
+            outcome: ScanOutcome.Rejected,
+            rejectionCategory: ScanRejectionCategory.IncorrectEvent,
+            scannedAt: scannedAt,
+            ticketId: ticketId);
+
     public static ScanAttempt UnexpectedError(
         SubmittedTicketCode submittedTicketCode,
         TicketCode? normalizedTicketCode,
