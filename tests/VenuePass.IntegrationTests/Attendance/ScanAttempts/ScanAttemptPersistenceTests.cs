@@ -38,7 +38,7 @@ public sealed class ScanAttemptPersistenceTests
             publishedEventReferenceId: publishedEventReferenceId,
             scannedAt: DateTimeOffset.UtcNow);
 
-        ScanAttempt rejected = ScanAttempt.TicketNotFound(
+        ScanAttempt rejected = ScanAttempt.UnknownTicket(
             submittedTicketCode: new SubmittedTicketCode("INVALID-CODE"),
             normalizedTicketCode: new TicketCode("0000000000000202"),
             publishedEventReferenceId: publishedEventReferenceId,

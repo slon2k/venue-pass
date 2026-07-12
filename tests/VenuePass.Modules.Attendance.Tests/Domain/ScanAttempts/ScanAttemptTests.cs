@@ -79,10 +79,10 @@ public sealed class ScanAttemptTests
     }
 
     [Fact]
-    public void TicketNotFound_WithEmptyPublishedEventReference_ThrowsArgumentException()
+    public void UnknownTicket_WithEmptyPublishedEventReference_ThrowsArgumentException()
     {
         var exception = Assert.Throws<ArgumentException>(() =>
-            ScanAttempt.TicketNotFound(
+            ScanAttempt.UnknownTicket(
                 submittedTicketCode: new SubmittedTicketCode("01AR-Z3ND-EKTS-V4RR"),
                 normalizedTicketCode: new TicketCode("01ARZ3NDEKTSV4RR"),
                 publishedEventReferenceId: new PublishedEventReferenceId(Guid.Empty),
