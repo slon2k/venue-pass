@@ -29,7 +29,7 @@ Handle all non-successful scans deterministically, fail closed on dependency fai
 
 - malformed ticket code: `400 Bad Request`, reason `MalformedTicketCode`
 - unknown ticket: `404 Not Found`, reason `UnknownTicket`
-- invalid ticket: `422 Unprocessable Entity`, reason `InvalidTicket`
+- invalid ticket: `400 Bad Request`, reason `InvalidTicket`
 - canceled ticket: `409 Conflict`, reason `CanceledTicket`
 - validation timeout: `503 Service Unavailable`, reason `ValidationUnavailable`
 - validation unavailable: `503 Service Unavailable`, reason `ValidationUnavailable`
