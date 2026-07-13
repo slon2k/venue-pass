@@ -42,22 +42,22 @@ Handle all non-successful scans deterministically, fail closed on dependency fai
 
 ## Acceptance Criteria
 
-- [ ] Malformed ticket code is rejected deterministically and scan attempt is persisted.
-- [ ] Unknown ticket is rejected with consistent contract and scan attempt is persisted.
-- [ ] Invalid ticket is rejected with consistent contract and scan attempt is persisted.
-- [ ] Canceled ticket is rejected with consistent contract and scan attempt is persisted.
-- [ ] Validation timeout fails closed and persists rejected attempt with `ValidationUnavailable`.
-- [ ] Validation unavailable fails closed and persists rejected attempt with `ValidationUnavailable`.
-- [ ] No rejected scan creates attendance record.
-- [ ] No rejected scan emits `TicketCheckedIn`.
+- [x] Malformed ticket code is rejected deterministically and scan attempt is persisted.
+- [x] Unknown ticket is rejected with consistent contract and scan attempt is persisted.
+- [x] Invalid ticket is rejected with consistent contract and scan attempt is persisted.
+- [x] Canceled ticket is rejected with consistent contract and scan attempt is persisted.
+- [x] Validation timeout fails closed and persists rejected attempt with `ValidationUnavailable`.
+- [x] Validation unavailable fails closed and persists rejected attempt with `ValidationUnavailable`.
+- [x] No rejected scan creates attendance record.
+- [x] No rejected scan emits `TicketCheckedIn`.
 
 ## Tests
 
-- [ ] Integration test: malformed ticket rejected and scan attempt persisted.
-- [ ] Integration test: unknown ticket rejected and scan attempt persisted.
-- [ ] Integration test: invalid ticket rejected and scan attempt persisted.
-- [ ] Integration test: canceled ticket rejected and scan attempt persisted.
-- [ ] Resilience test: validation timeout creates rejected attempt with `ValidationUnavailable`.
-- [ ] Resilience test: validation unavailable creates rejected attempt with `ValidationUnavailable`.
-- [ ] Integration test: no rejected scan creates attendance record.
-- [ ] Integration test: no rejected scan writes `TicketCheckedIn` outbox message.
+- [x] Integration test: malformed ticket rejected and scan attempt persisted.
+- [x] Integration test: unknown ticket rejected and scan attempt persisted.
+- [x] Integration test: invalid ticket rejected and scan attempt persisted.
+- [x] Integration test: canceled ticket rejected and scan attempt persisted.
+- [x] Resilience test: validation timeout creates rejected attempt with `ValidationUnavailable`.
+- [x] Resilience test: validation unavailable creates rejected attempt with `ValidationUnavailable`.
+- [x] Integration test: no rejected scan creates attendance record.
+- [x] Integration test: no rejected scan writes `TicketCheckedIn` outbox message.
