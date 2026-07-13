@@ -76,7 +76,7 @@ public sealed record TicketValidationResultDto
         {
             TicketValidationStatus.Issued => TicketValidationFailureReason.None,
             TicketValidationStatus.Canceled => TicketValidationFailureReason.TicketCanceled,
-            _ => TicketValidationFailureReason.Other
+            _ => TicketValidationFailureReason.InvalidTicket
         };
 
         return new TicketValidationResultDto(
@@ -91,6 +91,12 @@ public sealed record TicketValidationResultDto
         isValid: false,
         failureReason: TicketValidationFailureReason.TicketNotFound,
         ticket: null);
+
+    public static TicketValidationResultDto InvalidTicket(TicketExportDto ticket) => new(
+        isFound: true,
+        isValid: false,
+        failureReason: TicketValidationFailureReason.InvalidTicket,
+        ticket: ticket);
 
     public static TicketValidationResultDto MalformedTicketCode() => new(
         isFound: false,
@@ -119,7 +125,7 @@ public enum TicketValidationFailureReason
     TicketCanceled = 3,
     IncorrectEvent = 4,
     PublishedEventReferenceNotFound = 5,
-    Other = 99,
+    InvalidTicket = 6,
 }
 
 

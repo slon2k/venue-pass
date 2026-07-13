@@ -56,10 +56,39 @@ public sealed class ScanTicketHandler(
             return ScanTicketErrors.MalformedTicketCode(command.TicketCode);
         }
 
-        var ticketValidationResult = await ticketingContract.ValidateTicketForPublishedEventReferenceAsync(
-            validTicketCode.Value,
-            command.PublishedEventReferenceId,
-            cancellationToken);
+        TicketValidationResultDto ticketValidationResult;
+
+        try
+        {
+            ticketValidationResult = await ticketingContract.ValidateTicketForPublishedEventReferenceAsync(
+                validTicketCode.Value,
+                command.PublishedEventReferenceId,
+                cancellationToken);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+                return await HandleValidationUnavailableAsync(command, validTicketCode, checkedInAt, cancellationToken);
+        }
+        catch (TimeoutException ex)
+        {
+            logger.LogWarning(
+                ex,
+                "Ticket validation timed out for TicketCode: {TicketCode}, PublishedEventReferenceId: {PublishedEventReferenceId}",
+                validTicketCode.Value,
+                command.PublishedEventReferenceId);
+
+                return await HandleValidationUnavailableAsync(command, validTicketCode, checkedInAt, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(
+                ex,
+                "Ticket validation failed for TicketCode: {TicketCode}, PublishedEventReferenceId: {PublishedEventReferenceId}",
+                validTicketCode.Value,
+                command.PublishedEventReferenceId);
+
+                return await HandleValidationUnavailableAsync(command, validTicketCode, checkedInAt, cancellationToken);
+        }
 
         if (!ticketValidationResult.IsValid)
         {
@@ -234,10 +263,11 @@ public sealed class ScanTicketHandler(
         return ticketValidationResult.FailureReason switch
         {
             TicketValidationFailureReason.MalformedTicketCode => ScanTicketErrors.MalformedTicketCode(ticketCode),
-            TicketValidationFailureReason.TicketNotFound => ScanTicketErrors.TicketNotFound(ticketCode),
+            TicketValidationFailureReason.TicketNotFound => ScanTicketErrors.UnknownTicket(ticketCode),
             TicketValidationFailureReason.PublishedEventReferenceNotFound => ScanTicketErrors.PublishedEventReferenceNotFound(publishedEventReferenceId),
             TicketValidationFailureReason.TicketCanceled => ScanTicketErrors.TicketCanceled(ticketCode),
             TicketValidationFailureReason.IncorrectEvent => ScanTicketErrors.IncorrectEvent(ticketCode, publishedEventReferenceId),
+            TicketValidationFailureReason.InvalidTicket => ScanTicketErrors.InvalidTicket(ticketCode, publishedEventReferenceId),
             _ => ScanTicketErrors.OtherFailure(ticketCode, publishedEventReferenceId)
         };
     }
@@ -260,9 +290,16 @@ public sealed class ScanTicketHandler(
                 new SubmittedTicketCode(command.TicketCode),
                 checkedInAt),
 
-            TicketValidationFailureReason.TicketNotFound => ScanAttempt.TicketNotFound(
+            TicketValidationFailureReason.TicketNotFound => ScanAttempt.UnknownTicket(
                 new SubmittedTicketCode(command.TicketCode),
                 normalizedTicketCode,
+                new PublishedEventReferenceId(command.PublishedEventReferenceId),
+                checkedInAt),
+
+            TicketValidationFailureReason.InvalidTicket => ScanAttempt.InvalidTicket(
+                new SubmittedTicketCode(command.TicketCode),
+                normalizedTicketCode,
+                new TicketId(ticketValidationResult.Ticket?.TicketId ?? throw new InvalidOperationException("Ticket validation result is invalid but does not contain ticket information.")),
                 new PublishedEventReferenceId(command.PublishedEventReferenceId),
                 checkedInAt),
             
@@ -286,5 +323,22 @@ public sealed class ScanTicketHandler(
                 new PublishedEventReferenceId(command.PublishedEventReferenceId),
                 checkedInAt)
         };
+    }
+
+    private async Task<Result<ScanTicketResult>> HandleValidationUnavailableAsync(
+        ScanTicketCommand command,
+        TicketCode normalizedTicketCode,
+        DateTimeOffset checkedInAt,
+        CancellationToken cancellationToken)
+    {
+        var scanAttempt = ScanAttempt.ValidationUnavailable(
+            new SubmittedTicketCode(command.TicketCode),
+            normalizedTicketCode,
+            new PublishedEventReferenceId(command.PublishedEventReferenceId),
+            checkedInAt);
+
+        await RecordScanAttempt(scanAttempt, cancellationToken);
+
+        return ScanTicketErrors.ValidationUnavailable(command.TicketCode, command.PublishedEventReferenceId);
     }
 }

@@ -12,21 +12,31 @@ public static class ScanTicketErrors
         "Attendance.ScanTicket.MalformedTicketCode",
         $"Malformed ticket code: {ticketCode}.");
 
-    public static Error TicketNotFound(string ticketCode) => Error.NotFound(
-        "Attendance.ScanTicket.TicketNotFound",
+    public static Error UnknownTicket(string ticketCode) => Error.NotFound(
+        "Attendance.ScanTicket.UnknownTicket",
         $"No ticket found with code: {ticketCode}.");
+
+    public static Error TicketNotFound(string ticketCode) => UnknownTicket(ticketCode);
 
     public static Error PublishedEventReferenceNotFound(Guid publishedEventReferenceId) => Error.NotFound(
         "Attendance.ScanTicket.PublishedEventReferenceNotFound",
         $"No published event reference found with ID: {publishedEventReferenceId}.");
 
-    public static Error TicketCanceled(string ticketCode) => Error.Validation(
+    public static Error TicketCanceled(string ticketCode) => Error.Conflict(
         "Attendance.ScanTicket.TicketCanceled",
         $"The ticket with code {ticketCode} has been canceled.");
+
+    public static Error InvalidTicket(string ticketCode, Guid publishedEventReferenceId) => Error.Validation(
+        "Attendance.ScanTicket.InvalidTicket",
+        $"The ticket with code {ticketCode} is invalid for the published event reference with ID {publishedEventReferenceId}.");
 
     public static Error IncorrectEvent(string ticketCode, Guid publishedEventReferenceId) => Error.Validation(
         "Attendance.ScanTicket.IncorrectEvent",
         $"The ticket with code {ticketCode} is not valid for the published event reference with ID {publishedEventReferenceId}.");
+
+    public static Error ValidationUnavailable(string ticketCode, Guid publishedEventReferenceId) => Error.Unavailable(
+        "Attendance.ScanTicket.ValidationUnavailable",
+        $"Ticket validation is unavailable for ticket code {ticketCode} and published event reference ID {publishedEventReferenceId}.");
 
     public static Error OtherFailure(string ticketCode, Guid publishedEventReferenceId) => Error.Unexpected(
         "Attendance.ScanTicket.OtherFailure",

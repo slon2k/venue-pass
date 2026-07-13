@@ -88,7 +88,7 @@ public sealed class ScanAttempt : AggregateRoot<ScanAttemptId>
         ticketId: null
     );
 
-    public static ScanAttempt TicketNotFound(
+    public static ScanAttempt UnknownTicket(
         SubmittedTicketCode submittedTicketCode,
         TicketCode normalizedTicketCode,
         PublishedEventReferenceId publishedEventReferenceId,
@@ -98,7 +98,7 @@ public sealed class ScanAttempt : AggregateRoot<ScanAttemptId>
             submittedTicketCode: submittedTicketCode,
             normalizedTicketCode: normalizedTicketCode,
             outcome: ScanOutcome.Rejected,
-            rejectionCategory: ScanRejectionCategory.TicketNotFound,
+            rejectionCategory: ScanRejectionCategory.UnknownTicket,
             scannedAt: scannedAt,
             ticketId: null);
 
@@ -129,6 +129,21 @@ public sealed class ScanAttempt : AggregateRoot<ScanAttemptId>
             normalizedTicketCode: normalizedTicketCode,
             outcome: ScanOutcome.Rejected,
             rejectionCategory: ScanRejectionCategory.TicketCanceled,
+            scannedAt: scannedAt,
+            ticketId: ticketId);
+
+    public static ScanAttempt InvalidTicket(
+        SubmittedTicketCode submittedTicketCode,
+        TicketCode normalizedTicketCode,
+        TicketId ticketId,
+        PublishedEventReferenceId publishedEventReferenceId,
+        DateTimeOffset scannedAt) => new(
+            id: ScanAttemptId.Create(),
+            publishedEventReferenceId: publishedEventReferenceId,
+            submittedTicketCode: submittedTicketCode,
+            normalizedTicketCode: normalizedTicketCode,
+            outcome: ScanOutcome.Rejected,
+            rejectionCategory: ScanRejectionCategory.InvalidTicket,
             scannedAt: scannedAt,
             ticketId: ticketId);
 
@@ -227,10 +242,12 @@ public enum ScanRejectionCategory
     None = 0,
 
     MalformedTicketCode = 1,
-    TicketNotFound = 2,
+    UnknownTicket = 2,
     TicketCanceled = 3,
     IncorrectEvent = 4,
     DuplicateScan = 5,
+
+    InvalidTicket = 6,
 
     ValidationUnavailable = 98,
     UnexpectedError = 99,
