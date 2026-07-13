@@ -17,22 +17,22 @@ Guarantee one successful check-in per ticket, deterministic duplicate behavior, 
 
 ## Acceptance Criteria
 
-- [ ] Second scan of same ticket is rejected as duplicate.
-- [ ] Duplicate scan persists rejected scan attempt with duplicate reason.
-- [ ] Duplicate scan does not create second attendance record.
-- [ ] Duplicate scan does not emit another `TicketCheckedIn`.
-- [ ] Concurrent scans of same ticket produce exactly one successful attendance record.
-- [ ] Concurrent scans of same ticket produce exactly one `TicketCheckedIn` outbox message.
-- [ ] Race loser returns deterministic duplicate/conflict response.
-- [ ] Race loser persists rejected scan attempt.
-- [ ] Successful attendance record and outbox write are atomic.
+- [x] Second scan of same ticket is rejected as duplicate.
+- [x] Duplicate scan persists rejected scan attempt with duplicate reason.
+- [x] Duplicate scan does not create second attendance record.
+- [x] Duplicate scan does not emit another `TicketCheckedIn`.
+- [x] Concurrent scans of same ticket produce exactly one successful attendance record.
+- [x] Concurrent scans of same ticket produce exactly one `TicketCheckedIn` outbox message.
+- [x] Race loser returns deterministic duplicate/conflict response.
+- [x] Race loser persists rejected scan attempt.
+- [x] Successful attendance record and outbox write are atomic.
 
 ## Tests
 
-- [ ] Integration test: duplicate scan rejected as duplicate.
-- [ ] Integration test: duplicate scan persists rejected attempt with duplicate reason.
-- [ ] Integration test: duplicate scan does not write duplicate `TicketCheckedIn` outbox message.
-- [ ] Concurrency test: simultaneous scans produce exactly one success.
-- [ ] Concurrency test: race loser maps to duplicate/conflict deterministically.
-- [ ] Concurrency test: exactly one `TicketCheckedIn` outbox message exists after concurrent scans.
-- [ ] Transaction test: attendance record and outbox write are atomic.
+- [x] Integration test: duplicate scan rejected as duplicate.
+- [x] Integration test: duplicate scan persists rejected attempt with duplicate reason.
+- [x] Integration test: duplicate scan does not write duplicate `TicketCheckedIn` outbox message.
+- [x] Concurrency test: simultaneous scans produce exactly one success.
+- [x] Concurrency test: race loser maps to duplicate/conflict deterministically.
+- [x] Concurrency test: exactly one `TicketCheckedIn` outbox message exists after concurrent scans.
+- [x] Transaction test: attendance record and outbox write are atomic.
