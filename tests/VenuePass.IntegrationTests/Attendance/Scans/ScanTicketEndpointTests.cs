@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -115,6 +116,126 @@ public sealed class ScanTicketEndpointTests
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    [Fact]
+    public async Task ScanTicket_WhenTicketScannedTwice_ReturnsConflict_AndPersistsDuplicateRejectedAttempt()
+    {
+        IssuedTicketSeed issuedTicket = await CreateIssuedTicketAsync();
+
+        HttpResponseMessage firstResponse = await _operatorClient.PostAsJsonAsync(
+            "/attendance/scans",
+            new ScanTicketRequest(issuedTicket.TicketCode, issuedTicket.PublishedEventReferenceId));
+
+        HttpResponseMessage secondResponse = await _operatorClient.PostAsJsonAsync(
+            "/attendance/scans",
+            new ScanTicketRequest(issuedTicket.TicketCode, issuedTicket.PublishedEventReferenceId));
+
+        Assert.Equal(HttpStatusCode.Created, firstResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, secondResponse.StatusCode);
+
+        ProblemDetails? duplicateProblem = await secondResponse.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.NotNull(duplicateProblem);
+        Assert.Equal("Attendance.ScanTicket.TicketAlreadyScanned", GetProblemCode(duplicateProblem!));
+
+        await using AsyncServiceScope scope = _fixture.Factory.Services.CreateAsyncScope();
+        AttendanceDbContext attendanceDb = scope.ServiceProvider.GetRequiredService<AttendanceDbContext>();
+
+        int attendanceCount = await attendanceDb.AttendanceRecords
+            .AsNoTracking()
+            .CountAsync(x => x.TicketId == new TicketId(issuedTicket.TicketId));
+
+        List<ScanAttempt> scanAttempts = await attendanceDb.ScanAttempts
+            .AsNoTracking()
+            .Where(x => x.TicketId == new TicketId(issuedTicket.TicketId))
+            .OrderBy(x => x.ScannedAt)
+            .ToListAsync();
+
+        List<TicketCheckedInIntegrationEvent> checkedInMessages = await LoadCheckedInMessagesAsync(attendanceDb, issuedTicket.TicketId);
+
+        Assert.Equal(1, attendanceCount);
+        Assert.Equal(2, scanAttempts.Count);
+        Assert.Single(scanAttempts, x => x.Outcome == ScanOutcome.Accepted);
+        Assert.Single(scanAttempts, x => x.Outcome == ScanOutcome.Rejected && x.RejectionCategory == ScanRejectionCategory.DuplicateScan);
+        Assert.Single(checkedInMessages);
+    }
+
+    [Fact]
+    public async Task ScanTicket_WhenConcurrentScansForSameTicket_OneSucceedsAndOneConflicts_WithSingleOutboxMessage()
+    {
+        IssuedTicketSeed issuedTicket = await CreateIssuedTicketAsync();
+
+        HttpClient firstOperatorClient = CreateAttendanceOperatorClient(_fixture);
+        HttpClient secondOperatorClient = CreateAttendanceOperatorClient(_fixture);
+
+        Task<HttpResponseMessage> firstAttempt = firstOperatorClient.PostAsJsonAsync(
+            "/attendance/scans",
+            new ScanTicketRequest(issuedTicket.TicketCode, issuedTicket.PublishedEventReferenceId));
+
+        Task<HttpResponseMessage> secondAttempt = secondOperatorClient.PostAsJsonAsync(
+            "/attendance/scans",
+            new ScanTicketRequest(issuedTicket.TicketCode, issuedTicket.PublishedEventReferenceId));
+
+        HttpResponseMessage[] responses = await Task.WhenAll(firstAttempt, secondAttempt);
+
+        int successCount = responses.Count(x => x.StatusCode == HttpStatusCode.Created);
+        int conflictCount = responses.Count(x => x.StatusCode == HttpStatusCode.Conflict);
+
+        Assert.Equal(1, successCount);
+        Assert.Equal(1, conflictCount);
+
+        HttpResponseMessage conflictResponse = responses.Single(x => x.StatusCode == HttpStatusCode.Conflict);
+        ProblemDetails? conflictProblem = await conflictResponse.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.NotNull(conflictProblem);
+        Assert.Equal("Attendance.ScanTicket.TicketAlreadyScanned", GetProblemCode(conflictProblem!));
+
+        await using AsyncServiceScope scope = _fixture.Factory.Services.CreateAsyncScope();
+        AttendanceDbContext attendanceDb = scope.ServiceProvider.GetRequiredService<AttendanceDbContext>();
+
+        int attendanceCount = await attendanceDb.AttendanceRecords
+            .AsNoTracking()
+            .CountAsync(x => x.TicketId == new TicketId(issuedTicket.TicketId));
+
+        List<ScanAttempt> scanAttempts = await attendanceDb.ScanAttempts
+            .AsNoTracking()
+            .Where(x => x.TicketId == new TicketId(issuedTicket.TicketId))
+            .ToListAsync();
+
+        List<TicketCheckedInIntegrationEvent> checkedInMessages = await LoadCheckedInMessagesAsync(attendanceDb, issuedTicket.TicketId);
+
+        Assert.Equal(1, attendanceCount);
+        Assert.Single(checkedInMessages);
+        Assert.Single(scanAttempts, x => x.Outcome == ScanOutcome.Accepted);
+        Assert.Single(scanAttempts, x => x.Outcome == ScanOutcome.Rejected && x.RejectionCategory == ScanRejectionCategory.DuplicateScan);
+    }
+
+    [Fact]
+    public async Task ScanTicket_WhenSuccessful_PersistsAttendanceAndOutboxAtomically()
+    {
+        IssuedTicketSeed issuedTicket = await CreateIssuedTicketAsync();
+
+        HttpResponseMessage response = await _operatorClient.PostAsJsonAsync(
+            "/attendance/scans",
+            new ScanTicketRequest(issuedTicket.TicketCode, issuedTicket.PublishedEventReferenceId));
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        await using AsyncServiceScope scope = _fixture.Factory.Services.CreateAsyncScope();
+        AttendanceDbContext attendanceDb = scope.ServiceProvider.GetRequiredService<AttendanceDbContext>();
+
+        int attendanceCount = await attendanceDb.AttendanceRecords
+            .AsNoTracking()
+            .CountAsync(x => x.TicketId == new TicketId(issuedTicket.TicketId));
+
+        int acceptedAttemptCount = await attendanceDb.ScanAttempts
+            .AsNoTracking()
+            .CountAsync(x => x.TicketId == new TicketId(issuedTicket.TicketId) && x.Outcome == ScanOutcome.Accepted);
+
+        List<TicketCheckedInIntegrationEvent> checkedInMessages = await LoadCheckedInMessagesAsync(attendanceDb, issuedTicket.TicketId);
+
+        Assert.Equal(1, attendanceCount);
+        Assert.Equal(1, acceptedAttemptCount);
+        Assert.Single(checkedInMessages);
+    }
+
     private async Task<IssuedTicketSeed> CreateIssuedTicketAsync()
     {
         await EnsureAttendanceSchemaAsync();
@@ -216,6 +337,21 @@ public sealed class ScanTicketEndpointTests
         }
 
         return matching;
+    }
+
+    private static string? GetProblemCode(ProblemDetails details)
+    {
+        if (!details.Extensions.TryGetValue("code", out object? value) || value is null)
+        {
+            return null;
+        }
+
+        return value switch
+        {
+            string text => text,
+            JsonElement json when json.ValueKind == JsonValueKind.String => json.GetString(),
+            _ => value.ToString()
+        };
     }
 
     private sealed record ScanTicketRequest(string TicketCode, Guid PublishedEventReferenceId);
